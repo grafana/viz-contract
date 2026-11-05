@@ -186,7 +186,13 @@ for (const f of jsonFiles) for (const t of textOf(readJSON(f))) linkHits(t).forE
 for (const h of publicHits) fail('public-text', h);
 if (!publicHits.length) pass('public-text', 'no internal text');
 
-// 6. Word count of the prose (information only).
+// 6. The package version is the version of the latest CHANGELOG.md entry.
+const pkgVersion = readJSON('package.json').version;
+const logVersion = (read('CHANGELOG.md').match(/^## (\S+)/m) || [])[1];
+if (pkgVersion === logVersion) pass('version', `package.json and CHANGELOG.md give ${pkgVersion}`);
+else fail('version', `package.json gives ${pkgVersion}, the latest CHANGELOG.md entry is ${logVersion}`);
+
+// 7. Word count of the prose (information only).
 const words = proseFiles.filter((f) => f.endsWith('.md')).reduce((n, f) => n + (prose(f).match(/\S+/g) || []).length, 0);
 console.log(`INFO [words] ${words} words of prose in *.md`);
 

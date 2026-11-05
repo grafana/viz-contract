@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions: {}
+
+jobs:
+  publish:
+    # Only a new tag publishes. A moved (force-pushed) or deleted tag does not.
+    if: github.event.created && !github.event.deleted
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing; it also adds provenance
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Check that the tagged commit is on main
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "The tagged commit $GITHUB_SHA is not on main"
+            exit 1
+          fi
+      - name: Check that the tag gives the package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "v$version" ]; then
+            echo "Tag $TAG does not match package.json version $version"
+            exit 1
+          fi
+      - name: Run the contract checks
+        working-directory: scripts
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node check.mjs
+      - name: Publish
+        # Node 24 comes with npm 11.5.1 or later, which trusted publishing needs.
+        # A re-run after npm accepted the upload goes green instead of failing.
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if npm view "@grafana/viz-contract@$version" version >/dev/null 2>&1; then
+            echo "$version is already published"
+            exit 0
+          fi
+          npm publish --ignore-scripts
