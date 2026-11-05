@@ -48,6 +48,7 @@ flowchart TB
 | App | The view in `ui://grafana/app.html` of mcp-grafana that gets the tool result and calls the Renderer |
 | Renderer | The browser bundle that draws a viz spec |
 | Viz spec | The JSON object that the App gives to the Renderer |
+| Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
 
 The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 
@@ -93,6 +94,8 @@ version.
 | `defaultMaxDataPoints` | 1000 | points | no | maxDataPoints of a query that has none. intervalMs is the range divided by it |
 | `maxSeries` | 50 | series | yes | Most series that the Renderer draws |
 | `maxBundleGzipBytes` | not set | bytes | yes | Largest gzip size of the Renderer bundle. Not set until the host size research is done |
+| `maxAppNotes` | 5 | notes | yes | Most notes of the Source that render_grafana_app adds to its text line |
+| `maxAppNoteChars` | 200 | characters | yes | Longest note in the text line of render_grafana_app |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
 <!-- constants:end -->
