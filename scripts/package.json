@@ -1,0 +1,17 @@
+{
+  "name": "contract-scripts",
+  "private": true,
+  "type": "module",
+  "description": "Checks of the Grafana visualization contract",
+  "scripts": {
+    "check": "node check.mjs",
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "ajv-formats": "3.0.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "query_datasource tool result",
+  "description": "The structuredContent that the Source gives to the App.",
+  "type": "object",
+  "required": [
+    "chart",
+    "panel",
+    "alternatives",
+    "data"
+  ],
+  "properties": {
+    "chart": {
+      "$ref": "#/$defs/chartName"
+    },
+    "panel": {
+      "$ref": "#/$defs/panel"
+    },
+    "alternatives": {
+      "type": "array",
+      "description": "Each other chart that fits the frames. The App can switch to one with no new query.",
+      "items": {
+        "type": "object",
+        "required": [
+          "chart",
+          "panel"
+        ],
+        "properties": {
+          "chart": {
+            "$ref": "#/$defs/chartName"
+          },
+          "panel": {
+            "$ref": "#/$defs/panel"
+          }
+        }
+      }
+    },
+    "data": {
+      "$ref": "#/$defs/data"
+    },
+    "grafanaUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "The base URL of the Grafana that the Source queries."
+    }
+  },
+  "$defs": {
+    "chartName": {
+      "$ref": "query-datasource-args.schema.json#/properties/type"
+    },
+    "panelId": {
+      "type": "string",
+      "$comment": "Generated from registry/panel-types.json. Do not edit.",
+      "enum": [
+        "grafana-echartscartesian-panel",
+        "grafana-echartsgeo-panel",
+        "grafana-echartsheatmap-panel",
+        "grafana-echartshierarchy-panel",
+        "grafana-echartsmultivariate-panel",
+        "grafana-echartsparttowhole-panel",
+        "grafana-relations-panel",
+        "grafana-echartsstatetimeline-panel",
+        "grafana-echartsstatushistory-panel",
+        "grafana-echartsstream-panel"
+      ]
+    },
+    "panel": {
+      "type": "object",
+      "description": "The panel ID and the options preset of the chart, and the unit of the tool arguments.",
+      "required": [
+        "type",
+        "options"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/panelId"
+        },
+        "options": {
+          "type": "object"
+        },
+        "fieldConfig": {
+          "type": "object",
+          "properties": {
+            "defaults": {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "overrides": {
+              "type": "array"
+            }
+          }
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "required": [
+        "range",
+        "capturedAt",
+        "results"
+      ],
+      "properties": {
+        "range": {
+          "type": "object",
+          "description": "The absolute time range of the query, in epoch milliseconds.",
+          "required": [
+            "from",
+            "to"
+          ],
+          "properties": {
+            "from": {
+              "type": "integer"
+            },
+            "to": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "capturedAt": {
+          "type": "integer",
+          "description": "The time when the response of /api/ds/query arrived, in epoch milliseconds."
+        },
+        "results": {
+          "$ref": "#/$defs/results"
+        }
+      }
+    },
+    "results": {
+      "type": "object",
+      "description": "The results object of the /api/ds/query response, with no change. The key is the refId.",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "integer"
+          },
+          "frames": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/frame"
+            }
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "frame": {
+      "type": "object",
+      "description": "A frame in the DataFrameJSON format of the dataplane contract.",
+      "required": [
+        "schema"
+      ],
+      "properties": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "refId": {
+              "type": "string"
+            },
+            "meta": {
+              "type": "object"
+            },
+            "fields": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "config": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

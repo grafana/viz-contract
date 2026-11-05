@@ -1,0 +1,375 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Registry files of the contract",
+  "description": "One definition for each file in registry/. A check validates each file against its definition.",
+  "$defs": {
+    "condition": {
+      "title": "Condition",
+      "description": "A condition on the summary of the frames. Each key must match. An empty object always matches. The summary skips the frames that have schema.meta.dataTopic annotations.",
+      "type": "object",
+      "propertyNames": {
+        "anyOf": [
+          {
+            "description": "frameCount, rowCountTotal, rowCountMax, fieldCount and fieldCountMax are numbers. isInstant is true when the frames have a time field with one or more values, and each time value is the same.",
+            "enum": [
+              "frameCount",
+              "rowCountTotal",
+              "rowCountMax",
+              "fieldCount",
+              "fieldCountMax",
+              "isInstant"
+            ]
+          },
+          {
+            "description": "fieldCountByType.<type> is the number of fields of that @grafana/data field type. hasFieldType.<type> is true when that number is more than 0. A field with enum values counts as a string field.",
+            "pattern": "^(fieldCountByType|hasFieldType)\\.(time|number|string|boolean|trace|geo|enum|other|frame|nestedFrames)$"
+          },
+          {
+            "description": "hasDataFrameType.<type> is true when a frame has schema.meta.type <type>. hasPreferredVisualisationType.<type> is true when a frame has schema.meta.preferredVisualisationType <type>. hasFieldName.<name> is true when a frame has a field with the name <name>, in lower case.",
+            "pattern": "^(hasDataFrameType|hasPreferredVisualisationType|hasFieldName)\\..+$"
+          }
+        ]
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/matcher"
+      }
+    },
+    "matcher": {
+      "title": "Matcher",
+      "description": "A list matches when the summary value is a member. An object matches a number from min to max, both included. Any other value matches when it is equal.",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": [
+              "boolean",
+              "number",
+              "string"
+            ]
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            }
+          },
+          "minProperties": 1,
+          "additionalProperties": false
+        }
+      ]
+    },
+    "constant": {
+      "type": "object",
+      "required": [
+        "value",
+        "unit",
+        "meaning"
+      ],
+      "properties": {
+        "value": {
+          "type": [
+            "number",
+            "string",
+            "null"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "changeable": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "constants": {
+      "title": "registry/constants.json",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][A-Za-z0-9]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/constant"
+      }
+    },
+    "panelTypes": {
+      "title": "registry/panel-types.json",
+      "type": "object",
+      "required": [
+        "panels"
+      ],
+      "properties": {
+        "panels": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "family",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+-panel$"
+              },
+              "family": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "The name of the panel that a user reads, in lower case"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "chartTypes": {
+      "title": "registry/chart-types.json",
+      "type": "object",
+      "required": [
+        "charts"
+      ],
+      "properties": {
+        "charts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "panel",
+              "options",
+              "fits",
+              "description",
+              "dataShape"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9-]*$"
+              },
+              "panel": {
+                "type": "string",
+                "description": "An id of registry/panel-types.json"
+              },
+              "options": {
+                "type": "object",
+                "description": "The options preset that the panel gets"
+              },
+              "fits": {
+                "type": "array",
+                "minItems": 1,
+                "description": "The frames fit the chart when one condition of the list matches",
+                "items": {
+                  "$ref": "#/$defs/condition"
+                }
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1
+              },
+              "dataShape": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "pick": {
+      "title": "registry/pick.json",
+      "type": "object",
+      "required": [
+        "pickVersion",
+        "rules"
+      ],
+      "properties": {
+        "pickVersion": {
+          "const": 1
+        },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "description": "The first rule whose when matches wins. The when of the last rule must be empty",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "reason",
+              "when",
+              "chart"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9-]+$"
+              },
+              "reason": {
+                "type": "string",
+                "minLength": 1
+              },
+              "when": {
+                "$ref": "#/$defs/condition"
+              },
+              "chart": {
+                "type": "string",
+                "description": "A name of registry/chart-types.json"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "message": {
+      "type": "object",
+      "required": [
+        "code",
+        "when",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "when": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A pattern. A name in angle brackets is a placeholder"
+        }
+      }
+    },
+    "states": {
+      "title": "registry/states.json",
+      "type": "object",
+      "required": [
+        "states",
+        "errors",
+        "toolErrors",
+        "refresh"
+      ],
+      "properties": {
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "state",
+              "final",
+              "meaning"
+            ],
+            "properties": {
+              "state": {
+                "type": "string",
+                "pattern": "^[a-z-]+$"
+              },
+              "final": {
+                "type": "boolean"
+              },
+              "meaning": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "errors": {
+          "description": "The error codes of the Renderer",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/message",
+            "unevaluatedProperties": false
+          }
+        },
+        "toolErrors": {
+          "description": "The tool errors of the Source",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/message",
+            "unevaluatedProperties": false
+          }
+        },
+        "refresh": {
+          "description": "The messages of a failed refresh that the Renderer shows",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/message",
+            "unevaluatedProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "notices": {
+      "title": "registry/notices.json",
+      "type": "object",
+      "required": [
+        "notices"
+      ],
+      "properties": {
+        "notices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/message",
+            "required": [
+              "raisedBy"
+            ],
+            "properties": {
+              "raisedBy": {
+                "enum": [
+                  "renderer",
+                  "app"
+                ]
+              }
+            },
+            "unevaluatedProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$comment": "Generated from schemas/registry.schema.json. Do not edit."
+}

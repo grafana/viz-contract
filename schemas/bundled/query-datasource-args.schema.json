@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "query_datasource arguments",
+  "description": "Query a Grafana data source through /api/ds/query and draw the result as a chart.",
+  "type": "object",
+  "required": [
+    "datasourceUid",
+    "queries"
+  ],
+  "properties": {
+    "datasourceUid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "UID of the data source. All queries use this data source."
+    },
+    "queries": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The queries of /api/ds/query: a unique refId and the fields of the data source, for example expr and legendFormat for Prometheus.",
+      "items": {
+        "type": "object",
+        "required": [
+          "refId"
+        ],
+        "properties": {
+          "refId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "from": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "default": "now-1h",
+      "$comment": "Generated from registry/constants.json (defaultFrom). Do not edit.",
+      "description": "Start of the time range, in a format that /api/ds/query accepts, for example now-6h or epoch milliseconds (a string or an integer)."
+    },
+    "to": {
+      "type": [
+        "string",
+        "integer"
+      ],
+      "default": "now",
+      "$comment": "Generated from registry/constants.json (defaultTo). Do not edit.",
+      "description": "End of the time range, in a format that /api/ds/query accepts, for example now or epoch milliseconds."
+    },
+    "type": {
+      "type": "string",
+      "$comment": "Generated from registry/chart-types.json. Do not edit.",
+      "enum": [
+        "timeseries",
+        "barchart",
+        "histogram",
+        "candlestick",
+        "boxplot",
+        "piechart",
+        "funnel",
+        "heatmap",
+        "geomap",
+        "state-timeline",
+        "status-history",
+        "nodeGraph",
+        "sankey",
+        "chord",
+        "treemap",
+        "sunburst",
+        "radar",
+        "parallel",
+        "streamgraph",
+        "bubble"
+      ],
+      "description": "Optional chart to draw. With no type, the chart comes from the data. Each chart needs: timeseries (a time field and number fields), barchart (number fields, with a string or time field for the categories), histogram (number fields), candlestick (number fields named open, high, low and close), boxplot (number fields named min, q1, median, q3 and max), piechart (a number field, with a string field for the names of the parts), funnel (a number field, with a string field for the names of the stages), heatmap (heatmap cells, or a time field and number fields for the buckets), geomap (a geo field, a geohash field, or latitude and longitude fields), state-timeline (a time field and string, boolean or number fields), status-history (a time field and string, boolean or number fields), nodeGraph (node graph frames, or source and target fields), sankey (source, target and value fields), chord (source, target and value fields), treemap (string fields for the levels and a number field), sunburst (string fields for the levels and a number field), radar (three or more number fields), parallel (two or more number fields), streamgraph (a time field and number fields), bubble (a time field and number fields)."
+    },
+    "unit": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional Grafana unit ID for all values, for example bytes, percent or reqps."
+    }
+  },
+  "additionalProperties": false,
+  "$comment": "Generated from schemas/query-datasource-args.schema.json. Do not edit."
+}
