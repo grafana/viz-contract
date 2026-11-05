@@ -76,6 +76,10 @@ The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 The interfaces do not have the same promise of stability. [8-versioning.md](8-versioning.md) gives the three
 promises and the promise of each interface.
 
+The tool result, the viz spec and the Renderer API have the internal promise. They can change in any minor
+version, with no deprecation period. If you build on them outside mcp-grafana and the Renderer, pin a tagged
+version.
+
 ## Constants
 
 <!-- constants:start. A script makes this table from registry/constants.json. Do not edit it. -->
