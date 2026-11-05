@@ -1,7 +1,8 @@
 # 8. Versioning
 
 The contract has a semver version, for example `1.0.0`. Each version has a tag `v<version>`, for example `v1.0.0`, and an entry in
-[CHANGELOG.md](CHANGELOG.md).
+[CHANGELOG.md](CHANGELOG.md). The npm package and the Go module use the same tags. Thus a new major version from 2
+on also changes the Go module path, for example to `github.com/grafana/viz-contract/v2`.
 
 ## Version rules
 

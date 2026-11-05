@@ -87,6 +87,8 @@ import vizSpecSchema from '@grafana/viz-contract/schemas/viz-spec.schema.json' w
 import type { RenderOptions } from '@grafana/viz-contract/renderer-api';
 ```
 
+`renderer-api` has types only. Import it with `import type`. The functions that it declares come from the Renderer.
+
 A test that reads all fixtures finds the folder like this:
 
 ```ts
