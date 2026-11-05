@@ -1,0 +1,33 @@
+{
+  "name": "@grafana/viz-contract",
+  "version": "1.0.0",
+  "description": "Contract between a Grafana query source, the host that shows the chart, and the Renderer",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/grafana/viz-contract.git"
+  },
+  "type": "module",
+  "files": [
+    "schemas/bundled/",
+    "registry/",
+    "fixtures/",
+    "renderer-api.d.ts",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "exports": {
+    "./renderer-api": {
+      "types": "./renderer-api.d.ts"
+    },
+    "./schemas/*": "./schemas/bundled/*",
+    "./registry/*": "./registry/*",
+    "./fixtures/*": "./fixtures/*",
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

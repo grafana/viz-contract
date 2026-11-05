@@ -32,11 +32,13 @@ This file gives the steps to change the contract.
 1. Pick the version number with the rules of `8-versioning.md`: major, minor or patch.
 2. Add an entry to `CHANGELOG.md` under the new version. If the change affects only an interface with the
    internal or the provisional promise, mark the entry `internal`.
-3. After the merge, tag the commit `contract-<version>`, for example `contract-1.1.0`.
+3. Set the same version in `package.json`. The checks fail if the two versions are different.
+4. After the merge, tag the commit `contract-<version>`, for example `contract-1.1.0`. The tag starts the release
+   workflow. The workflow runs the checks and publishes the npm package `@grafana/viz-contract`.
 
 ## Tell the consumers
 
-Consumers copy the files of a tagged version. If the change affects a schema, a registry or a fixture, open an
+Consumers use the files of a tagged version. If the change affects a schema, a registry or a fixture, open an
 issue in each repository that implements the contract: `grafana/mcp-grafana` for the Source and the App, and the
 repository of the Renderer. The issue links the pull request of the change.
 

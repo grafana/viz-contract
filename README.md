@@ -63,13 +63,31 @@ The Renderer draws the panels of the package `@plugins/grafana-echarts`.
    | Renderer | 2 to 8, `renderer-api.d.ts`, and the registries of panel types, states, notices and constants |
 
 3. The schemas give the shapes. The prose gives the behavior only, and does not repeat a schema.
-   `schemas/bundled/` holds each schema as one file with no reference to another file. Consumers copy the bundled
+   `schemas/bundled/` holds each schema as one file with no reference to another file. Consumers use the bundled
    files.
 4. Each rule has a stable ID: a file prefix, a dot and a number, for example `refresh.3`. A test names the ID of
    the rule that it checks. An ID never gets a new meaning. The ID of a removed rule is not used again.
 5. "Must" is a requirement. "Can" is a permission.
 6. The prose names a fixed value by its constant, for example `maxResultBytes`. The value is in
    `registry/constants.json` and in the table below.
+
+## Use the package
+
+The npm package `@grafana/viz-contract` holds the bundled schemas, the registries, the fixtures and the types of
+the Renderer API. Each package version is a contract version.
+
+```sh
+npm install --save-dev @grafana/viz-contract
+```
+
+```ts
+import panelTypes from '@grafana/viz-contract/registry/panel-types.json' with { type: 'json' };
+import vizSpecSchema from '@grafana/viz-contract/schemas/viz-spec.schema.json' with { type: 'json' };
+import type { RenderOptions } from '@grafana/viz-contract/renderer-api';
+```
+
+A test that reads all fixtures finds the folder with
+`path.join(path.dirname(require.resolve('@grafana/viz-contract/package.json')), 'fixtures')`.
 
 ## Promises
 

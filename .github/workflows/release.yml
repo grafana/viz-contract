@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags: ["contract-*"]
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write # npm trusted publishing and provenance
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Check that npm supports trusted publishing
+        run: |
+          npm --version
+          node -e "const [a, b, c] = process.argv[1].split('.').map(Number); process.exit(a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1))) ? 0 : 1)" "$(npm --version)"
+      - name: Check that the tag gives the package version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "contract-$version" ]; then
+            echo "Tag $TAG does not match package.json version $version"
+            exit 1
+          fi
+      - name: Run the contract checks
+        working-directory: scripts
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node check.mjs
+      - name: Publish
+        run: npm publish --ignore-scripts

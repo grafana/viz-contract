@@ -3,6 +3,7 @@
 !/.gitignore
 !/.github/
 !/LICENSE
+!/package.json
 !/*.md
 !/renderer-api.d.ts
 !/fixtures/
