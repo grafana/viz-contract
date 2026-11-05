@@ -86,8 +86,15 @@ import vizSpecSchema from '@grafana/viz-contract/schemas/viz-spec.schema.json' w
 import type { RenderOptions } from '@grafana/viz-contract/renderer-api';
 ```
 
-A test that reads all fixtures finds the folder with
-`path.join(path.dirname(require.resolve('@grafana/viz-contract/package.json')), 'fixtures')`.
+A test that reads all fixtures finds the folder like this:
+
+```ts
+import { createRequire } from 'node:module';
+import path from 'node:path';
+
+const pkg = createRequire(import.meta.url).resolve('@grafana/viz-contract/package.json');
+const fixturesDir = path.join(path.dirname(pkg), 'fixtures');
+```
 
 ## Promises
 

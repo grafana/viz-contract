@@ -33,8 +33,8 @@ This file gives the steps to change the contract.
 2. Add an entry to `CHANGELOG.md` under the new version. If the change affects only an interface with the
    internal or the provisional promise, mark the entry `internal`.
 3. Set the same version in `package.json`. The checks fail if the two versions are different.
-4. After the merge, tag the commit `contract-<version>`, for example `contract-1.1.0`. The tag starts the release
-   workflow. The workflow runs the checks and publishes the npm package `@grafana/viz-contract`.
+4. After the merge, tag the commit `v<version>`, for example `v1.1.0`. Do not move or reuse a tag. A new tag starts
+   the release workflow. The workflow runs the checks and publishes the npm package `@grafana/viz-contract`.
 
 ## Tell the consumers
 

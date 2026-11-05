@@ -1,6 +1,6 @@
 # 8. Versioning
 
-The contract has a semver version, for example `1.0.0`. Each version has a tag `contract-<version>` and an entry in
+The contract has a semver version, for example `1.0.0`. Each version has a tag `v<version>`, for example `v1.0.0`, and an entry in
 [CHANGELOG.md](CHANGELOG.md).
 
 ## Version rules
