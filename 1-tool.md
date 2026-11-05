@@ -79,8 +79,14 @@ The Source reads `registry/chart-types.json` and `registry/pick.json`. No other 
   `states.json`, the text is the code, a colon, a space and the message, for example `type-mismatch: sankey needs
   source, target and value fields. Charts that fit: timeseries, barchart.`
   `render_grafana_app` gives a tool error of the Source to the model in the same turn.
-- `tool.26` `render_grafana_app` replaces the text of the Source with its own text line. Thus, in the same turn,
-  the model reads that line and the tool errors only. The MCP Apps specification says that `structuredContent` is
-  not added to the model context. A failed query of a partial result reaches the model through the model context
-  of the App, in a later turn (`state.14`).
 - `tool.27` If the Source knows a URL of its Grafana that a browser can open, it writes that URL to `grafanaUrl`.
+- `tool.28` `render_grafana_app` replaces the text of the Source with its own text line, and adds the notes of
+  the Source after that line, one note on each line. Thus, in the same turn, the model reads that line, the notes
+  and the tool errors. The MCP Apps specification says that `structuredContent` is not added to the model context.
+- `tool.29` The Source gives one note for each failed query of a partial result: `Query`, a space, the `refId`, a
+  space, `failed:`, a space and the `error` of the entry, for example `Query B failed: bad_data: parse error:
+  unclosed left parenthesis`.
+- `tool.30` `render_grafana_app` replaces each run of white space in a note with one space, and leaves out an
+  empty note. It adds `maxAppNotes` notes or fewer. A note that is longer than `maxAppNoteChars` characters is
+  cut to that length, and its last character is `…`. If the Source gives more notes, the last line is `…`, a
+  space, the number of the other notes and ` more not shown`, for example `… 2 more not shown`.
