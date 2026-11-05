@@ -1,6 +1,6 @@
 {
   "name": "@grafana/viz-contract",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Contract between a Grafana query source, the host that shows the chart, and the Renderer",
   "license": "Apache-2.0",
   "repository": {
