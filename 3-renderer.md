@@ -23,12 +23,15 @@ Shape: `renderer-api.d.ts`.
 - `renderer.8` If the browser blocks `localStorage`, the Renderer still works.
 - `renderer.9` The Renderer takes React, `@grafana/ui`, `@grafana/data` and `@emotion/*` from the App. The
   `peerDependencies` in the `package.json` of the Renderer list them. The Renderer bundle has no copy of them.
-- `renderer.15` Before the App calls `render`, it fills the `react-inlinesvg` cache of its `@grafana/ui` with the
-  SVG of each icon in the `icons` of the manifest (`delivery.2`). The key of each cache entry is the URL that the
-  `Icon` of `@grafana/ui` requests for the icon: the icon root of that `@grafana/ui`, then `<dir>/<name>.svg`.
-  Grafana core fills the same cache from `public/app/core/icons/cached.json`. Thus the `Icon` of `@grafana/ui` makes
-  no network request (`renderer.7`). The Renderer cannot fill the cache, because the cache is in the copy of
-  `@grafana/ui` of the App (`renderer.9`).
+- `renderer.15` This is a rule for the App. Before the App calls `render`, it fills the icon cache with each icon
+  of `icons.json` (`delivery.9`). Thus the `Icon` of `@grafana/ui` makes no network request (`renderer.7`). The
+  Renderer cannot fill the icon cache, because the icon cache is in the copy of `@grafana/ui` of the App
+  (`renderer.9`). The icon cache is not a part of the iframe of `renderer.6`.
+- `renderer.16` This is a rule for the App. The key of each icon cache entry is the URL that `Icon` requests:
+  `getIconRoot()` of `@grafana/ui`, then `<dir>/<name>.svg`. `getIconRoot()` reads `window.__grafana_build_path__`
+  one time and keeps the value. Thus the App computes the keys with the same `window.__grafana_build_path__` that
+  `Icon` reads, and does not change it after the fill. If a key is not correct, `Icon` does not find the entry and
+  makes a request.
 
 ## The chart
 
