@@ -158,7 +158,7 @@ for (const f of proseFiles) {
 }
 if (!literalHits) pass('constants', 'the prose names the constants and writes no value');
 
-const PUBLIC = /hackathon|grafana-experimental|grafana-beyond|background\.md|brief\.md|docs\.google|slack|squad|sprint|spike|owner|mirror|fork|revision|eng-plan|mvp|release plan|phase [0-9]|demo site|#[0-9]+|gcx/i;
+const PUBLIC = /hackathon|background\.md|brief\.md|docs\.google|slack|squad|sprint|spike|owner|mirror|fork|revision|eng-plan|mvp|release plan|phase [0-9]|demo site|#[0-9]+|gcx/i;
 const textOf = (node, keys = ['description', 'meaning', 'dataShape', 'reason', 'when', 'message', 'title', '$comment']) => {
   const out = [];
   const walk = (n) => {
@@ -178,6 +178,11 @@ for (const f of proseFiles) {
 }
 const jsonFiles = [...SCHEMAS.map((s) => `schemas/${s}.schema.json`), ...Object.keys(defs).map((r) => `registry/${r}.json`)];
 for (const f of jsonFiles) for (const t of textOf(readJSON(f))) if (PUBLIC.test(t)) publicHits.push(`${f}: ${t}`);
+// A GitHub link must point to a public repository. This list names them, so the check names no private repository.
+const PUBLIC_REPOS = /^github\.com\/(modelcontextprotocol\/[\w.-]+|grafana\/(grafana|mcp-grafana|dataplane|viz-contract))(\/|$)/i;
+const linkHits = (text) => (text.match(/github\.com\/[\w.-]+(\/[\w.-]+)?/gi) || []).filter((l) => !PUBLIC_REPOS.test(l));
+for (const f of proseFiles) read(f).split('\n').forEach((line, i) => linkHits(line).forEach((l) => publicHits.push(`${f}:${i + 1}: link to a repository that is not public: ${l}`)));
+for (const f of jsonFiles) for (const t of textOf(readJSON(f))) linkHits(t).forEach((l) => publicHits.push(`${f}: link to a repository that is not public: ${l}`));
 for (const h of publicHits) fail('public-text', h);
 if (!publicHits.length) pass('public-text', 'no internal text');
 
