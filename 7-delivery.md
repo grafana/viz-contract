@@ -8,7 +8,8 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.2` A manifest next to the bundle gives `version` (the Renderer version), `sha256` (of the bundle),
   `contractVersion` (the version of this contract), `specVersions` (the viz spec versions that the Renderer
   supports) and `icons`. `icons` names each `@grafana/ui` icon that the Renderer, or a `@grafana/ui` component that
-  the Renderer uses, can show. A name is `<dir>/<name>`, for example `unicons/sync`.
+  the Renderer uses, can show. A name is `<dir>/<name>`, for example `unicons/sync`. The Renderer build writes
+  `icons`.
 - `delivery.3` The App does not check `specVersion` before it calls `render`. If the `specVersion` of the viz spec is
   not in `specVersions`, the Renderer shows the `unsupported-spec-version` error (`state.3`).
 
@@ -20,3 +21,6 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.6` A CI check makes sure that the `sha256` of the manifest is the hash of the bundle.
 - `delivery.7` A CI check makes sure that the App fills its icon cache with each icon of the manifest `icons`
   (`renderer.15`), and that `app.html` makes no icon request when it draws the fixtures.
+- `delivery.8` A CI check of the Renderer makes sure that `icons` is complete. The check fills the icon cache from
+  `icons`, as the App does. Then it draws the fixtures in the iframe of `renderer.6`, at a width where the toolbar of
+  `@grafana/ui` shows only icons, and with the pointer on the chart. The check fails on each icon request.

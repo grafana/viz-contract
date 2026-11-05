@@ -24,9 +24,11 @@ Shape: `renderer-api.d.ts`.
 - `renderer.9` The Renderer takes React, `@grafana/ui`, `@grafana/data` and `@emotion/*` from the App. The
   `peerDependencies` in the `package.json` of the Renderer list them. The Renderer bundle has no copy of them.
 - `renderer.15` Before the App calls `render`, it fills the `react-inlinesvg` cache of its `@grafana/ui` with the
-  SVG of each icon in the `icons` of the manifest (`delivery.2`), as Grafana core does. Thus the `Icon` of
-  `@grafana/ui` makes no network request (`renderer.7`). The Renderer cannot fill the cache, because the cache is in
-  the copy of `@grafana/ui` of the App (`renderer.9`).
+  SVG of each icon in the `icons` of the manifest (`delivery.2`). The key of each cache entry is the URL that the
+  `Icon` of `@grafana/ui` requests for the icon: the icon root of that `@grafana/ui`, then `<dir>/<name>.svg`.
+  Grafana core fills the same cache from `public/app/core/icons/cached.json`. Thus the `Icon` of `@grafana/ui` makes
+  no network request (`renderer.7`). The Renderer cannot fill the cache, because the cache is in the copy of
+  `@grafana/ui` of the App (`renderer.9`).
 
 ## The chart
 
