@@ -79,8 +79,18 @@ The Source reads `registry/chart-types.json` and `registry/pick.json`. No other 
   `states.json`, the text is the code, a colon, a space and the message, for example `type-mismatch: sankey needs
   source, target and value fields. Charts that fit: timeseries, barchart.`
   `render_grafana_app` gives a tool error of the Source to the model in the same turn.
-- `tool.26` `render_grafana_app` replaces the text of the Source with its own text line. Thus, in the same turn,
-  the model reads that line and the tool errors only. The MCP Apps specification says that `structuredContent` is
-  not added to the model context. A failed query of a partial result reaches the model through the model context
-  of the App, in a later turn (`state.14`).
 - `tool.27` If the Source knows a URL of its Grafana that a browser can open, it writes that URL to `grafanaUrl`.
+- `tool.28` `render_grafana_app` replaces the text of the Source with its own text line, and adds the notes of
+  the Source after that line, one note on each line. The Source gives its notes to `render_grafana_app` as an
+  ordered list of text lines, next to its structured content. A Source that gives no list leaves the text line
+  as it is. Thus, in the same turn, the model reads that line, the notes and the tool errors. The MCP Apps
+  specification says that `structuredContent` is not added to the model context.
+- `tool.29` The Source gives one note for each entry of `data.results` that has an `error`, also when every entry
+  has one. The note is the `message` of `query-failed` in `notices.json`, filled with the `refId` and the `error`
+  of the entry (`state.8`). The message is the same when one entry fails and when each entry fails.
+- `tool.30` `render_grafana_app` makes the notes in this order: (1) replace each run of white space in a note with
+  one space, (2) leave out each empty note, (3) keep the first `maxAppNotes` notes, (4) cut each kept note that is
+  longer than `maxAppNoteChars` characters to that length, with `…` as its last character. A character is a
+  Unicode code point. If the Source gave more notes after step 2, one more line follows the kept notes: `…`, a
+  space, the number of the notes that step 3 left out and ` more not shown`, for example `… 2 more not shown`.
+  Thus `render_grafana_app` adds at most `maxAppNotes` lines, and the `more not shown` line when it left some out.
