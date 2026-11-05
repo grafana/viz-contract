@@ -20,8 +20,8 @@ This file gives the steps to change the contract.
    value.
 6. Write the prose in plain English: short sentences, active voice, and one term for each concept. The terms are
    in [README.md](README.md).
-7. Describe the change in [CHANGELOG.md](CHANGELOG.md) and in the pull request. Do not describe it in the
-   contract text. The contract text has no change history and no build status.
+7. Describe the change in the pull request. Do not describe it in the contract text. The contract text has no
+   change history and no build status.
 8. If you changed a registry or a schema, run `node scripts/generate.mjs`. It writes the generated parts of
    the schemas, the bundled schemas and the constants table of `README.md`.
 9. Run the checks: run `npm ci --ignore-scripts` in `scripts` once, then run
@@ -29,12 +29,26 @@ This file gives the steps to change the contract.
 
 ## Version and changelog
 
-1. Pick the version number with the rules of `8-versioning.md`: major, minor or patch.
-2. Add an entry to `CHANGELOG.md` under the new version. If the change affects only an interface with the
-   internal or the provisional promise, mark the entry `internal`.
-3. Set the same version in `package.json`. The checks fail if the two versions are different.
-4. After the merge, tag the merge commit on `main` `v<version>`, for example `v1.1.0`. Do not move or reuse a tag. A new tag starts
-   the release workflow. The workflow runs the checks and publishes the npm package `@grafana/viz-contract`.
+A change pull request does not change `CHANGELOG.md` or the version in `package.json`. Thus two open pull requests
+do not conflict on the version. A release pull request changes them.
+
+In each change pull request:
+
+1. Find the kind of the change with the rules of `8-versioning.md`: major, minor or patch.
+2. Give the kind in the pull request description, for example `Version: minor, internal`. Write `internal` if the
+   change affects only an interface with the internal or the provisional promise.
+
+To make a release:
+
+1. List the pull requests merged since the last tag, for example with `git log --oneline v1.1.0..main`.
+2. Pick the new version from the largest kind in the list. The release is `internal` if each change in it is
+   `internal`.
+3. Open a release pull request. It adds one `CHANGELOG.md` entry for the new version, made from the descriptions of
+   the pull requests, and sets the same version in `package.json`. The checks fail if the two versions are
+   different.
+4. After the merge, tag the merge commit on `main` `v<version>`, for example `v1.2.0`. Do not move or reuse a tag. A
+   new tag starts the release workflow. The workflow runs the checks and publishes the npm package
+   `@grafana/viz-contract`.
 
 ## Tell the consumers
 
