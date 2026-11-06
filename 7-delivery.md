@@ -38,3 +38,6 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   request.
 - `delivery.10` A CI check makes sure that `app.html` has one copy of `react-inlinesvg`. With two copies, the App can
   fill a cache that `Icon` does not read.
+- `delivery.11` A CI check reports the gzip size of `icons.json`, and does not fail. `icons.json` adds to the size
+  of `app.html`, but `maxBundleGzipBytes` (`delivery.5`) is for the Renderer bundle only, and does not include
+  `icons.json`.
