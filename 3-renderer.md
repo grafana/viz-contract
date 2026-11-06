@@ -27,11 +27,9 @@ Shape: `renderer-api.d.ts`.
   of `icons.json` (`delivery.9`). Thus the `Icon` of `@grafana/ui` makes no network request (`renderer.7`). The
   Renderer cannot fill the icon cache, because the icon cache is in the copy of `@grafana/ui` of the App
   (`renderer.9`). The icon cache is not a part of the iframe of `renderer.6`.
-- `renderer.16` This is a rule for the App. The key of each icon cache entry is the URL that `Icon` requests:
-  `getIconRoot()` of `@grafana/ui`, then `<dir>/<name>.svg`. `getIconRoot()` reads `window.__grafana_build_path__`
-  one time and keeps the value. Thus the App computes the keys with the same `window.__grafana_build_path__` that
-  `Icon` reads, and does not change it after the fill. If a key is not correct, `Icon` does not find the entry and
-  makes a request.
+- `renderer.16` This is a rule for the App. The key of each icon cache entry is the URL that `Icon` of the
+  `@grafana/ui` of the App requests for the icon. If a key is not correct, `Icon` does not find the entry and makes
+  a request. The check of `delivery.7` finds this request.
 
 ## The chart
 
