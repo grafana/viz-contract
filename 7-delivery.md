@@ -12,10 +12,9 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   not in `specVersions`, the Renderer shows the `unsupported-spec-version` error (`state.3`).
 - `delivery.9` The Renderer build writes `icons.json` next to the manifest. It gives the SVG of each `@grafana/ui`
   icon that the Renderer, or a `@grafana/ui` component that the Renderer uses, can show. It is a JSON object. A key
-  is `<dir>/<name>`, for example `unicons/sync`. `<dir>` is the folder that `getIconSubDir` of `@grafana/ui` picks:
-  `unicons`, `solid`, `mono` or `custom`. The same name can be in two folders. A value is the SVG content of the
-  icon. The SVG comes from the build, because the `@grafana/ui` package ships only the icons of Grafana core
-  `public/app/core/icons/cached.json`.
+  is `<dir>/<name>`, for example `unicons/sync`. `<dir>` is the folder that `Icon` of `@grafana/ui` uses for the
+  icon: `unicons`, `solid`, `mono` or `custom`. The same name can be in two folders. A value is the SVG content of
+  the icon. The SVG comes from the build, because the `@grafana/ui` package does not ship each icon.
 
 ## Checks
 
