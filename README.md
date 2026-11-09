@@ -49,6 +49,7 @@ flowchart TB
 | Renderer | The browser bundle that draws a viz spec |
 | Viz spec | The JSON object that the App gives to the Renderer |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
+| Query type | The JSON schema that a data source plugin gives for one kind of its queries. Grafana serves it with the feature toggle `datasources.queryTypes` (`tool.31`) |
 
 The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 
