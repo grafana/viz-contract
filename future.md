@@ -17,7 +17,7 @@ specified.
 8. Annotations. The chart shows the annotations of the query range, and the user can add an annotation.
 9. Edit the chart. The user changes the options of the chart in the App, for example with an options pane.
 10. Transformations. The Renderer runs the Grafana transformations of a panel.
-11. Option docs and model guidance. The model can read the options of each chart and the query rules of each data
-    source when it needs them.
+11. Option docs and model guidance. The model can read the options of each chart, and the query types of a data
+    source before its first query, when it needs them.
 
 A gcx path can be a future addition after the MCP path.

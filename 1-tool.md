@@ -94,3 +94,28 @@ The Source reads `registry/chart-types.json` and `registry/pick.json`. No other 
   Unicode code point. If the Source gave more notes after step 2, one more line follows the kept notes: `…`, a
   space, the number of the notes that step 3 left out and ` more not shown`, for example `… 2 more not shown`.
   Thus `render_grafana_app` adds at most `maxAppNotes` lines, and the `more not shown` line when it left some out.
+
+## Query types
+
+A data source plugin can describe the fields of its queries in a query types file. Grafana serves the file only
+with the feature toggle `datasources.queryTypes`, and only for a plugin that ships one. The Source uses the file to
+help the model correct a failed query. The query still goes to `/api/ds/query` (`tool.13`).
+
+- `tool.31` The Source reads the query types only when an entry of `data.results` has an `error`. It sends
+  `GET /apis/<plugin>.datasource.grafana.app/<version>/querytypes` to its Grafana. `<plugin>` is the `type` of the
+  data source of `datasourceUid`. `<version>` is the preferred version of that API group. The response is a
+  `QueryTypeDefinitionList`. Each item has a `metadata.name`, and a `spec` with `discriminators` and a JSON
+  `schema`.
+- `tool.32` If Grafana does not serve the query types, or the request fails, the Source gives no query type note.
+  It does not return a tool error for this. It gives the notes of `tool.29` as before.
+- `tool.33` The query type of a query is the first item for which each `field` and `value` of its `discriminators`
+  matches the same field of the query. If no item matches, it is the item with no `discriminators`. If there is no
+  such item, the query has no query type and gets no note.
+- `tool.34` The Source gives one note for each query type of the queries of the failed entries, in the order of
+  those entries. A query type that two failed entries use gets one note. The note is `Fields of <plugin> query type
+  <name>: <fields>. Required: <required>.` `<fields>` lists the names of `spec.schema.properties`, and `<required>`
+  lists `spec.schema.required`, each in the order of the file, with a comma and a space between names. If
+  `<required>` is empty, the note has no `Required:` sentence. The Source gives these notes before the notes of
+  `tool.29`. Thus `maxAppNotes` does not leave them out when many entries fail.
+- `tool.35` The query types are not in the `render_grafana_app` description and not in the structured content.
+  Thus they add no tokens to `tools/list`, and the model reads them only in a turn with a failed query.
