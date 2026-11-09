@@ -34,3 +34,7 @@ Shape: `renderer-api.d.ts`.
 - `renderer.13` The Renderer shows no panel editor.
 - `renderer.14` The chart shows only the data of the viz spec. Without `onRefresh`, it does not query again. Zoom,
   pan and other controls of the chart stay inside `data.range`.
+- `renderer.17` If the viz spec has `panel.title`, the Renderer shows it above the chart, as the panel header of
+  Grafana does. It shows the title as text, not as HTML. If the title is wider than `el`, the Renderer cuts it with
+  `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
+  `panel.title`, the Renderer shows no title.

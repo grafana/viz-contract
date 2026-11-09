@@ -123,6 +123,7 @@ version.
 | `maxBundleGzipBytes` | not set | bytes | yes | Largest gzip size of the Renderer bundle. Not set until the host size research is done |
 | `maxAppNotes` | 5 | notes | yes | Most notes of the Source that render_grafana_app adds to its text line |
 | `maxAppNoteChars` | 200 | characters | yes | Longest note in the text line of render_grafana_app |
+| `maxTitleChars` | 100 | characters | yes | Longest title of the tool arguments |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
 <!-- constants:end -->

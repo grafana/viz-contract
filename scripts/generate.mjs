@@ -1,5 +1,5 @@
 // Writes the parts of the contract that come from the registries:
-//   - the type enum and its description, and the from and to defaults (query-datasource-args.schema.json)
+//   - the type enum and its description, the from and to defaults and the title maxLength (query-datasource-args.schema.json)
 //   - the panelId enum (tool-result.schema.json)
 //   - the specVersion const (viz-spec.schema.json)
 //   - one bundled file for each schema in schemas/bundled/, with no reference to another file
@@ -23,6 +23,8 @@ export function generate() {
   args.properties.from.$comment = GENERATED.replace('%s', 'constants.json (defaultFrom)');
   args.properties.to.default = constants.defaultTo.value;
   args.properties.to.$comment = GENERATED.replace('%s', 'constants.json (defaultTo)');
+  args.properties.title.maxLength = constants.maxTitleChars.value;
+  args.properties.title.$comment = GENERATED.replace('%s', 'constants.json (maxTitleChars)');
   args.properties.type.$comment = GENERATED.replace('%s', 'chart-types.json');
   args.properties.type.enum = charts.map((c) => c.name);
   args.properties.type.description =
