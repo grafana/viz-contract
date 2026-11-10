@@ -63,11 +63,11 @@ does not name it, edit the notes of the GitHub Release after the release.
 Do not tag by hand, and do not move or reuse a tag. If a step fails, re-run the release workflow. A re-run does
 not make a second release.
 
-## Tell the consumers
+## The consumers
 
-Consumers use the files of a tagged version. If the change affects a schema, a registry or a fixture, open an
-issue in each repository that implements the contract: `grafana/mcp-grafana` for the Source and the App, and the
-repository of the Renderer. The issue links the pull request of the change.
+Consumers use the files of a tagged version. Each repository that implements the contract decides when it
+supports a new version. The GitHub Release of each version tells the consumers what changed. A pull request of
+the contract does not open issues in those repositories.
 
 ## Public text
 
