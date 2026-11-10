@@ -138,5 +138,5 @@ version.
 
 ## Changes
 
-[CHANGELOG.md](CHANGELOG.md) lists the versions. [CONTRIBUTING.md](CONTRIBUTING.md) gives the steps to change the
-contract.
+The [GitHub Releases](https://github.com/grafana/viz-contract/releases) list the versions. [CHANGELOG.md](CHANGELOG.md)
+lists the versions before 1.2.0. [CONTRIBUTING.md](CONTRIBUTING.md) gives the steps to change the contract.

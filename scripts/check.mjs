@@ -186,11 +186,11 @@ for (const f of jsonFiles) for (const t of textOf(readJSON(f))) linkHits(t).forE
 for (const h of publicHits) fail('public-text', h);
 if (!publicHits.length) pass('public-text', 'no internal text');
 
-// 6. The package version is the version of the latest CHANGELOG.md entry.
+// 6. package.json keeps the placeholder version. The release workflow sets the version from the tag.
+const PLACEHOLDER = '0.0.0-development';
 const pkgVersion = readJSON('package.json').version;
-const logVersion = (read('CHANGELOG.md').match(/^## (\S+)/m) || [])[1];
-if (pkgVersion === logVersion) pass('version', `package.json and CHANGELOG.md give ${pkgVersion}`);
-else fail('version', `package.json gives ${pkgVersion}, the latest CHANGELOG.md entry is ${logVersion}`);
+if (pkgVersion === PLACEHOLDER) pass('version', `package.json gives the placeholder ${PLACEHOLDER}`);
+else fail('version', `package.json gives ${pkgVersion}. Keep ${PLACEHOLDER}: the release workflow sets the version`);
 
 // 7. Word count of the prose (information only).
 const words = proseFiles.filter((f) => f.endsWith('.md')).reduce((n, f) => n + (prose(f).match(/\S+/g) || []).length, 0);

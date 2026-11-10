@@ -2,10 +2,10 @@
 //
 // node scripts/version.mjs labels '<JSON array of label names>'
 //   Exit code 1 when the labels of one pull request are not valid.
-// node scripts/version.mjs expected <owner/repo> <last tag> <commit>
-//   Prints the version that the pull requests merged after <last tag> up to <commit> give.
-//   Exit code 1 when a pull request has no valid labels, or when no pull request needs a release.
-//   Reads the token from GH_TOKEN.
+// node scripts/version.mjs next <owner/repo> <last tag> <commit>
+//   Prints the next release as JSON, from the labels of the pull requests merged after <last tag> up to <commit>:
+//   {"version":"1.2.0","internal":false}, or {"version":null} when each pull request has version:none.
+//   Exit code 1 when a pull request has no valid labels. Reads the token from GH_TOKEN.
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -37,16 +37,22 @@ export function bump(version, kind) {
   throw new Error(`not a release kind: ${kind}`);
 }
 
-// prs: [{ number, labels: [name] }]. Throws an Error that names each problem.
-export function expectedVersion(last, prs) {
+// prs: [{ number, labels: [name] }]. Returns { version, internal }, or { version: null } when no pull request
+// needs a release. The release is internal when each pull request that needs a release has version:internal.
+// Throws an Error that names each pull request with labels that are not valid.
+export function nextRelease(last, prs) {
   const problems = prs
     .map((pr) => ({ pr, errors: labelErrors(pr.labels) }))
     .filter((p) => p.errors.length)
     .map((p) => `#${p.pr.number}: ${p.errors.join('; ')}`);
   if (problems.length) throw new Error(`pull requests with labels that are not valid:\n${problems.join('\n')}`);
   const kind = RELEASE_KINDS.find((k) => prs.some((pr) => pr.labels.includes(k)));
-  if (!kind) throw new Error(`each pull request after ${last} has version:none, so no release is needed`);
-  return bump(last.replace(/^v/, ''), kind);
+  if (!kind) return { version: null };
+  const releasing = prs.filter((pr) => !pr.labels.includes('version:none'));
+  return {
+    version: bump(last.replace(/^v/, ''), kind),
+    internal: releasing.every((pr) => pr.labels.includes(INTERNAL)),
+  };
 }
 
 // The merged pull requests of the first-parent commits after `last` up to `commit`.
@@ -82,11 +88,11 @@ async function main([mode, ...args]) {
     for (const e of errors) console.log(`FAIL [version-label] ${e}`);
     if (errors.length) process.exit(1);
     console.log('PASS [version-label] the labels are valid');
-  } else if (mode === 'expected') {
+  } else if (mode === 'next') {
     const [repo, last, commit] = args;
-    console.log(expectedVersion(last, await mergedPullRequests(repo, last, commit)));
+    console.log(JSON.stringify(nextRelease(last, await mergedPullRequests(repo, last, commit))));
   } else {
-    console.error('usage: node scripts/version.mjs labels <json> | expected <owner/repo> <last tag> <commit>');
+    console.error('usage: node scripts/version.mjs labels <json> | next <owner/repo> <last tag> <commit>');
     process.exit(2);
   }
 }
