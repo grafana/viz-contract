@@ -53,6 +53,10 @@ jobs:
             echo "v$version already tags $sha. Publish only."
             echo "new=false" >> "$GITHUB_OUTPUT"
             echo "tagged=true" >> "$GITHUB_OUTPUT"
+          elif [ "$sha" = "$GITHUB_SHA" ]; then
+            # This push changed the version, but a tag made by hand already names another commit.
+            echo "v$version tags $tagged, not the release commit $sha. Delete the tag or pick a new version."
+            exit 1
           else
             echo "v$version is already tagged. No release."
             echo "new=false" >> "$GITHUB_OUTPUT"
@@ -113,6 +117,8 @@ jobs:
       - name: Publish
         # Node 24 comes with npm 11.5.1 or later, which trusted publishing needs.
         # A re-run after npm accepted the upload goes green instead of failing.
+        # The npm provenance names GITHUB_SHA. If GitHub cancelled the waiting run of the release push, a later
+        # push does the release, and the provenance names that later commit, not the tagged commit.
         env:
           VERSION: ${{ needs.tag.outputs.version }}
         run: |
