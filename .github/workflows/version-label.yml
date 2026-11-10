@@ -11,6 +11,8 @@ permissions:
 
 jobs:
   version-label:
+    # The required check for main uses this name. CONTRIBUTING.md names it too.
+    name: Version label
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
