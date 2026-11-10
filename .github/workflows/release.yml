@@ -43,8 +43,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          release_tags() { git tag "$@" --list 'v[0-9]*.[0-9]*.[0-9]*' | grep -v -- - || true; }
           last="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude '*-*' "$GITHUB_SHA^")"
-          head_tag="$(git tag --points-at "$GITHUB_SHA" --list 'v[0-9]*.[0-9]*.[0-9]*' | grep -v -- - || true)"
+          head_tag="$(release_tags --points-at "$GITHUB_SHA")"
+          if [ "$(wc -w <<<"$head_tag")" -gt 1 ]; then
+            echo "More than one release tag names $GITHUB_SHA: $(tr '\n' ' ' <<<"$head_tag")"
+            exit 1
+          fi
+          # A re-run of an old run: a later release tag already contains this commit, so that release covers it.
+          covered="$(release_tags --contains "$GITHUB_SHA" | grep -vxF -- "${head_tag:-none}" || true)"
+          if [ -n "$covered" ]; then
+            echo "A later release covers $GITHUB_SHA: $(tr '\n' ' ' <<<"$covered")No release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "last=$last" >> "$GITHUB_OUTPUT"
           next="$(node scripts/version.mjs next "$GITHUB_REPOSITORY" "$last" "$GITHUB_SHA")"
           version="$(jq -r .version <<<"$next")"
           internal="$(jq -r .internal <<<"$next")"
@@ -88,6 +101,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.next.outputs.version }}
           INTERNAL: ${{ steps.next.outputs.internal }}
+          LAST: ${{ steps.next.outputs.last }}
         run: |
           if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "The GitHub Release v$VERSION already exists"
@@ -97,8 +111,9 @@ jobs:
           if [ "$INTERNAL" = true ]; then
             notes="Internal: this release changes only interfaces with the internal or the provisional promise."
           fi
+          # The notes start at the last tag. v1.1.0 has no GitHub Release, so the default start can be wrong.
           gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --title "v$VERSION" --generate-notes --notes "$notes"
+            --title "v$VERSION" --generate-notes --notes-start-tag "$LAST" --notes "$notes"
 
   publish:
     needs: release
@@ -129,5 +144,5 @@ jobs:
             echo "$VERSION is already published"
             exit 0
           fi
-          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          npm version "$VERSION" --no-git-tag-version --allow-same-version --ignore-scripts
           npm publish --ignore-scripts

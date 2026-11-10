@@ -12,20 +12,20 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
 - `version.2` An additive change makes a new minor version. An additive change is a new optional field, a new
   registry row, a new rule, or a new value of a changeable constant.
 - `version.3` A change to an interface with the provisional or the internal promise makes a new minor version,
-  also if it is breaking. Its changelog entry is marked `internal`.
+  also if it is breaking. Its release notes are marked `internal`.
 - `version.4` A change of text that changes no rule makes a new patch version.
 - `version.5` A rule ID never gets a new meaning. A removed rule keeps its ID out of use.
 - `version.6` A consumer ignores the fields that it does not know. Thus an additive change does not break it.
 
 ## The three promises
 
-- `version.7` Provisional: the shape can change in any minor version, with an `internal` changelog entry and no
+- `version.7` Provisional: the shape can change in any minor version, with `internal` release notes and no
   deprecation period.
 - `version.8` Frozen: a change can only add. A removal, a rename or a new meaning needs a new major version and a
   deprecation period. In the period, the component accepts the old form and the new form. The schema marks the old
-  form with `"deprecated": true`, and the changelog names the version that removes it. The period lasts
+  form with `"deprecated": true`, and the release notes name the version that removes it. The period lasts
   `deprecationDays` or more.
-- `version.9` Internal: the shape can change in any minor version, with an `internal` changelog entry and no
+- `version.9` Internal: the shape can change in any minor version, with `internal` release notes and no
   deprecation period. The components of the change ship together, so they are never out of step.
 
 ## The promise of each interface

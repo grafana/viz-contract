@@ -55,7 +55,10 @@ commit:
    release is `internal` if each pull request in it has the label `version:internal` or `version:none`.
 4. It publishes the npm package `@grafana/viz-contract` with that version.
 
-Thus the title of a pull request is its line in the release notes. Write it for the consumers of the contract.
+Thus the title of a pull request is its line in the release notes. Write it for the consumers of the contract. A
+pull request that deprecates a frozen form names the version that removes it in its title, for example
+`deprecate the field x, removed in 3.0.0`. Rule `version.8` needs that version in the release notes. If the title
+does not name it, edit the notes of the GitHub Release after the release.
 
 Do not tag by hand, and do not move or reuse a tag. If a step fails, re-run the release workflow. A re-run does
 not make a second release.
