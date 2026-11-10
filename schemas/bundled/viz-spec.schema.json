@@ -128,7 +128,9 @@
     },
     "tool-result.$defs.panel.properties.title": {
       "type": "string",
-      "minLength": 1,
+      "pattern": "\\S",
+      "maxLength": 100,
+      "$comment": "Generated from registry/constants.json (maxTitleChars). Do not edit.",
       "description": "The title of the tool arguments."
     },
     "tool-result.$defs.panel.properties.fieldConfig": {

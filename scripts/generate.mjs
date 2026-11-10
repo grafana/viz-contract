@@ -1,6 +1,6 @@
 // Writes the parts of the contract that come from the registries:
 //   - the type enum and its description, the from and to defaults and the title maxLength (query-datasource-args.schema.json)
-//   - the panelId enum (tool-result.schema.json)
+//   - the panelId enum and the panel title maxLength (tool-result.schema.json)
 //   - the specVersion const (viz-spec.schema.json)
 //   - one bundled file for each schema in schemas/bundled/, with no reference to another file
 //   - the constants table in README.md
@@ -36,6 +36,8 @@ export function generate() {
   const result = readJSON('schemas/tool-result.schema.json');
   result.$defs.panelId.$comment = GENERATED.replace('%s', 'panel-types.json');
   result.$defs.panelId.enum = panels.map((p) => p.id);
+  result.$defs.panel.properties.title.maxLength = constants.maxTitleChars.value;
+  result.$defs.panel.properties.title.$comment = GENERATED.replace('%s', 'constants.json (maxTitleChars)');
   out.set('schemas/tool-result.schema.json', result);
 
   const spec = readJSON('schemas/viz-spec.schema.json');
