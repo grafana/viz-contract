@@ -14,9 +14,8 @@ are in `fixtures/`, one directory for each set.
 | `result.json` | The expected tool result, or the expected tool error | Source, App |
 | `spec.json` | The expected viz spec | App, Renderer |
 | `state.json` | The expected state, error and notices of `onState` | Renderer |
-| `expected.png` | The reference image of the chart | Renderer |
 
-- `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `expected.png`.
+- `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
   The `spec.json` of an error set (`fixtures.12`) can break its schema on purpose.
 - `fixtures.3` A test resolves relative times, for example `now-6h`, with `now` of `meta.json`. Thus the result is
@@ -25,7 +24,7 @@ are in `fixtures/`, one directory for each set.
 ## Sets
 
 - `fixtures.4` Focus sets for the time series chart:
-  - `prometheus-line`: a Prometheus range query with one series for each label value. It has `expected.png`.
+  - `prometheus-line`: a Prometheus range query with one series for each label value.
   - `no-data`: a query that gives frames with no rows.
   - `partial-error`: one correct query and one failed query. The response has the HTTP status 400, as Grafana gives
     for a partial failure.
@@ -36,7 +35,7 @@ are in `fixtures/`, one directory for each set.
     the frames of `prometheus-line` with new label values until the tool result is larger than `maxResultBytes`.
     The expected result is the `too-large` tool error.
 - `fixtures.5` One smoke set for each row of `registry/chart-types.json`. It has `spec.json` and `state.json` with
-  the state `ready`, and no `expected.png`. A test makes sure that each row has a set.
+  the state `ready`. A test makes sure that each row has a set.
 - `fixtures.6` One pick set for each rule of `registry/pick.json`. It has the frames and the expected chart name. A
   test makes sure that each rule has a set.
 - `fixtures.7` One `type-mismatch` set. Its `result.json` is the expected tool error.
@@ -49,8 +48,7 @@ are in `fixtures/`, one directory for each set.
   `request.json`, the request body must equal it. The tool result must equal `result.json`, but the test does not
   compare `grafanaUrl`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
-- `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`. If the set has
-  `expected.png`, the image of the chart must match it within the limits of the image test.
+- `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response
   has a secret, an internal host name or a private URL.
 - `fixtures.12` One error set for each of the errors `invalid-spec`, `unsupported-spec-version`,
