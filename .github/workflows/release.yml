@@ -1,15 +1,82 @@
 name: Release
 
+# A push to main with a new version in package.json makes a release:
+# the tag job checks the version against the version: labels and creates the tag v<version>,
+# then the publish job publishes the npm package. A push that keeps the version does nothing.
+# The publish job is in this workflow because a tag that GITHUB_TOKEN creates starts no other workflow.
+# npm trusted publishing names this file and the npm-publish environment. Do not rename them.
 on:
   push:
-    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+    branches: [main]
 
 permissions: {}
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the tag
+      pull-requests: read # read the labels of the merged pull requests
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tagged: ${{ steps.tag.outputs.tagged }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Read the version
+        id: version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+            echo "v$version is already tagged. No release."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check the version against the version labels
+        if: steps.version.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          last="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' "$GITHUB_SHA")"
+          expected="$(node scripts/version.mjs expected "$GITHUB_REPOSITORY" "$last" "$GITHUB_SHA")"
+          if [ "$expected" != "$VERSION" ]; then
+            echo "package.json gives $VERSION, but the labels of the pull requests after $last give $expected"
+            exit 1
+          fi
+      - name: Run the contract checks
+        if: steps.version.outputs.new == 'true'
+        working-directory: scripts
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node check.mjs
+      - name: Create the tag
+        id: tag
+        if: steps.version.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$VERSION" -f sha="$GITHUB_SHA" >/dev/null
+          echo "Tagged $GITHUB_SHA v$VERSION"
+          echo "tagged=true" >> "$GITHUB_OUTPUT"
+
   publish:
-    # Only a new tag publishes. A moved (force-pushed) or deleted tag does not.
-    if: github.event.created && !github.event.deleted
+    needs: tag
+    if: needs.tag.outputs.tagged == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: npm-publish
@@ -20,39 +87,19 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      - name: Check that the tagged commit is on main
-        run: |
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "The tagged commit $GITHUB_SHA is not on main"
-            exit 1
-          fi
-      - name: Check that the tag gives the package version
-        env:
-          TAG: ${{ github.ref_name }}
-        run: |
-          version="$(node -p "require('./package.json').version")"
-          if [ "$TAG" != "v$version" ]; then
-            echo "Tag $TAG does not match package.json version $version"
-            exit 1
-          fi
-      - name: Run the contract checks
-        working-directory: scripts
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          node check.mjs
       - name: Publish
         # Node 24 comes with npm 11.5.1 or later, which trusted publishing needs.
         # A re-run after npm accepted the upload goes green instead of failing.
+        env:
+          VERSION: ${{ needs.tag.outputs.version }}
         run: |
-          version="$(node -p "require('./package.json').version")"
-          if npm view "@grafana/viz-contract@$version" version >/dev/null 2>&1; then
-            echo "$version is already published"
+          if npm view "@grafana/viz-contract@$VERSION" version >/dev/null 2>&1; then
+            echo "$VERSION is already published"
             exit 0
           fi
           npm publish --ignore-scripts
