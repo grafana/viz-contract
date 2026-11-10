@@ -79,6 +79,13 @@
       "type": "string",
       "minLength": 1,
       "description": "Optional Grafana unit ID for all values, for example bytes, percent or reqps."
+    },
+    "title": {
+      "type": "string",
+      "pattern": "\\S",
+      "maxLength": 100,
+      "$comment": "Generated from registry/constants.json (maxTitleChars). Do not edit.",
+      "description": "Optional title of the chart, for example HTTP requests by handler. The chart shows it as a panel title."
     }
   },
   "additionalProperties": false

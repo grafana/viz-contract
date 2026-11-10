@@ -70,6 +70,9 @@ The Source reads `registry/chart-types.json` and `registry/pick.json`. No other 
   have a `unit`, `panel.fieldConfig.defaults.unit` is that unit.
 - `tool.23` `alternatives` lists each other chart whose `fits` matches the frames, in the order of
   `chart-types.json`. Each entry has its own `panel`, made as in `tool.22`.
+- `tool.31` If the arguments have a `title`, the `panel.title` of the chart and of each alternative is that title,
+  with no change. With no `title`, no panel has a `title`. A `title` of only white space does not validate
+  (`tool.4`).
 
 ## Errors and the text result
 

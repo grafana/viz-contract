@@ -21,6 +21,8 @@ Shape: `schemas/viz-spec.schema.json`.
   can show a link to it and open it with `ui/open-link`.
 - `spec.8` `notices` holds the notices of the App, for example `chart-changed` (`refresh.10`). Each entry has a
   `code` and a `message` from `registry/notices.json`.
+- `spec.15` `panel.title` is a copy of the `title` of the panel of the tool result, or of the alternative that the
+  user picked. If that panel has no `title`, the viz spec has no `panel.title`.
 
 ## What the Renderer reads
 

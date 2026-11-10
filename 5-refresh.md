@@ -41,5 +41,5 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   notice to the viz spec of this refresh only. The App knows the error by the code at the start of the text
   (`tool.25`).
 - `refresh.11` If the call gives another tool error, the App calls `setRefreshed(false, <message>)`.
-- `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`) and calls
-  `update`.
+- `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`)
+  and calls `update`.

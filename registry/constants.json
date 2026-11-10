@@ -9,6 +9,7 @@
   "maxBundleGzipBytes":   { "value": null, "unit": "bytes", "meaning": "Largest gzip size of the Renderer bundle. Not set until the host size research is done", "changeable": true },
   "maxAppNotes":          { "value": 5, "unit": "notes", "meaning": "Most notes of the Source that render_grafana_app adds to its text line", "changeable": true },
   "maxAppNoteChars":      { "value": 200, "unit": "characters", "meaning": "Longest note in the text line of render_grafana_app", "changeable": true },
+  "maxTitleChars":        { "value": 100, "unit": "characters", "meaning": "Longest title of the tool arguments", "changeable": true },
   "deprecationDays":      { "value": 30, "unit": "days", "meaning": "Shortest deprecation period of a change to a frozen interface", "changeable": true },
   "specVersion":          { "value": 1, "unit": "version", "meaning": "The viz spec version that this contract gives" }
 }

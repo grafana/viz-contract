@@ -32,6 +32,8 @@ are in `fixtures/`, one directory for each set.
   - `epoch-range`: `from` and `to` are integers. `request.json` has them as strings, with the default
     `maxDataPoints` and `intervalMs` (`tool.6`, `tool.12`).
   - `hostile-label`: series names and label values with HTML and script text. The Renderer shows them as text.
+  - `title`: the query of `prometheus-line` with a `title` that has HTML text. Each panel of `result.json` and the
+    panel of `spec.json` have the title (`tool.31`, `spec.15`). The Renderer shows it as text (`renderer.17`).
   - `too-large`: the set has `args.json` and `meta.json` only. The test makes the response at run time: it repeats
     the frames of `prometheus-line` with new label values until the tool result is larger than `maxResultBytes`.
     The expected result is the `too-large` tool error.
