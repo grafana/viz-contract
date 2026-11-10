@@ -35,20 +35,32 @@ do not conflict on the version. A release pull request changes them.
 In each change pull request:
 
 1. Find the kind of the change with the rules of `8-versioning.md`: major, minor or patch.
-2. Give the kind in the pull request description, for example `Version: minor, internal`. Write `internal` if the
-   change affects only an interface with the internal or the provisional promise.
+2. Add one label for the kind: `version:major`, `version:minor` or `version:patch`. Add the label `version:none` if
+   the change needs no release, for example a change to CI, to `scripts/` or to the README. Renovate adds
+   `version:none` to its pull requests.
+3. Also add the label `version:internal` if the change affects only an interface with the internal or the
+   provisional promise.
+
+The check `Version label` fails until the pull request has valid labels. A pull request with a failed check cannot
+merge.
 
 To make a release:
 
-1. List the pull requests merged since the last tag, for example with `git log --oneline v1.1.0..main`.
-2. Pick the new version from the largest kind in the list. The release is `internal` if each change in it is
-   `internal`.
-3. Open a release pull request. It adds one `CHANGELOG.md` entry for the new version, made from the descriptions of
-   the pull requests, and sets the same version in `package.json`. The checks fail if the two versions are
-   different.
-4. After the merge, tag the merge commit on `main` `v<version>`, for example `v1.2.0`. Do not move or reuse a tag. A
-   new tag starts the release workflow. The workflow runs the checks and publishes the npm package
-   `@grafana/viz-contract`.
+1. List the pull requests merged since the last tag, for example with
+   `gh pr list --state merged --search "merged:>=<date of the last tag>" --json number,title,labels`.
+2. Pick the new version from the largest `version:` label in the list. The release is `internal` if each change in
+   it has the label `version:internal` or `version:none`.
+3. Open a release pull request with the label `version:none`. It adds one `CHANGELOG.md` entry for the new version,
+   made from the descriptions of the pull requests, and sets the same version in `package.json`. The checks fail if
+   the two versions are different.
+4. Merge the release pull request. The release workflow then does these steps on the merge commit:
+   - It computes the version from the labels of the pull requests merged since the last tag. It stops if a pull
+     request has no valid labels, or if the version is not the version in `package.json`.
+   - It runs the checks and creates the tag `v<version>`, for example `v1.2.0`.
+   - It publishes the npm package `@grafana/viz-contract`.
+
+Do not tag by hand, and do not move or reuse a tag. If the publish step fails, re-run the failed job of the release
+workflow.
 
 ## Tell the consumers
 

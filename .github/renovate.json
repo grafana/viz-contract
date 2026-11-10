@@ -1,0 +1,5 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "The dependencies are only in scripts/, so an update needs no release. The Version label check needs the label.",
+  "addLabels": ["version:none"]
+}

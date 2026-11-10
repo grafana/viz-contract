@@ -26,3 +26,5 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run the contract checks
         run: node check.mjs
+      - name: Run the tests of the scripts
+        run: node --test

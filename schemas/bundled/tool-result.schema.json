@@ -66,7 +66,7 @@
     },
     "panel": {
       "type": "object",
-      "description": "The panel ID and the options preset of the chart, and the unit of the tool arguments.",
+      "description": "The panel ID and the options preset of the chart, and the unit and the title of the tool arguments.",
       "required": [
         "type",
         "options"
@@ -74,6 +74,13 @@
       "properties": {
         "type": {
           "$ref": "#/$defs/panelId"
+        },
+        "title": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 100,
+          "$comment": "Generated from registry/constants.json (maxTitleChars). Do not edit.",
+          "description": "The title of the tool arguments."
         },
         "options": {
           "type": "object"
