@@ -1,15 +1,108 @@
 name: Release
 
+# A push to main with a new version in package.json makes a release:
+# the tag job checks the version against the version: labels and creates the tag v<version>,
+# then the publish job publishes the npm package. A push that keeps the version does nothing.
+# The publish job is in this workflow because a tag that GITHUB_TOKEN creates starts no other workflow.
+# npm trusted publishing names this file and the npm-publish environment. Do not rename them.
 on:
   push:
-    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+    branches: [main]
 
 permissions: {}
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the tag
+      pull-requests: read # read the labels of the merged pull requests
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      sha: ${{ steps.version.outputs.sha }}
+      release: ${{ steps.version.outputs.release }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Read the version
+        id: version
+        # The release commit is the first-parent commit that introduced this version, not always the pushed commit.
+        # Thus a run for a later push (when GitHub cancels a waiting run) releases the same commit with the same labels.
+        # -S matches only a change to the exact version line, so a re-indent of package.json does not move it.
+        # The release is done when npm has the version. Until then, each run does the checks and publishes.
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          sha="$(git log -1 --first-parent --format=%H -S"\"version\": \"$version\"" "$GITHUB_SHA" -- package.json)"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          # npm view exits 1 with E404 for a version that is not published. Any other error stops the run.
+          err="$RUNNER_TEMP/npm-view-error.txt"
+          if published="$(npm view "@grafana/viz-contract@$version" version 2>"$err")"; then :
+          elif grep -q E404 "$err"; then published=""
+          else cat "$err"; exit 1
+          fi
+          tagged="$(git rev-parse -q --verify "refs/tags/v$version^{commit}" || true)"
+          if [ -n "$published" ]; then
+            echo "$version is already published. No release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "$tagged" ]; then
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "create_tag=true" >> "$GITHUB_OUTPUT"
+          elif [ "$tagged" = "$sha" ]; then
+            # A re-run of all jobs, or a tag made by hand on the release commit: do the checks, then publish.
+            echo "v$version already tags $sha. Do the checks and publish, without a new tag."
+            echo "release=true" >> "$GITHUB_OUTPUT"
+            echo "create_tag=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "v$version tags $tagged, not the release commit $sha. Delete the tag or pick a new version."
+            exit 1
+          fi
+      - name: Check the version against the version labels
+        if: steps.version.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          last="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude '*-*' "$SHA^")"
+          expected="$(node scripts/version.mjs expected "$GITHUB_REPOSITORY" "$last" "$SHA")"
+          if [ "$expected" != "$VERSION" ]; then
+            echo "package.json gives $VERSION, but the labels of the pull requests after $last give $expected"
+            exit 1
+          fi
+      - name: Run the contract checks on the release commit
+        if: steps.version.outputs.release == 'true'
+        env:
+          SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          git checkout -q "$SHA"
+          cd scripts
+          npm ci --ignore-scripts --no-audit --no-fund
+          node check.mjs
+      - name: Create the tag
+        if: steps.version.outputs.create_tag == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$VERSION" -f sha="$SHA" >/dev/null
+          echo "Tagged $SHA v$VERSION"
+
   publish:
-    # Only a new tag publishes. A moved (force-pushed) or deleted tag does not.
-    if: github.event.created && !github.event.deleted
+    needs: tag
+    if: needs.tag.outputs.release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: npm-publish
@@ -20,39 +113,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.sha }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      - name: Check that the tagged commit is on main
-        run: |
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "The tagged commit $GITHUB_SHA is not on main"
-            exit 1
-          fi
-      - name: Check that the tag gives the package version
-        env:
-          TAG: ${{ github.ref_name }}
-        run: |
-          version="$(node -p "require('./package.json').version")"
-          if [ "$TAG" != "v$version" ]; then
-            echo "Tag $TAG does not match package.json version $version"
-            exit 1
-          fi
-      - name: Run the contract checks
-        working-directory: scripts
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          node check.mjs
       - name: Publish
         # Node 24 comes with npm 11.5.1 or later, which trusted publishing needs.
         # A re-run after npm accepted the upload goes green instead of failing.
+        # The npm provenance names GITHUB_SHA. If GitHub cancelled the waiting run of the release push, a later
+        # push does the release, and the provenance names that later commit, not the tagged commit.
+        env:
+          VERSION: ${{ needs.tag.outputs.version }}
         run: |
-          version="$(node -p "require('./package.json').version")"
-          if npm view "@grafana/viz-contract@$version" version >/dev/null 2>&1; then
-            echo "$version is already published"
+          if npm view "@grafana/viz-contract@$VERSION" version >/dev/null 2>&1; then
+            echo "$VERSION is already published"
             exit 0
           fi
           npm publish --ignore-scripts
