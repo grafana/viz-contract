@@ -24,7 +24,8 @@ jobs:
       pull-requests: read # read the labels of the merged pull requests
     outputs:
       version: ${{ steps.version.outputs.version }}
-      tagged: ${{ steps.tag.outputs.tagged }}
+      sha: ${{ steps.version.outputs.sha }}
+      tagged: ${{ steps.version.outputs.tagged || steps.tag.outputs.tagged }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -36,31 +37,46 @@ jobs:
           package-manager-cache: false
       - name: Read the version
         id: version
+        # The release commit is the last commit that changed the version, not always the pushed commit.
+        # Thus a run for a later push (when GitHub cancels a waiting run) tags the same commit with the same labels.
         run: |
           version="$(node -p "require('./package.json').version")"
+          sha="$(git log -1 --first-parent --format=%H -G'"version":' "$GITHUB_SHA" -- package.json)"
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          tagged="$(git rev-parse -q --verify "refs/tags/v$version^{commit}" || true)"
+          if [ -z "$tagged" ]; then
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          elif [ "$tagged" = "$sha" ] && [ "$sha" = "$GITHUB_SHA" ]; then
+            # A re-run of all jobs for the release push, after the tag job created the tag.
+            # Publish again. The publish step is idempotent.
+            echo "v$version already tags $sha. Publish only."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+            echo "tagged=true" >> "$GITHUB_OUTPUT"
+          else
             echo "v$version is already tagged. No release."
             echo "new=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "new=true" >> "$GITHUB_OUTPUT"
           fi
       - name: Check the version against the version labels
         if: steps.version.outputs.new == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
+          SHA: ${{ steps.version.outputs.sha }}
         run: |
-          last="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' "$GITHUB_SHA")"
-          expected="$(node scripts/version.mjs expected "$GITHUB_REPOSITORY" "$last" "$GITHUB_SHA")"
+          last="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' "$SHA")"
+          expected="$(node scripts/version.mjs expected "$GITHUB_REPOSITORY" "$last" "$SHA")"
           if [ "$expected" != "$VERSION" ]; then
             echo "package.json gives $VERSION, but the labels of the pull requests after $last give $expected"
             exit 1
           fi
-      - name: Run the contract checks
+      - name: Run the contract checks on the release commit
         if: steps.version.outputs.new == 'true'
-        working-directory: scripts
+        env:
+          SHA: ${{ steps.version.outputs.sha }}
         run: |
+          git checkout -q "$SHA"
+          cd scripts
           npm ci --ignore-scripts --no-audit --no-fund
           node check.mjs
       - name: Create the tag
@@ -69,9 +85,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.version }}
+          SHA: ${{ steps.version.outputs.sha }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$VERSION" -f sha="$GITHUB_SHA" >/dev/null
-          echo "Tagged $GITHUB_SHA v$VERSION"
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/v$VERSION" -f sha="$SHA" >/dev/null
+          echo "Tagged $SHA v$VERSION"
           echo "tagged=true" >> "$GITHUB_OUTPUT"
 
   publish:
@@ -87,6 +104,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          ref: ${{ needs.tag.outputs.sha }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24

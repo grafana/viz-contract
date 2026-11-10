@@ -1,4 +1,4 @@
-// Tests of version.mjs. Usage: node --test scripts/
+// Tests of version.mjs. Usage: npm test, in scripts/
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { bump, expectedVersion, labelErrors } from './version.mjs';

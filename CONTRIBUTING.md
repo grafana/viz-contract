@@ -36,7 +36,8 @@ In each change pull request:
 
 1. Find the kind of the change with the rules of `8-versioning.md`: major, minor or patch.
 2. Add one label for the kind: `version:major`, `version:minor` or `version:patch`. Add the label `version:none` if
-   the change needs no release, for example a change to CI, to `scripts/` or to the README.
+   the change needs no release, for example a change to CI, to `scripts/` or to the README. Renovate adds
+   `version:none` to its pull requests.
 3. Also add the label `version:internal` if the change affects only an interface with the internal or the
    provisional promise.
 
@@ -48,7 +49,7 @@ To make a release:
 1. List the pull requests merged since the last tag, for example with
    `gh pr list --state merged --search "merged:>=<date of the last tag>" --json number,title,labels`.
 2. Pick the new version from the largest `version:` label in the list. The release is `internal` if each change in
-   it has the label `version:internal`.
+   it has the label `version:internal` or `version:none`.
 3. Open a release pull request with the label `version:none`. It adds one `CHANGELOG.md` entry for the new version,
    made from the descriptions of the pull requests, and sets the same version in `package.json`. The checks fail if
    the two versions are different.
