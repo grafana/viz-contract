@@ -48,6 +48,7 @@ flowchart TB
 | App | The view in `ui://grafana/app.html` of mcp-grafana that gets the tool result and calls the Renderer |
 | Renderer | The browser bundle that draws a viz spec |
 | Viz spec | The JSON object that the App gives to the Renderer |
+| Icon cache | The `react-inlinesvg` cache of the copy of `@grafana/ui` in the App. `Icon` reads an SVG from it, and makes no request for that SVG |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
 
 The Renderer draws the panels of the package `@plugins/grafana-echarts`.

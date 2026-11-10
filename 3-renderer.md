@@ -23,6 +23,14 @@ Shape: `renderer-api.d.ts`.
 - `renderer.8` If the browser blocks `localStorage`, the Renderer still works.
 - `renderer.9` The Renderer takes React, `@grafana/ui`, `@grafana/data` and `@emotion/*` from the App. The
   `peerDependencies` in the `package.json` of the Renderer list them. The Renderer bundle has no copy of them.
+- `renderer.15` This is a rule for the App. Before the App calls `render`, it fills the icon cache with each icon
+  of `icons.json` (`delivery.9`). Thus the `Icon` of `@grafana/ui` makes no network request (`renderer.7`). The
+  Renderer cannot fill the icon cache, because the icon cache is in the copy of `@grafana/ui` of the App
+  (`renderer.9`). The fill of the icon cache does not change the sandbox or the content security policy of
+  `renderer.6`.
+- `renderer.16` This is a rule for the App. The key of each icon cache entry is the URL that `Icon` of the
+  `@grafana/ui` of the App requests for the icon. If a key is not correct, `Icon` does not find the entry and makes
+  a request. The check of `delivery.7` finds this request.
 
 ## The chart
 

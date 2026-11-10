@@ -12,7 +12,9 @@ specified.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.
 6. Load the Renderer from a CDN. The App loads the Renderer at run time. The viz spec and the Renderer API then
-   become frozen.
+   become frozen. The App then also loads the `icons.json` of that Renderer (`delivery.9`), and fills the icon
+   cache from it (`renderer.15`). Thus an older App gets the icons of a newer Renderer. `icons.json` then needs a
+   hash, as the bundle has in `delivery.6`, because its SVG goes into the DOM.
 7. Annotations. The chart shows the annotations of the query range, and the user can add an annotation.
 8. Edit the chart. The user changes the options of the chart in the App, for example with an options pane.
 9. Transformations. The Renderer runs the Grafana transformations of a panel.
