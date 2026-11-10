@@ -16,7 +16,7 @@
       "code": "series-truncated",
       "raisedBy": "renderer",
       "when": "The frames have more series than maxSeries",
-      "message": "<omitted> series with the smallest peak values are not shown."
+      "message": "<omitted> series are not shown. The first <maxSeries> series are drawn."
     },
     {
       "code": "chart-changed",
