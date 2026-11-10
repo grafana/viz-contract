@@ -15,13 +15,16 @@
     },
     "panel": {
       "type": "object",
-      "description": "A Grafana panel JSON. type, options and fieldConfig come from the panel of the tool result. datasource and targets come from the tool arguments.",
+      "description": "A Grafana panel JSON. type, title, options and fieldConfig come from the panel of the tool result. datasource and targets come from the tool arguments.",
       "required": [
         "type"
       ],
       "properties": {
         "type": {
           "$ref": "tool-result.schema.json#/$defs/panelId"
+        },
+        "title": {
+          "$ref": "tool-result.schema.json#/$defs/panel/properties/title"
         },
         "options": {
           "type": "object"
