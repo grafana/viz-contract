@@ -1,7 +1,7 @@
 // Tests of version.mjs. Usage: npm test, in scripts/
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { bump, expectedVersion, labelErrors } from './version.mjs';
+import { bump, labelErrors, nextRelease } from './version.mjs';
 
 test('one kind label is valid', () => {
   for (const k of ['version:major', 'version:minor', 'version:patch', 'version:none']) {
@@ -35,18 +35,32 @@ test('the largest label gives the version', () => {
     { number: 2, labels: ['version:minor', 'version:internal'] },
     { number: 3, labels: ['version:none'] },
   ];
-  assert.equal(expectedVersion('v1.1.0', prs), '1.2.0');
-  assert.equal(expectedVersion('v1.1.0', [...prs, { number: 4, labels: ['version:major'] }]), '2.0.0');
+  assert.deepEqual(nextRelease('v1.1.0', prs), { version: '1.2.0', internal: false });
+  assert.equal(nextRelease('v1.1.0', [...prs, { number: 4, labels: ['version:major'] }]).version, '2.0.0');
+});
+
+test('one merged pull request gives one release', () => {
+  assert.deepEqual(nextRelease('v1.2.0', [{ number: 9, labels: ['version:patch'] }]), {
+    version: '1.2.1',
+    internal: false,
+  });
+});
+
+test('the release is internal when each pull request that needs a release is internal', () => {
+  const internal = { number: 1, labels: ['version:minor', 'version:internal'] };
+  const none = { number: 2, labels: ['version:none'] };
+  assert.equal(nextRelease('v1.1.0', [internal, none]).internal, true);
+  assert.equal(nextRelease('v1.1.0', [internal, { number: 3, labels: ['version:patch'] }]).internal, false);
 });
 
 test('a pull request without a valid label fails, and the error names it', () => {
   assert.throws(
-    () => expectedVersion('v1.1.0', [{ number: 1, labels: ['version:patch'] }, { number: 7, labels: [] }]),
+    () => nextRelease('v1.1.0', [{ number: 1, labels: ['version:patch'] }, { number: 7, labels: [] }]),
     /#7: needs exactly one/,
   );
 });
 
-test('only version:none fails', () => {
-  assert.throws(() => expectedVersion('v1.1.0', [{ number: 1, labels: ['version:none'] }]), /no release is needed/);
-  assert.throws(() => expectedVersion('v1.1.0', []), /no release is needed/);
+test('only version:none gives no release', () => {
+  assert.deepEqual(nextRelease('v1.1.0', [{ number: 1, labels: ['version:none'] }]), { version: null });
+  assert.deepEqual(nextRelease('v1.1.0', []), { version: null });
 });
