@@ -9,7 +9,9 @@
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-export const KINDS = ['version:major', 'version:minor', 'version:patch', 'version:none'];
+// The kinds that make a release, largest first. expectedVersion takes the first one that a pull request has.
+export const RELEASE_KINDS = ['version:major', 'version:minor', 'version:patch'];
+export const KINDS = [...RELEASE_KINDS, 'version:none'];
 export const INTERNAL = 'version:internal';
 
 // The problems with the labels of one pull request. An empty list means the labels are valid.
@@ -42,17 +44,19 @@ export function expectedVersion(last, prs) {
     .filter((p) => p.errors.length)
     .map((p) => `#${p.pr.number}: ${p.errors.join('; ')}`);
   if (problems.length) throw new Error(`pull requests with labels that are not valid:\n${problems.join('\n')}`);
-  const kind = KINDS.slice(0, 3).find((k) => prs.some((pr) => pr.labels.includes(k)));
+  const kind = RELEASE_KINDS.find((k) => prs.some((pr) => pr.labels.includes(k)));
   if (!kind) throw new Error(`each pull request after ${last} has version:none, so no release is needed`);
   return bump(last.replace(/^v/, ''), kind);
 }
 
 // The merged pull requests of the first-parent commits after `last` up to `commit`.
+// Throws when a commit has no merged pull request, for example a direct push, because it has no labels.
 async function mergedPullRequests(repo, last, commit) {
   const shas = execFileSync('git', ['rev-list', '--first-parent', `${last}..${commit}`], { encoding: 'utf8' })
     .split('\n')
     .filter(Boolean);
   const prs = new Map();
+  const unmerged = [];
   for (const sha of shas) {
     const res = await fetch(`https://api.github.com/repos/${repo}/commits/${sha}/pulls`, {
       headers: {
@@ -62,11 +66,12 @@ async function mergedPullRequests(repo, last, commit) {
       },
     });
     if (!res.ok) throw new Error(`GET pulls of ${sha}: ${res.status} ${await res.text()}`);
-    for (const pr of await res.json()) {
-      if (pr.merged_at && pr.base.ref === 'main') {
-        prs.set(pr.number, { number: pr.number, labels: pr.labels.map((l) => l.name) });
-      }
-    }
+    const merged = (await res.json()).filter((pr) => pr.merged_at && pr.base.ref === 'main');
+    if (!merged.length) unmerged.push(sha);
+    for (const pr of merged) prs.set(pr.number, { number: pr.number, labels: pr.labels.map((l) => l.name) });
+  }
+  if (unmerged.length) {
+    throw new Error(`commits after ${last} without a merged pull request, so without labels:\n${unmerged.join('\n')}`);
   }
   return [...prs.values()];
 }
