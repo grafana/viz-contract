@@ -25,16 +25,16 @@ func readJSON(t *testing.T, fsys fs.FS, name string) {
 
 // Each registry file parses. The files that mcp-grafana reads must exist.
 func TestRegistry(t *testing.T) {
-	names, err := fs.Glob(Registry, "registry/*.json")
+	names, err := fs.Glob(Registry(), "*.json")
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, name := range names {
-		readJSON(t, Registry, name)
+		readJSON(t, Registry(), name)
 	}
 	for _, name := range []string{"chart-types.json", "pick.json", "constants.json"} {
-		if _, err := fs.Stat(Registry, "registry/"+name); err != nil {
-			t.Errorf("mcp-grafana reads registry/%s: %v", name, err)
+		if _, err := fs.Stat(Registry(), name); err != nil {
+			t.Errorf("mcp-grafana reads %s: %v", name, err)
 		}
 	}
 }
@@ -46,29 +46,30 @@ func TestSchemas(t *testing.T) {
 		"viz-spec.schema.json",
 		"registry.schema.json",
 	} {
-		readJSON(t, Schemas, "schemas/bundled/"+name)
+		readJSON(t, Schemas(), name)
 	}
 }
 
 // A Source fixture set has a response.json. It also has the other files of the Source test (fixtures.8).
 // request.json is optional: a pick set has none (fixtures.1).
 func TestSourceFixtures(t *testing.T) {
-	sets, err := fs.ReadDir(Fixtures, "fixtures")
+	fixtures := Fixtures()
+	sets, err := fs.ReadDir(fixtures, ".")
 	if err != nil {
 		t.Fatal(err)
 	}
 	n := 0
 	for _, set := range sets {
-		dir := path.Join("fixtures", set.Name())
-		if _, err := fs.Stat(Fixtures, path.Join(dir, "response.json")); err != nil {
+		dir := set.Name()
+		if _, err := fs.Stat(fixtures, path.Join(dir, "response.json")); err != nil {
 			continue
 		}
 		n++
 		for _, name := range []string{"args.json", "meta.json", "response.json", "result.json"} {
-			readJSON(t, Fixtures, path.Join(dir, name))
+			readJSON(t, fixtures, path.Join(dir, name))
 		}
-		if _, err := fs.Stat(Fixtures, path.Join(dir, "request.json")); err == nil {
-			readJSON(t, Fixtures, path.Join(dir, "request.json"))
+		if _, err := fs.Stat(fixtures, path.Join(dir, "request.json")); err == nil {
+			readJSON(t, fixtures, path.Join(dir, "request.json"))
 		}
 	}
 	if n == 0 {
@@ -76,7 +77,7 @@ func TestSourceFixtures(t *testing.T) {
 	}
 }
 
-// A binary that uses only Registry does not carry the fixtures. The test builds a program that reads only
+// A binary that calls only Registry does not carry the fixtures. The test builds a program that reads only
 // Registry and a program that also reads Fixtures. The second binary must be larger by about the size of the
 // fixtures.
 func TestRegistryOnlyBinaryHasNoFixtures(t *testing.T) {
@@ -93,7 +94,7 @@ func TestRegistryOnlyBinaryHasNoFixtures(t *testing.T) {
 	}
 
 	var fixtureBytes int64
-	err = fs.WalkDir(Fixtures, "fixtures", func(name string, d fs.DirEntry, err error) error {
+	err = fs.WalkDir(Fixtures(), ".", func(name string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return err
 		}
@@ -113,7 +114,8 @@ func TestRegistryOnlyBinaryHasNoFixtures(t *testing.T) {
 		dir := t.TempDir()
 		goMod := "module sizecheck\n\ngo 1.24\n\nrequire github.com/grafana/viz-contract v0.0.0\n\n" +
 			"replace github.com/grafana/viz-contract => " + strconv.Quote(repo) + "\n"
-		main := "package main\n\nimport vizcontract \"github.com/grafana/viz-contract\"\n\nfunc main() {\n" + body + "}\n"
+		main := "package main\n\nimport (\n\t\"io/fs\"\n\n\tvizcontract \"github.com/grafana/viz-contract\"\n)\n\n" +
+			"func main() {\n" + body + "}\n"
 		for name, text := range map[string]string{"go.mod": goMod, "main.go": main} {
 			if err := os.WriteFile(filepath.Join(dir, name), []byte(text), 0o644); err != nil {
 				t.Fatal(err)
@@ -133,14 +135,14 @@ func TestRegistryOnlyBinaryHasNoFixtures(t *testing.T) {
 		return info.Size()
 	}
 
-	registryOnly := build("\t_, _ = vizcontract.Registry.ReadFile(\"registry/pick.json\")\n")
-	withFixtures := build("\t_, _ = vizcontract.Registry.ReadFile(\"registry/pick.json\")\n" +
-		"\t_, _ = vizcontract.Fixtures.ReadFile(\"fixtures/prometheus-line/args.json\")\n")
+	registryOnly := build("\t_, _ = fs.ReadFile(vizcontract.Registry(), \"pick.json\")\n")
+	withFixtures := build("\t_, _ = fs.ReadFile(vizcontract.Registry(), \"pick.json\")\n" +
+		"\t_, _ = fs.ReadFile(vizcontract.Fixtures(), \"prometheus-line/args.json\")\n")
 
 	diff := withFixtures - registryOnly
 	t.Logf("registry only %d bytes, with fixtures %d bytes, fixtures %d bytes", registryOnly, withFixtures, fixtureBytes)
-	// Padding in the binary can change the difference a little. If the linker kept the unused Fixtures, the
-	// difference would be about 0.
+	// Padding in the binary can change the difference a little. If the linker kept the unused fixtures, for
+	// example because a package variable calls fs.Sub, the difference would be about 0.
 	if diff < fixtureBytes*3/4 {
 		t.Fatalf("the binary with Fixtures is only %d bytes larger, but the fixtures are %d bytes", diff, fixtureBytes)
 	}

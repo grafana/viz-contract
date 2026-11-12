@@ -103,19 +103,24 @@ const fixturesDir = path.join(path.dirname(pkg), 'fixtures');
 ## Use the Go module
 
 The Go module `github.com/grafana/viz-contract` holds the bundled schemas, the registries and the fixtures. It has
-the same tags as the npm package. It gives each folder as its own `embed.FS`:
-`Registry` (`registry/`), `Schemas` (`schemas/bundled/`) and `Fixtures` (`fixtures/`). A binary that uses only
-`Registry` does not carry the fixtures. A path starts with the folder name, as in the repository.
+the same tags as the npm package. A function gives each folder as its own `fs.FS`: `Registry()` (`registry/`),
+`Schemas()` (`schemas/bundled/`) and `Fixtures()` (`fixtures/`). A binary that calls only `Registry()` does not
+carry the fixtures. A path does not start with the folder name. It is the path after the folder in the npm package.
 
 ```sh
 go get github.com/grafana/viz-contract@latest
 ```
 
 ```go
-import vizcontract "github.com/grafana/viz-contract"
+import (
+	"io/fs"
 
-chartTypes, err := vizcontract.Registry.ReadFile("registry/chart-types.json")
-args, err := vizcontract.Fixtures.ReadFile("fixtures/prometheus-line/args.json")
+	vizcontract "github.com/grafana/viz-contract"
+)
+
+chartTypes, err := fs.ReadFile(vizcontract.Registry(), "chart-types.json")
+vizSpec, err := fs.ReadFile(vizcontract.Schemas(), "viz-spec.schema.json")
+args, err := fs.ReadFile(vizcontract.Fixtures(), "prometheus-line/args.json")
 ```
 
 ## Promises
