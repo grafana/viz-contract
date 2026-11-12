@@ -89,6 +89,20 @@ jobs:
             echo "Release v$version after $last (internal: $internal)."
             echo "release=true" >> "$GITHUB_OUTPUT"
           fi
+      - name: Check the Go module path
+        # Go resolves a tag from v2.0.0 on only if the module path ends in /v<major>. A wrong path makes no tag.
+        if: steps.next.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.next.outputs.version }}
+        run: |
+          major="${VERSION%%.*}"
+          want="github.com/grafana/viz-contract"
+          if [ "$major" -ge 2 ]; then want="$want/v$major"; fi
+          have="$(awk '$1 == "module" { print $2 }' go.mod)"
+          if [ "$have" != "$want" ]; then
+            echo "v$VERSION needs the module path $want in go.mod, but go.mod has $have"
+            exit 1
+          fi
       - name: Run the contract checks
         if: steps.next.outputs.release == 'true'
         working-directory: scripts
