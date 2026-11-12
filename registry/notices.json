@@ -9,8 +9,8 @@
     {
       "code": "unit-unknown",
       "raisedBy": "renderer",
-      "when": "panel.fieldConfig.defaults.unit is not a unit ID of @grafana/data",
-      "message": "Unit <unit> is not a Grafana unit. The values show with no unit."
+      "when": "panel.fieldConfig.defaults.unit is not a key of getValueFormatterIndex() of @grafana/data, and it does not start with prefix:, suffix:, time:, si:, count:, currency: or bool:",
+      "message": "Unit <unit> is not a Grafana unit. The values show with <unit> as a suffix."
     },
     {
       "code": "series-truncated",

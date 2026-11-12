@@ -68,12 +68,12 @@
   "refresh": [
     {
       "code": "refresh-failed",
-      "when": "The App calls setRefreshed(false, error) with an error text, or onRefresh throws",
+      "when": "The App calls setRefreshed(id, false, error) with an error text, or onRefresh throws",
       "message": "Refresh failed: <error>"
     },
     {
       "code": "refresh-failed-no-detail",
-      "when": "The App calls setRefreshed(false) with no error text",
+      "when": "The App calls setRefreshed(id, false) with no error text",
       "message": "Refresh failed."
     },
     {
