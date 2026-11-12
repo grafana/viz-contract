@@ -10,7 +10,7 @@
       "code": "unit-unknown",
       "raisedBy": "renderer",
       "when": "panel.fieldConfig.defaults.unit is not a unit ID of @grafana/data",
-      "message": "Unit <unit> is not a Grafana unit. The values show with no unit."
+      "message": "Unit <unit> is not a Grafana unit. The values show with <unit> as a suffix."
     },
     {
       "code": "series-truncated",

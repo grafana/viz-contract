@@ -32,7 +32,7 @@ placeholder.
   `notices` field of the viz spec.
 - `state.8` `query-failed`: one notice for each entry of `data.results` that has an `error`.
 - `state.9` `unit-unknown`: `panel.fieldConfig.defaults.unit` is not a unit ID of `@grafana/data`. The values show
-  with no unit.
+  with the unit ID as a suffix. For example, the unit `foo` shows `5 foo`.
 - `state.19` `series-truncated`: the frames have more series than `maxSeries`. The Renderer draws the first
   `maxSeries` series, in the order of the frames and of the fields in each frame. It does not sort the series. The
   query sets the order, for example with `topk` or `sort`. `<omitted>` is the number of series that it does not
