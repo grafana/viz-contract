@@ -41,11 +41,13 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   of `app.html`, but `maxBundleGzipBytes` (`delivery.5`) is for the Renderer bundle only, and does not include
   `icons.json`.
 - `delivery.12` A CI check of the Renderer draws the `prometheus-line` fixture. It does each zoom, zoom out
-  (a double click on a time axis, and the Zoom out button of the time picker when the chart shows it), Reset and
-  pan, with `onRefresh` and with no `onRefresh`. It fails in these cases:
+  (a double click on the plot area, and the Zoom out button of the time picker when the chart shows it), Reset
+  and pan, with `onRefresh` and with no `onRefresh`. It fails in these cases:
   - With `onRefresh`, an action does not call `onRefresh` one time with the cause `timeRange`, or the chart is not
-    busy after the call (`renderer.18`).
-  - With `onRefresh`, a pan calls `onRefresh` before the end of the drag, or more than one time (`renderer.21`).
-  - While the chart is busy, an action calls `onRefresh` (`renderer.22`).
+    busy after the call (`renderer.19`).
+  - With `onRefresh`, Reset after a zoom does not give the `from` and `to` of the `timeRange` of the fixture, for
+    example `now-15m` and `now` (`renderer.21`).
+  - With `onRefresh`, a pan calls `onRefresh` before the end of the drag, or more than one time (`renderer.22`).
+  - While the chart is busy, an action calls `onRefresh` (`renderer.23`).
   - With no `onRefresh`, an action makes a network request, or the time range on screen leaves `data.range`
-    (`renderer.14`).
+    (`renderer.18`).

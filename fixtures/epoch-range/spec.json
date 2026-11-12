@@ -1,5 +1,9 @@
 {
   "specVersion": 1,
+  "timeRange": {
+    "from": 1790352577294,
+    "to": 1790353477294
+  },
   "panel": {
     "type": "grafana-echartscartesian-panel",
     "options": {

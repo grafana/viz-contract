@@ -93,6 +93,12 @@ for (const set of sets) {
   if (files['request.json'] && JSON.stringify(files['request.json']) !== JSON.stringify(sourceRequest(files['args.json'], files['meta.json'].now, constants))) {
     fail('fixtures', `${set}/request.json is not the request of tool.5, tool.6 and tool.12`);
   }
+  if (files['args.json'] && files['spec.json']) {
+    const want = { from: files['args.json'].from ?? constants.defaultFrom.value, to: files['args.json'].to ?? constants.defaultTo.value };
+    if (JSON.stringify(files['spec.json'].timeRange) !== JSON.stringify(want)) {
+      fail('fixtures', `${set}/spec.json: timeRange is not the from and to of args.json (spec.16)`);
+    }
+  }
   const result = files['result.json'];
   if (files['response.json'] && result && !result.isError) {
     const s = summary(files['response.json'].body.results);
