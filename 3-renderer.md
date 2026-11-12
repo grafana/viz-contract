@@ -65,7 +65,8 @@ range. Reset goes back to the reset range of `renderer.21`. A pan is a drag that
   picker sets the reset range to the pick. A zoom, a zoom out, a pan, a Reset and a call of `update` do not change
   it. For example, after a pick A, a zoom, a pick B and a zoom, the reset range is B. With `onRefresh`, Reset
   calls `onRefresh` with the `from` and `to` of the reset range. A relative range stays relative. Thus later
-  refreshes move with the clock (`refresh.3`).
+  refreshes move with the clock (`refresh.3`). The Renderer sends an integer as its decimal string, as the Source
+  does (`tool.6`). For example, `1790352577294` becomes `"1790352577294"`.
 - `renderer.22` A pan calls `onRefresh` only at the end of the drag. It does not call `onRefresh` while the drag
   continues, because data source requests can be slow or expensive.
 - `renderer.23` While the chart is busy, zoom, zoom out, Reset and pan do nothing.
