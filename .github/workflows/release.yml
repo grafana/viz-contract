@@ -164,6 +164,7 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
+      pull-requests: write # comment on the merged pull request when the check fails
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -199,3 +200,22 @@ jobs:
             if [ "$i" -lt 6 ]; then sleep 30; fi
           done
           exit 1
+      - name: Comment on the merged pull request
+        # The comment tells the author and the reviewers of the pull request that made the release. GITHUB_TOKEN
+        # gives the access, so the step needs no other secret.
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          body="The Go proxy does not give the Go module of v$VERSION, so Go code cannot fetch it. See $RUN_URL. After a fix, re-run the go-proxy job."
+          prs="$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[] | select(.merged_at) | .number')"
+          if [ -z "$prs" ]; then
+            echo "No merged pull request has $GITHUB_SHA, so no comment"
+            exit 0
+          fi
+          for pr in $prs; do
+            gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" -f body="$body" --silent
+            echo "Commented on #$pr"
+          done
