@@ -100,6 +100,29 @@ const pkg = createRequire(import.meta.url).resolve('@grafana/viz-contract/packag
 const fixturesDir = path.join(path.dirname(pkg), 'fixtures');
 ```
 
+## Use the Go module
+
+The Go module `github.com/grafana/viz-contract` holds the bundled schemas, the registries and the fixtures. It has
+the same tags as the npm package. A function gives each folder as its own `fs.FS`: `Registry()` (`registry/`),
+`Schemas()` (`schemas/bundled/`) and `Fixtures()` (`fixtures/`). A binary that calls only `Registry()` does not
+carry the fixtures. A path does not start with the folder name. It is the path after the folder in the npm package.
+
+```sh
+go get github.com/grafana/viz-contract@latest
+```
+
+```go
+import (
+	"io/fs"
+
+	vizcontract "github.com/grafana/viz-contract"
+)
+
+chartTypes, err := fs.ReadFile(vizcontract.Registry(), "chart-types.json")
+vizSpec, err := fs.ReadFile(vizcontract.Schemas(), "viz-spec.schema.json")
+args, err := fs.ReadFile(vizcontract.Fixtures(), "prometheus-line/args.json")
+```
+
 ## Promises
 
 The interfaces do not have the same promise of stability. [8-versioning.md](8-versioning.md) gives the three

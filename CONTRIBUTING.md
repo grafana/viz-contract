@@ -40,6 +40,10 @@ In each pull request:
    `version:none` to its pull requests.
 3. Also add the label `version:internal` if the change affects only an interface with the internal or the
    provisional promise.
+4. If you add the label `version:major`, change the module path in `go.mod` to
+   `github.com/grafana/viz-contract/v<major>`, for example `/v2` for `v2.0.0`. Change the Go import in `README.md`
+   to the same path. Go resolves a tag from `v2.0.0` on only with that path. The check `Version label` fails until
+   the module path agrees with the next major version.
 
 The check `Version label` fails until the pull request has valid labels. A pull request with a failed check cannot
 merge.

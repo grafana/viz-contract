@@ -4,6 +4,8 @@
 !/.github/
 !/LICENSE
 !/package.json
+!/go.mod
+!/*.go
 !/*.md
 !/renderer-api.d.ts
 !/fixtures/
