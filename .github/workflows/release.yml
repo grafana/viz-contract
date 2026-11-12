@@ -186,7 +186,7 @@ jobs:
           module="$(awk '$1 == "module" { print $2 }' go.mod)"
           cd "$RUNNER_TEMP"
           for i in 1 2 3 4 5 6; do
-            # stdout is the JSON. stderr goes to the log, so that it gives the error of a failed try.
+            # stdout is the JSON, and its Error field gives the reason of a failed try.
             if out="$(go mod download -json "$module@v$VERSION")"; then
               dir="$(jq -r .Dir <<<"$out")"
               if [ ! -f "$dir/embed.go" ]; then
