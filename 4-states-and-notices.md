@@ -31,8 +31,7 @@ placeholder.
   `notices.json` that have `raisedBy` `renderer` and whose condition is true. Then it shows the notices of the
   `notices` field of the viz spec.
 - `state.8` `query-failed`: one notice for each entry of `data.results` that has an `error`, when another entry
-  has no error. If every entry has an `error`, the Renderer shows the `all-queries-failed` error in place of these
-  notices (`state.3`).
+  has no error. If every entry has an `error`, the state is `error` (`state.3`) and these notices do not show.
 - `state.9` `unit-unknown`: `panel.fieldConfig.defaults.unit` is not a unit ID of `@grafana/data`. The values show
   with no unit.
 - `state.19` `series-truncated`: the frames have more series than `maxSeries`. The Renderer draws the first
