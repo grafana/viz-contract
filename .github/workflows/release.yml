@@ -3,8 +3,10 @@ name: Release
 # Each push to main can make a release. The version comes from the version: labels of the pull requests merged
 # since the last tag: version:major, version:minor or version:patch bumps it, version:none does not.
 # The release job creates the GitHub Release v<version> with its tag and its notes, and the publish job publishes
-# the npm package with that version. package.json on main keeps a placeholder version.
-# The publish job is in this workflow because a tag that GITHUB_TOKEN creates starts no other workflow.
+# the npm package with that version. package.json on main keeps a placeholder version. The go-proxy job makes
+# sure that the Go proxy gives the Go module of the tag.
+# The publish and go-proxy jobs are in this workflow because a tag that GITHUB_TOKEN creates starts no other
+# workflow.
 # npm trusted publishing names this file and the npm-publish environment. Do not rename them.
 on:
   push:
@@ -153,3 +155,47 @@ jobs:
           fi
           npm version "$VERSION" --no-git-tag-version --allow-same-version --ignore-scripts
           npm publish --ignore-scripts
+
+  go-proxy:
+    # Its own job, so that a failure here does not stop the npm publish. A re-run of this job only is safe.
+    needs: release
+    if: needs.release.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: go.mod
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Fetch the Go module from the Go proxy
+        # The first request makes proxy.golang.org fetch the tag, and go checks the sum with sum.golang.org.
+        # GOPROXY has no direct fallback, so the check fails if only GitHub has the tag.
+        # The proxy can need some time for a new tag, so the step tries again.
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          GOPROXY: https://proxy.golang.org
+        run: |
+          module="$(awk '$1 == "module" { print $2 }' go.mod)"
+          cd "$RUNNER_TEMP"
+          for i in 1 2 3 4 5 6; do
+            # stdout is the JSON. stderr goes to the log, so that it gives the error of a failed try.
+            if out="$(go mod download -json "$module@v$VERSION")"; then
+              dir="$(jq -r .Dir <<<"$out")"
+              if [ ! -f "$dir/embed.go" ]; then
+                echo "$module@v$VERSION has no embed.go"
+                exit 1
+              fi
+              echo "The Go proxy gives $module@v$VERSION"
+              exit 0
+            fi
+            echo "Try $i of 6 failed: $(jq -r '.Error // empty' <<<"$out")"
+            if [ "$i" -lt 6 ]; then sleep 30; fi
+          done
+          exit 1
