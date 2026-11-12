@@ -15,14 +15,17 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   disabled.
 - `refresh.5` The busy state ends at the first of these events:
   - The App calls `update`. The Renderer draws the new viz spec.
-  - The App calls `setRefreshed(false, error)`. The old chart stays, and the Renderer shows the `refresh-failed`
-    message of `states.json`. With no `error`, it shows `refresh-failed-no-detail`.
-  - The App calls `setRefreshed(true)`. The chart does not change.
+  - The App calls `setRefreshed(id, false, error)`. The old chart stays, and the Renderer shows the
+    `refresh-failed` message of `states.json`. With no `error`, it shows `refresh-failed-no-detail`.
+  - The App calls `setRefreshed(id, true)`. The chart does not change.
   - `refreshTimeoutMs` passes with no result. The Renderer shows `refresh-timeout`.
-- `refresh.6` `setRefreshed` gives the result of the last `onRefresh` call only. A call before the first
-  `onRefresh`, a second call for the same refresh, and a call after the timeout do nothing.
+- `refresh.6` `setRefreshed` gives the result of the last `onRefresh` call only. A call with an `id` that is not
+  the `id` of the last `RefreshRequest` does nothing. A call before the first `onRefresh`, a second call for the
+  same refresh, and a call after the timeout also do nothing.
 - `refresh.7` If `onRefresh` throws, the Renderer writes the error to `console.error` with the prefix
-  `grafana-viz:`. The busy state ends as with `setRefreshed(false, <error message>)`.
+  `grafana-viz:`. The busy state ends as with `setRefreshed(id, false, <error message>)`.
+- `refresh.13` The Renderer gives each `RefreshRequest` a new `id`. Two calls of `onRefresh` from the same handle
+  never have the same `id`.
 
 ## The App
 
@@ -40,6 +43,9 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   `type`. It draws the chart of the result. If that chart is not the old chart, the App adds the `chart-changed`
   notice to the viz spec of this refresh only. The App knows the error by the code at the start of the text
   (`tool.25`).
-- `refresh.11` If the call gives another tool error, the App calls `setRefreshed(false, <message>)`.
+- `refresh.11` If the call gives another tool error, the App calls `setRefreshed(<id>, false, <message>)`. `<id>`
+  is the `id` of the `RefreshRequest` of the call.
 - `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`)
   and calls `update`.
+- `refresh.14` The App answers the last `RefreshRequest` only. If the call of an older `RefreshRequest` ends, the
+  App does not call `update` for it. `update` has no `id`, so the Renderer cannot ignore an old result.
