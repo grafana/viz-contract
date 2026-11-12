@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"testing"
 )
 
@@ -102,7 +103,7 @@ func TestRegistryOnlyBinaryHasNoFixtures(t *testing.T) {
 		t.Helper()
 		dir := t.TempDir()
 		goMod := "module sizecheck\n\ngo 1.24\n\nrequire github.com/grafana/viz-contract v0.0.0\n\n" +
-			"replace github.com/grafana/viz-contract => " + repo + "\n"
+			"replace github.com/grafana/viz-contract => " + strconv.Quote(repo) + "\n"
 		main := "package main\n\nimport vizcontract \"github.com/grafana/viz-contract\"\n\nfunc main() {\n" + body + "}\n"
 		for name, text := range map[string]string{"go.mod": goMod, "main.go": main} {
 			if err := os.WriteFile(filepath.Join(dir, name), []byte(text), 0o644); err != nil {
@@ -129,7 +130,8 @@ func TestRegistryOnlyBinaryHasNoFixtures(t *testing.T) {
 
 	diff := withFixtures - registryOnly
 	t.Logf("registry only %d bytes, with fixtures %d bytes, fixtures %d bytes", registryOnly, withFixtures, fixtureBytes)
-	// Padding in the binary can change the difference a little. Without the fix, the difference is about 0.
+	// Padding in the binary can change the difference a little. If the linker kept the unused Fixtures, the
+	// difference would be about 0.
 	if diff < fixtureBytes*3/4 {
 		t.Fatalf("the binary with Fixtures is only %d bytes larger, but the fixtures are %d bytes", diff, fixtureBytes)
 	}
