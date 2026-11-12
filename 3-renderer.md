@@ -40,9 +40,28 @@ Shape: `renderer-api.d.ts`.
 - `renderer.12` The chart has no data links and no ad-hoc filter buttons, because the chart is not in a Grafana
   dashboard.
 - `renderer.13` The Renderer shows no panel editor.
-- `renderer.14` The chart shows only the data of the viz spec. Without `onRefresh`, it does not query again. Zoom,
-  pan and other controls of the chart stay inside `data.range`.
 - `renderer.17` If the viz spec has `panel.title`, the Renderer shows it above the chart, as the panel header of
   Grafana does. It shows the title as text, not as HTML. If the title is wider than `el`, the Renderer cuts it with
   `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
   `panel.title`, the Renderer shows no title.
+
+## Zoom and pan
+
+A zoom is a drag across the chart that selects a part of the time range. A zoom out shows a wider time range.
+Reset goes back to the time range before the first zoom, zoom out or pan. A pan is a drag that moves the time
+range.
+
+- `renderer.14` The chart shows only the data of the viz spec. Without `onRefresh`, the Renderer does not query
+  again. Zoom, zoom out, Reset and pan work in the Renderer only, on the data of the viz spec. They stay inside
+  `data.range`. Reset shows all of `data.range`.
+- `renderer.18` With `onRefresh`, each zoom, zoom out, Reset and pan calls `onRefresh` one time with the cause
+  `timeRange` and the `from` and `to` of the new time range. Thus it changes the time range as a pick of the time
+  picker does (`refresh.3`). After the call, the chart is busy, as for each refresh (`refresh.4`, `refresh.5`). For
+  zoom, zoom out and pan, `from` and `to` are epoch milliseconds.
+- `renderer.19` A double click on a time axis and the Zoom out button of the time picker each do one zoom out. With
+  `onRefresh`, a zoom out asks for a wider time range, as the Zoom out button of the Grafana time picker does.
+- `renderer.20` With `onRefresh`, Reset asks for the time range of the last pick of the time picker again. With no
+  pick, it asks for the `data.range` of the viz spec of `render`. A relative pick stays relative (`refresh.3`).
+- `renderer.21` A pan calls `onRefresh` only at the end of the drag. It does not call `onRefresh` while the drag
+  continues, because data source requests can be slow or expensive.
+- `renderer.22` While the chart is busy, zoom, zoom out, Reset and pan do nothing.

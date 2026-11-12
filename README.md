@@ -131,7 +131,7 @@ version.
 
 ## Not in this contract
 
-1. Behavior inside one part. For example, zoom, pan and the Reset button are Renderer UI.
+1. Behavior inside one part. For example, the tooltip and the legend are Renderer UI.
 2. Size changes and display modes between the App and the Host. The
    [MCP Apps specification](https://github.com/modelcontextprotocol/ext-apps) gives them.
 3. Items that are not specified yet. [future.md](future.md) lists them in priority order.

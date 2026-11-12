@@ -25,8 +25,8 @@ export interface RenderOptions {
   /** Called when the Renderer shows a new final state or new notices. */
   onState?: (state: RenderState) => void;
   /**
-   * Called when the user clicks Refresh or picks a time range. The Renderer shows Refresh and the time picker
-   * only when the App gives this option.
+   * Called when the user clicks Refresh or picks a time range, and for each zoom, zoom out, Reset and pan of the
+   * chart (renderer.18). The Renderer shows Refresh and the time picker only when the App gives this option.
    */
   onRefresh?: (request: RefreshRequest) => void;
 }
@@ -68,8 +68,8 @@ export interface Notice {
 
 /**
  * A refresh. id is a new value for each call of onRefresh. The App gives it to setRefreshed. For timeRange, from
- * and to are the range that the user picked. A relative range, for example now-6h to now, stays relative. An
- * absolute range is in epoch milliseconds.
+ * and to are the range that the user picked, or the new range of a zoom, zoom out, Reset or pan. A relative range,
+ * for example now-6h to now, stays relative. An absolute range is in epoch milliseconds.
  */
 export type RefreshRequest = { id: string } & (
   | { cause: 'refresh' }
