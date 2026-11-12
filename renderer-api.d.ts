@@ -32,7 +32,7 @@ export interface RenderOptions {
 }
 
 export interface RenderHandle {
-  /** Draws a new viz spec in the same element. It keeps the legend overrides of the user (renderer.20). */
+  /** Draws a new viz spec in the same element. It keeps the legend overrides of the user (renderer.26). */
   update(spec: unknown): void;
   /**
    * Gives the result of the refresh with this id. id is the id of the RefreshRequest. With ok false, error is the
