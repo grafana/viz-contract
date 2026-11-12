@@ -34,8 +34,11 @@ export interface RenderOptions {
 export interface RenderHandle {
   /** Draws a new viz spec in the same element. */
   update(spec: unknown): void;
-  /** Gives the result of the last refresh. With ok false, error is the text that the Renderer shows. */
-  setRefreshed(ok: boolean, error?: string): void;
+  /**
+   * Gives the result of the refresh with this id. id is the id of the RefreshRequest. With ok false, error is the
+   * text that the Renderer shows.
+   */
+  setRefreshed(id: string, ok: boolean, error?: string): void;
   /** Removes the chart and its listeners. */
   destroy(): void;
 }
@@ -64,7 +67,11 @@ export interface Notice {
 }
 
 /**
- * The cause of a refresh. For timeRange, from and to are the range that the user picked. A relative range, for
- * example now-6h to now, stays relative. An absolute range is in epoch milliseconds.
+ * A refresh. id is a new value for each call of onRefresh. The App gives it to setRefreshed. For timeRange, from
+ * and to are the range that the user picked. A relative range, for example now-6h to now, stays relative. An
+ * absolute range is in epoch milliseconds.
  */
-export type RefreshRequest = { cause: 'refresh' } | { cause: 'timeRange'; from: string; to: string };
+export type RefreshRequest = { id: string } & (
+  | { cause: 'refresh' }
+  | { cause: 'timeRange'; from: string; to: string }
+);
