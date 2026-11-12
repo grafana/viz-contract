@@ -23,9 +23,13 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   the `id` of the last `RefreshRequest` does nothing. A call before the first `onRefresh`, a second call for the
   same refresh, and a call after the timeout also do nothing.
 - `refresh.7` If `onRefresh` throws, the Renderer writes the error to `console.error` with the prefix
-  `grafana-viz:`. The busy state ends as with `setRefreshed(id, false, <error message>)`.
+  `grafana-viz:`. The busy state ends as with `setRefreshed(<id>, false, <error message>)`. `<id>` is the `id` of
+  this `RefreshRequest`.
 - `refresh.13` The Renderer gives each `RefreshRequest` a new `id`. Two calls of `onRefresh` from the same handle
   never have the same `id`.
+- `refresh.15` `update` removes the `refresh-failed`, `refresh-failed-no-detail` and `refresh-timeout` messages.
+  Thus a late result after `refreshTimeoutMs` draws the new viz spec and removes `refresh-timeout`. A late
+  `setRefreshed` does nothing (`refresh.6`), because the user already sees `refresh-timeout`.
 
 ## The App
 
@@ -48,4 +52,5 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
 - `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`)
   and calls `update`.
 - `refresh.14` The App answers the last `RefreshRequest` only. If the call of an older `RefreshRequest` ends, the
-  App does not call `update` for it. `update` has no `id`, so the Renderer cannot ignore an old result.
+  App does not call `update` for it. `update` has no `id`, so the Renderer cannot ignore an old result. A result of
+  the last `RefreshRequest` after `refreshTimeoutMs` is not old. The App calls `update` for it (`refresh.15`).
