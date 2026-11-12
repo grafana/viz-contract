@@ -23,10 +23,19 @@ func readJSON(t *testing.T, fsys fs.FS, name string) {
 	}
 }
 
-// The files that mcp-grafana reads.
+// Each registry file parses. The files that mcp-grafana reads must exist.
 func TestRegistry(t *testing.T) {
+	names, err := fs.Glob(Registry, "registry/*.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range names {
+		readJSON(t, Registry, name)
+	}
 	for _, name := range []string{"chart-types.json", "pick.json", "constants.json"} {
-		readJSON(t, Registry, "registry/"+name)
+		if _, err := fs.Stat(Registry, "registry/"+name); err != nil {
+			t.Errorf("mcp-grafana reads registry/%s: %v", name, err)
+		}
 	}
 }
 
