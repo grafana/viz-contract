@@ -6,8 +6,17 @@
 //   Prints the next release as JSON, from the labels of the pull requests merged after <last tag> up to <commit>:
 //   {"version":"1.2.0","internal":false}, or {"version":null} when each pull request has version:none.
 //   Exit code 1 when a pull request has no valid labels. Reads the token from GH_TOKEN.
+// node scripts/version.mjs gomod <version>
+//   Exit code 1 when the module path in go.mod is not the path of <version>.
+// node scripts/version.mjs gomod-labels '<JSON array of label names>'
+//   With version:major, exit code 1 when the module path in go.mod is not the path of the next major version.
+//   The last tag comes from origin. With no version:major, it checks nothing.
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+export const GO_MODULE = 'github.com/grafana/viz-contract';
 
 // The kinds that make a release, largest first. expectedVersion takes the first one that a pull request has.
 export const RELEASE_KINDS = ['version:major', 'version:minor', 'version:patch'];
@@ -35,6 +44,36 @@ export function bump(version, kind) {
   if (kind === 'version:minor') return `${major}.${minor + 1}.0`;
   if (kind === 'version:patch') return `${major}.${minor}.${patch + 1}`;
   throw new Error(`not a release kind: ${kind}`);
+}
+
+// Go resolves a tag from v2.0.0 on only if the module path ends in /v<major>.
+export function goModulePath(version) {
+  const major = Number(/^v?(\d+)\.\d+\.\d+$/.exec(version)?.[1]);
+  if (Number.isNaN(major)) throw new Error(`not a version: ${version}`);
+  return major >= 2 ? `${GO_MODULE}/v${major}` : GO_MODULE;
+}
+
+// The problems with the module path of go.mod for a version. An empty list means the path is right.
+export function goModuleErrors(goMod, version) {
+  const have = /^module\s+(\S+)/m.exec(goMod)?.[1];
+  const want = goModulePath(version);
+  return have === want ? [] : [`v${version.replace(/^v/, '')} needs the module path ${want} in go.mod, but go.mod has ${have ?? 'none'}`];
+}
+
+// The largest release tag, for example v1.5.1, from the output of git ls-remote --tags.
+export function lastReleaseTag(lsRemote) {
+  const versions = [...lsRemote.matchAll(/refs\/tags\/v(\d+)\.(\d+)\.(\d+)$/gm)].map((m) => m.slice(1).map(Number));
+  if (!versions.length) throw new Error('no release tag');
+  versions.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+  return `v${versions.at(-1).join('.')}`;
+}
+
+function checkGoModule(version) {
+  const goMod = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'go.mod'), 'utf8');
+  const errors = goModuleErrors(goMod, version);
+  for (const e of errors) console.log(`FAIL [go-module] ${e}`);
+  if (errors.length) process.exit(1);
+  console.log(`PASS [go-module] go.mod has the module path ${goModulePath(version)}`);
 }
 
 // prs: [{ number, labels: [name] }]. Returns { version, internal }, or { version: null } when no pull request
@@ -91,8 +130,19 @@ async function main([mode, ...args]) {
   } else if (mode === 'next') {
     const [repo, last, commit] = args;
     console.log(JSON.stringify(nextRelease(last, await mergedPullRequests(repo, last, commit))));
+  } else if (mode === 'gomod') {
+    checkGoModule(args[0]);
+  } else if (mode === 'gomod-labels') {
+    if (!JSON.parse(args[0]).includes('version:major')) {
+      console.log('PASS [go-module] no version:major, so the module path does not change');
+      return;
+    }
+    const tags = execFileSync('git', ['ls-remote', '--tags', '--refs', 'origin', 'v*'], { encoding: 'utf8' });
+    checkGoModule(bump(lastReleaseTag(tags).slice(1), 'version:major'));
   } else {
-    console.error('usage: node scripts/version.mjs labels <json> | next <owner/repo> <last tag> <commit>');
+    console.error(
+      'usage: node scripts/version.mjs labels <json> | next <owner/repo> <last tag> <commit> | gomod <version> | gomod-labels <json>',
+    );
     process.exit(2);
   }
 }
