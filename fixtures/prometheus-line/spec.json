@@ -1,5 +1,9 @@
 {
   "specVersion": 1,
+  "timeRange": {
+    "from": "now-15m",
+    "to": "now"
+  },
   "panel": {
     "type": "grafana-echartscartesian-panel",
     "options": {

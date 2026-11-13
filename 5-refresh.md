@@ -49,8 +49,8 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   (`tool.25`).
 - `refresh.11` If the call gives another tool error, the App calls `setRefreshed(<id>, false, <message>)`. `<id>`
   is the `id` of the `RefreshRequest` of the call.
-- `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`)
-  and calls `update`.
+- `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`,
+  `spec.17`) and calls `update`.
 - `refresh.14` The App answers the last `RefreshRequest` only. If the call of an older `RefreshRequest` ends, the
   App does not call `update` for it. `update` has no `id`, so the Renderer cannot ignore an old result. A result of
   the last `RefreshRequest` after `refreshTimeoutMs` is not old. The App calls `update` for it (`refresh.15`).

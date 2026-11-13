@@ -40,8 +40,6 @@ Shape: `renderer-api.d.ts`.
 - `renderer.12` The chart has no data links and no ad-hoc filter buttons, because the chart is not in a Grafana
   dashboard.
 - `renderer.13` The Renderer shows no panel editor.
-- `renderer.14` The chart shows only the data of the viz spec. Without `onRefresh`, it does not query again. Zoom,
-  pan and other controls of the chart stay inside `data.range`.
 - `renderer.17` If the viz spec has `panel.title`, the Renderer shows it above the chart, as the panel header of
   Grafana does. It shows the title as text, not as HTML. If the title is wider than `el`, the Renderer cuts it with
   `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
@@ -70,3 +68,31 @@ action does on its chart. These rules give only what the App and the user see af
   not get them. They are not in the tool arguments, so a refresh does not send them to the Source (`refresh.9`).
   The Renderer keeps them in memory only, not in `localStorage` (`renderer.8`). A new `render` starts with no
   legend overrides.
+
+## Zoom and pan
+
+A zoom is a drag across the plot area that selects a part of the time range. A zoom out shows a wider time
+range. Reset goes back to the reset range of `renderer.45`. A pan is a drag that moves the time range.
+
+- `renderer.42` Without `onRefresh`, the chart shows only the data of the viz spec, and the Renderer does not
+  query again. Zoom, zoom out, Reset and pan work in the Renderer only, on that data. They stay inside
+  `data.range`. Reset shows all of `data.range`.
+- `renderer.43` With `onRefresh`, each zoom, zoom out, Reset and pan calls `onRefresh` one time with the cause
+  `timeRange` and the `from` and `to` of the new time range. Thus it changes the time range as a pick of the time
+  picker does (`refresh.3`). After the call, the chart is busy, as for each refresh (`refresh.4`, `refresh.5`). For
+  zoom, zoom out and pan, `from` and `to` are epoch milliseconds as decimal strings, for example `"1790352577294"`.
+- `renderer.44` A double click on the plot area and the Zoom out button of the time picker each do one zoom out. A
+  zoom out keeps the center of the time range and makes it wider, as Grafana does. Without `onRefresh`, it stays
+  inside `data.range` (`renderer.42`).
+- `renderer.45` The Renderer keeps a reset range. At `render`, the reset range is the `timeRange` of the viz spec
+  (`spec.17`). If the viz spec has no `timeRange`, the reset range is its `data.range`. Each pick of the time
+  picker sets the reset range to the pick. A zoom, a zoom out, a pan, a Reset and a call of `update` do not change
+  it. For example, after a pick A, a zoom, a pick B and a zoom, the reset range is B. With `onRefresh`, Reset
+  calls `onRefresh` with the `from` and `to` of the reset range. A relative range stays relative. Thus later
+  refreshes move with the clock (`refresh.3`). The Renderer sends an integer as its decimal string, as the Source
+  does (`tool.6`). For example, `1790352577294` becomes `"1790352577294"`.
+- `renderer.48` If no zoom, zoom out or pan came after the last change of the reset range or after the last
+  Reset, Reset does nothing. Thus Reset sends no query for the time range that the chart already asked for.
+- `renderer.46` A pan calls `onRefresh` only at the end of the drag. It does not call `onRefresh` while the drag
+  continues, because data source requests can be slow or expensive.
+- `renderer.47` While the chart is busy, zoom, zoom out, Reset and pan do nothing.

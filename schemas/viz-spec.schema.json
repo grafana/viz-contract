@@ -57,6 +57,29 @@
     "data": {
       "$ref": "tool-result.schema.json#/$defs/data"
     },
+    "timeRange": {
+      "type": "object",
+      "description": "The from and to of the tool arguments, with no change. A relative value, for example now-6h, stays relative. The Renderer uses it for Reset.",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "to": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "notices": {
       "type": "array",
       "description": "Notices of the App, for example chart-changed. The Renderer shows them with its own notices.",
