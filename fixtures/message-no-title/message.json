@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "description": "The viz spec has no panel.title. The chart in the text is the panel type.",
+      "request": {
+        "target": "point",
+        "series": {
+          "name": "plain",
+          "labels": {},
+          "refId": "A"
+        },
+        "point": {
+          "x": "2026-09-25 09:11:00",
+          "y": "10 req/s",
+          "xType": "time",
+          "xIso": "2026-09-25T16:11:00.000Z",
+          "xRaw": 1790352660000,
+          "yRaw": 10
+        }
+      },
+      "text": "Explain the value \"10 req/s\" of \"plain\" {} (query \"A\") at the time \"2026-09-25 09:11:00\" (2026-09-25T16:11:00.000Z) in the chart \"grafana-echartscartesian-panel\", from 2026-09-25T16:10:00.000Z to 2026-09-25T16:13:00.000Z."
+    }
+  ]
+}

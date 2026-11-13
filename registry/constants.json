@@ -10,6 +10,9 @@
   "maxAppNotes":          { "value": 5, "unit": "notes", "meaning": "Most notes of the Source that render_grafana_app adds to its text line", "changeable": true },
   "maxAppNoteChars":      { "value": 200, "unit": "characters", "meaning": "Longest note in the text line of render_grafana_app", "changeable": true },
   "maxTitleChars":        { "value": 100, "unit": "characters", "meaning": "Longest title of the tool arguments", "changeable": true },
+  "maxMessageChars":      { "value": 1000, "unit": "characters", "meaning": "Longest text of a message that the App sends to the conversation", "changeable": true },
+  "maxMessageLabels":     { "value": 10, "unit": "labels", "meaning": "Most labels of the series in a message", "changeable": true },
+  "maxMessageValueChars": { "value": 100, "unit": "characters", "meaning": "Longest value or label key in a message, for example a series name or a label value", "changeable": true },
   "deprecationDays":      { "value": 30, "unit": "days", "meaning": "Shortest deprecation period of a change to a frozen interface", "changeable": true },
   "specVersion":          { "value": 1, "unit": "version", "meaning": "The viz spec version that this contract gives" }
 }

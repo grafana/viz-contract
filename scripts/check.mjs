@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, fits, matches, read, readJSON, sourceRequest, summary } from './lib.mjs';
+import { CONTRACT, SCHEMAS, fits, matches, messageText, read, readJSON, sourceRequest, summary } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -40,7 +40,7 @@ if (old.length) fail('generated', `not current: ${old.join(', ')}. Run node scri
 else pass('generated', 'schemas, bundled schemas and the constants table are current');
 
 // 3. The registries are valid, and they agree with each other.
-const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', pick: 'pick', states: 'states', notices: 'notices' };
+const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', pick: 'pick', states: 'states', notices: 'notices', messages: 'messages' };
 for (const [file, def] of Object.entries(defs)) {
   const v = ajv.getSchema(`registry.schema.json#/$defs/${def}`);
   if (v(readJSON(`registry/${file}.json`))) pass('registry', `${file}.json is valid`);
@@ -52,7 +52,10 @@ const names = charts.map((c) => c.name);
 const rules = readJSON('registry/pick.json').rules;
 const states = readJSON('registry/states.json');
 const noticeCodes = readJSON('registry/notices.json').notices.map((n) => n.code);
+const messagePatterns = readJSON('registry/messages.json').messages;
+const X_TYPES = ['time', 'number', 'string'];
 const rel = [
+  [X_TYPES.every((t) => messagePatterns.some((m) => m.code === `point-${t}`)), 'each xType of the Renderer API has a message pattern'],
   [new Set(names).size === names.length, 'chart names are unique'],
   [charts.every((c) => panels.includes(c.panel)), 'each chart names a panel of panel-types.json'],
   [panels.every((p) => charts.some((c) => c.panel === p)), 'each panel has a chart'],
@@ -68,6 +71,16 @@ const fileSchema = { 'args.json': 'query-datasource-args', 'result.json': 'tool-
 let fixtureFailures = failures;
 const SPEC_ERRORS = ['invalid-spec', 'unsupported-spec-version', 'unsupported-panel-type'];
 const constants = readJSON('registry/constants.json');
+// The shape of MessageRequest in renderer-api.d.ts.
+const isText = (v) => typeof v === 'string';
+const optional = (v, type) => v === undefined || typeof v === type;
+const isMessageRequest = (r) =>
+  r?.target === 'point' &&
+  isText(r.series?.name) &&
+  r.series.labels && typeof r.series.labels === 'object' && Object.values(r.series.labels).every(isText) &&
+  optional(r.series.refId, 'string') &&
+  isText(r.point?.x) && isText(r.point.y) && X_TYPES.includes(r.point.xType) &&
+  optional(r.point.xIso, 'string') && optional(r.point.xRaw, 'number') && optional(r.point.yRaw, 'number');
 for (const set of sets) {
   const files = Object.fromEntries(fs.readdirSync(path.join(FIX, set)).filter((f) => f.endsWith('.json')).map((f) => [f, readJSON(`fixtures/${set}/${f}`)]));
   for (const [f, data] of Object.entries(files)) {
@@ -92,6 +105,18 @@ for (const set of sets) {
   }
   if (files['request.json'] && JSON.stringify(files['request.json']) !== JSON.stringify(sourceRequest(files['args.json'], files['meta.json'].now, constants))) {
     fail('fixtures', `${set}/request.json is not the request of tool.5, tool.6 and tool.12`);
+  }
+  if (files['message.json']) {
+    const cases = files['message.json'].cases;
+    if (!Array.isArray(cases) || !cases.length || !files['spec.json']) fail('fixtures', `${set}/message.json: it needs cases and a spec.json`);
+    else {
+      cases.forEach((c, i) => {
+        const where = `${set}/message.json: case ${i + 1}`;
+        if (!isMessageRequest(c.request)) fail('fixtures', `${where}: request is not a MessageRequest`);
+        else if (c.text !== messageText(c.request, files['spec.json'], constants, messagePatterns)) fail('fixtures', `${where}: text is not the text of state.22 to state.25`);
+        else if (c.text !== null && [...c.text].length > constants.maxMessageChars.value) fail('fixtures', `${where}: text is longer than maxMessageChars`);
+      });
+    }
   }
   const result = files['result.json'];
   if (files['response.json'] && result && !result.isError) {

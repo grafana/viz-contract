@@ -29,6 +29,11 @@ export interface RenderOptions {
    * only when the App gives this option.
    */
   onRefresh?: (request: RefreshRequest) => void;
+  /**
+   * Called when the user clicks the Ask in chat link of the tooltip. The Renderer shows the link only when the App
+   * gives this option.
+   */
+  onMessage?: (request: MessageRequest) => void;
 }
 
 export interface RenderHandle {
@@ -75,3 +80,37 @@ export type RefreshRequest = { id: string } & (
   | { cause: 'refresh' }
   | { cause: 'timeRange'; from: string; to: string }
 );
+
+/**
+ * A message about a part of the chart, for the conversation. The App makes the text. A later version can add a
+ * target, for example a range.
+ */
+export interface MessageRequest {
+  target: 'point';
+  series: SeriesRef;
+  point: PointRef;
+}
+
+export interface SeriesRef {
+  /** The display name, as the tooltip shows it. */
+  name: string;
+  /** The labels of the field. Can be empty. */
+  labels: Record<string, string>;
+  /** The refId of the frame. Absent when the frame has none. */
+  refId?: string;
+}
+
+export interface PointRef {
+  /** x as the tooltip shows it, for example a time in timeZone. */
+  x: string;
+  /** y as the tooltip shows it, with the unit. */
+  y: string;
+  /** The type of the x field. string is each type that is not a time or a number, for example a category. */
+  xType: 'time' | 'number' | 'string';
+  /** x in ISO 8601 UTC, for example 2026-11-13T10:00:00.000Z. Present only when xType is time. */
+  xIso?: string;
+  /** x as a number, for example epoch milliseconds. Absent when x is not a number. */
+  xRaw?: number;
+  /** y as a number. Absent when y is not a number. */
+  yRaw?: number;
+}
