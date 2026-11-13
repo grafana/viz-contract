@@ -42,6 +42,10 @@
       "type": "string",
       "format": "uri",
       "description": "The base URL of the Grafana that the Source queries."
+    },
+    "filters": {
+      "$ref": "query-datasource-args.schema.json#/properties/filters",
+      "description": "The ad-hoc filters that the Source added to the queries. Present, and possibly empty, only when the Source can add an ad-hoc filter to the queries of this data source."
     }
   },
   "$defs": {

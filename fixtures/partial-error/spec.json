@@ -193,5 +193,6 @@
         "error": "bad_data: invalid parameter \"query\": 1:69: parse error: unclosed left parenthesis"
       }
     }
-  }
+  },
+  "filters": []
 }

@@ -74,6 +74,25 @@ The Source reads `registry/chart-types.json` and `registry/pick.json`. No other 
   with no change. With no `title`, no panel has a `title`. A `title` of only white space does not validate
   (`tool.4`).
 
+## Ad-hoc filters
+
+- `tool.32` `filters` is a list of ad-hoc filters. An ad-hoc filter has a `key`, an `operator` and a `value`. With
+  `=`, the data source gives only the data where `key` has `value`. With `!=`, it leaves out that data. The user
+  adds an ad-hoc filter from the tooltip of the chart (`renderer.18`). The App sends the list in a refresh
+  (`refresh.9`).
+- `tool.33` Before the Source posts the request, it adds each ad-hoc filter to each query, in the query language
+  of the data source. For example, for Prometheus the ad-hoc filter `handler` `=` `/api/health` adds the label
+  matcher `handler="/api/health"` to each selector of `expr`. The Source escapes `key` and `value`, so an ad-hoc
+  filter cannot change another part of the query. The `filters` change only the request. They do not change the
+  `queries` of the tool arguments.
+- `tool.34` The Source can add an ad-hoc filter to the queries of a Prometheus data source. The Source decides to
+  which other data source types it can add one. If the arguments have
+  `filters` and the Source cannot add them to the queries of this data source, the Source returns the
+  `filters-unsupported` tool error of `states.json`. It does not query.
+- `tool.35` If the Source can add an ad-hoc filter to the queries of this data source, the tool result has
+  `filters`. It is a copy of the `filters` of the arguments, or an empty list when the arguments have none.
+  Otherwise the tool result has no `filters`.
+
 ## Errors and the text result
 
 - `tool.24` If the structured content of the tool result is larger than `maxResultBytes`, the Source returns the

@@ -37,8 +37,7 @@ Shape: `renderer-api.d.ts`.
 - `renderer.10` The chart fills the width and the height of `el`. If the height of `el` is 0, the Renderer sets it
   to `defaultHeightPx`.
 - `renderer.11` The Renderer uses the Grafana theme of `theme`.
-- `renderer.12` The chart has no data links and no ad-hoc filter buttons, because the chart is not in a Grafana
-  dashboard.
+- `renderer.12` The chart has no data links, because the chart is not in a Grafana dashboard.
 - `renderer.13` The Renderer shows no panel editor.
 - `renderer.14` The chart shows only the data of the viz spec. Without `onRefresh`, it does not query again. Zoom,
   pan and other controls of the chart stay inside `data.range`.
@@ -46,3 +45,16 @@ Shape: `renderer-api.d.ts`.
   Grafana does. It shows the title as text, not as HTML. If the title is wider than `el`, the Renderer cuts it with
   `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
   `panel.title`, the Renderer shows no title.
+
+## Ad-hoc filters
+
+- `renderer.18` The tooltip shows the buttons "Filter for value" and "Filter out value", as the tooltip of Grafana
+  does, only when the App gives `onRefresh` and the viz spec has `filters`. It shows them for each label of the
+  series of the tooltip, and for the value of each field that has `config.filterable` set to true. The `key` is the
+  name of the label or of the field. The `value` is the value of the label or of the field, as text. The tooltip
+  shows no button for an ad-hoc filter that is already in `filters`.
+- `renderer.19` The Renderer shows each ad-hoc filter of `filters` above the chart, in the order of the list: the
+  `key`, the `operator` and the `value`. It shows them as text, not as HTML. Thus the user sees that the chart does
+  not show all the data of the query. With `onRefresh`, each ad-hoc filter has a remove button. The title, the
+  ad-hoc filters and the chart together fill `el` (`renderer.10`). With no `filters`, or with an empty list, the
+  Renderer shows no ad-hoc filter.

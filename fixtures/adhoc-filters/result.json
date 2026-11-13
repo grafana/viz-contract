@@ -1,0 +1,237 @@
+{
+  "chart": "timeseries",
+  "panel": {
+    "type": "grafana-echartscartesian-panel",
+    "options": {
+      "seriesType": "line"
+    },
+    "fieldConfig": {
+      "defaults": {
+        "unit": "reqps"
+      }
+    }
+  },
+  "alternatives": [
+    {
+      "chart": "barchart",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "options": {
+          "seriesType": "bar"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    },
+    {
+      "chart": "histogram",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "options": {
+          "histogram": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    },
+    {
+      "chart": "piechart",
+      "panel": {
+        "type": "grafana-echartsparttowhole-panel",
+        "options": {
+          "seriesType": "pie"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    },
+    {
+      "chart": "funnel",
+      "panel": {
+        "type": "grafana-echartsparttowhole-panel",
+        "options": {
+          "seriesType": "funnel"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    },
+    {
+      "chart": "heatmap",
+      "panel": {
+        "type": "grafana-echartsheatmap-panel",
+        "options": {},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    },
+    {
+      "chart": "state-timeline",
+      "panel": {
+        "type": "grafana-echartsstatetimeline-panel",
+        "options": {},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    },
+    {
+      "chart": "status-history",
+      "panel": {
+        "type": "grafana-echartsstatushistory-panel",
+        "options": {},
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    },
+    {
+      "chart": "streamgraph",
+      "panel": {
+        "type": "grafana-echartsstream-panel",
+        "options": {
+          "streamChartType": "river"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    },
+    {
+      "chart": "bubble",
+      "panel": {
+        "type": "grafana-echartsstream-panel",
+        "options": {
+          "streamChartType": "bubble"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      }
+    }
+  ],
+  "data": {
+    "range": {
+      "from": 1790267077294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "meta": {
+                "type": "timeseries-multi",
+                "typeVersion": [
+                  0,
+                  1
+                ],
+                "custom": {
+                  "resultType": "matrix"
+                },
+                "executedQueryString": "Expr: sum by (handler) (rate(grafana_http_request_duration_seconds_count{handler=\"/api/health\"}[5m]))\nStep: 1m0s"
+              },
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time",
+                  "typeInfo": {
+                    "frame": "time.Time"
+                  },
+                  "config": {
+                    "interval": 60000
+                  }
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "typeInfo": {
+                    "frame": "float64"
+                  },
+                  "labels": {
+                    "handler": "/api/health"
+                  },
+                  "config": {
+                    "displayNameFromDS": "/api/health"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790352600000,
+                  1790352660000,
+                  1790352720000,
+                  1790352780000,
+                  1790352840000,
+                  1790352900000,
+                  1790352960000,
+                  1790353020000,
+                  1790353080000,
+                  1790353140000,
+                  1790353200000,
+                  1790353260000,
+                  1790353320000,
+                  1790353380000,
+                  1790353440000
+                ],
+                [
+                  0.022201440288057612,
+                  0.062200288011520465,
+                  0.10220016000355564,
+                  0.13855395408450072,
+                  0.17862549019607846,
+                  0.19649329642066407,
+                  0.19298245614035087,
+                  0.19298245614035087,
+                  0.1964912280701754,
+                  0.1929790705426221,
+                  0.19298245614035087,
+                  0.19298245614035087,
+                  0.15087719298245614,
+                  0.1087719298245614,
+                  0.07017593105916534
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "grafanaUrl": "http://localhost:3000",
+  "filters": [
+    {
+      "key": "handler",
+      "operator": "=",
+      "value": "/api/health"
+    }
+  ]
+}
