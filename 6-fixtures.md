@@ -14,6 +14,9 @@ are in `fixtures/`, one directory for each set.
 | `result.json` | The expected tool result, or the expected tool error | Source, App |
 | `spec.json` | The expected viz spec | App, Renderer |
 | `state.json` | The expected state, error and notices of `onState` | Renderer |
+| `chart-options.json` | A `chart-options.json`, as the Renderer build writes it | Source |
+| `options-args.json` | The arguments of `get_chart_options` | Source |
+| `options-result.json` | The expected tool result of `get_chart_options` | Source |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -41,6 +44,16 @@ are in `fixtures/`, one directory for each set.
 - `fixtures.6` One pick set for each rule of `registry/pick.json`. It has the frames and the expected chart name. A
   test makes sure that each rule has a set.
 - `fixtures.7` One `type-mismatch` set. Its `result.json` is the expected tool error.
+- `fixtures.14` Sets for the chart options. Each one uses the `chart-options.json` of the set `options`. That file
+  is an example with a few options of the time series chart. It is not the file of a Renderer.
+  - `options`: the query of `prometheus-line` with a `type`, `options`, and a `fieldConfig` that has an override.
+    The panel of the chart in `result.json` has them. The panels of the alternatives do not (`tool.41`).
+  - `options-invalid`: a path that is not an option, a value that does not validate, and a value that must be an
+    object, in `options`, in `fieldConfig.defaults` and in an override. The set has no `response.json`, because
+    the Source does not query. The expected result is the `invalid-options` tool error (`tool.39`).
+  - `options-list`: `get_chart_options` with no `advanced`. The text has the line of the advanced options that
+    are not listed (`tool.44`).
+  - `options-list-advanced`: `get_chart_options` with `advanced` set to true.
 
 ## Conformance tests
 
@@ -49,6 +62,10 @@ are in `fixtures/`, one directory for each set.
   `data.capturedAt` is `capturedAt` of `meta.json`. If the set has
   `request.json`, the request body must equal it. The tool result must equal `result.json`, but the test does not
   compare `grafanaUrl`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
+- `fixtures.15` For a set of `fixtures.14`, the Source test gives the `chart-options.json` of the set `options` to
+  the Source in place of the file of the Renderer. A set with `options-args.json` is a test of
+  `get_chart_options`: the test gives `options-args.json` to the tool, and the tool result must equal
+  `options-result.json`.
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response

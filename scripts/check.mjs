@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, fits, matches, read, readJSON, sourceRequest, summary } from './lib.mjs';
+import { CONTRACT, SCHEMAS, canonical, fits, matches, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -64,7 +64,17 @@ for (const [ok, message] of rel) (ok ? pass : fail)('registry', message);
 // 4. The fixtures validate, and they agree with the registries.
 const FIX = path.join(CONTRACT, 'fixtures');
 const sets = fs.readdirSync(FIX).filter((d) => fs.statSync(path.join(FIX, d)).isDirectory());
-const fileSchema = { 'args.json': 'query-datasource-args', 'result.json': 'tool-result', 'spec.json': 'viz-spec' };
+const fileSchema = {
+  'args.json': 'query-datasource-args',
+  'result.json': 'tool-result',
+  'spec.json': 'viz-spec',
+  'chart-options.json': 'chart-options',
+  'options-args.json': 'chart-options-args',
+};
+// The chart options sets (fixtures.14) use the chart-options.json of the set options.
+const chartOptions = readJSON('fixtures/options/chart-options.json').charts;
+const valueAjv = newAjv();
+const validValue = (schema, value) => valueAjv.compile(schema)(value);
 let fixtureFailures = failures;
 const SPEC_ERRORS = ['invalid-spec', 'unsupported-spec-version', 'unsupported-panel-type'];
 const constants = readJSON('registry/constants.json');
@@ -104,6 +114,37 @@ for (const set of sets) {
       fail('fixtures', `${set}: alternatives are not the charts that fit (${alternatives.join(', ')})`);
     }
   }
+  const args = files['args.json'];
+  if (args?.options || args?.fieldConfig) {
+    const entry = chartOptions[args.type];
+    const row = charts.find((c) => c.name === args.type);
+    const problems = entry ? optionProblems(args, entry, validValue) : [];
+    if (!entry) fail('fixtures', `${set}: chart-options.json of the set options has no chart ${args.type}`);
+    else if (problems.length) {
+      const text = `invalid-options: ${args.type} does not accept these options: ${problems.join('; ')}. get_chart_options lists the options of ${args.type}.`;
+      if (result?.content?.[0]?.text !== text) fail('fixtures', `${set}/result.json is not the tool error of tool.39: ${text}`);
+    } else if (!result || result.isError) fail('fixtures', `${set}: the options are correct, so result.json must be a tool result`);
+    else {
+      const plain = (c) => {
+        const panel = { type: c.panel, options: c.options };
+        if (args.title) panel.title = args.title;
+        if (args.unit) panel.fieldConfig = { defaults: { unit: args.unit } };
+        return panel;
+      };
+      if (canonical(result.panel) !== canonical(panelWithOptions(plain(row), args, entry))) fail('fixtures', `${set}: panel is not the panel of tool.41`);
+      for (const a of result.alternatives) {
+        if (canonical(a.panel) !== canonical(plain(charts.find((c) => c.name === a.chart)))) fail('fixtures', `${set}: the alternative ${a.chart} has options of the arguments (tool.41)`);
+      }
+    }
+  }
+  if (files['options-args.json']) {
+    const { type, advanced } = files['options-args.json'];
+    const text = chartOptions[type] ? optionsText(type, chartOptions[type], advanced === true) : undefined;
+    const got = files['options-result.json'];
+    if (got?.content?.length !== 1 || got.content[0].text !== text || got.structuredContent !== undefined) {
+      fail('fixtures', `${set}/options-result.json is not the text of tool.44:\n${text}`);
+    }
+  }
   if (set.startsWith('smoke-')) {
     const row = charts.find((c) => c.name === set.slice('smoke-'.length));
     const spec = files['spec.json'];
@@ -113,6 +154,21 @@ for (const set of sets) {
     } else if (!fits(summary(spec.data.results), row)) fail('fixtures', `${set}: the data does not fit the chart`);
   }
 }
+for (const [chart, entry] of Object.entries(chartOptions)) {
+  const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
+  for (const [name, list] of Object.entries(entry)) {
+    const paths = list.map((o) => o.path);
+    for (const o of list) {
+      if (o.default !== undefined && !validValue(o.schema, o.default)) fail('fixtures', `chart-options.json: the default of ${chart} ${o.path} does not validate (delivery.18)`);
+      if (paths.some((p) => p !== o.path && p.startsWith(`${o.path}.`))) fail('fixtures', `chart-options.json: ${chart} ${o.path} is the start of another path (delivery.15)`);
+      if (paths.filter((p) => p === o.path).length > 1) fail('fixtures', `chart-options.json: ${chart} has ${o.path} two times`);
+      if (name === 'options' && preset.some((p) => p === o.path || p.startsWith(`${o.path}.`) || o.path.startsWith(`${p}.`))) {
+        fail('fixtures', `chart-options.json: ${chart} ${o.path} is in the options of the chart row (delivery.15)`);
+      }
+    }
+  }
+}
+for (const s of ['options', 'options-invalid', 'options-list', 'options-list-advanced']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
 for (const c of names) if (!sets.includes(`smoke-${c}`)) fail('fixtures', `no smoke set for ${c}`);
 for (const code of [...SPEC_ERRORS, 'all-queries-failed']) if (!sets.includes(`error-${code}`)) fail('fixtures', `no error set for ${code}`);
 const pickRuleOf = (set) => {

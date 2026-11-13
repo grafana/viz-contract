@@ -63,6 +63,11 @@
       "code": "too-large",
       "when": "The structured content of the tool result is larger than maxResultBytes",
       "message": "The result is larger than <maxResultBytes> bytes. Use a shorter range, a larger intervalMs or fewer series."
+    },
+    {
+      "code": "invalid-options",
+      "when": "The options or the fieldConfig of the tool arguments have a path that is not an option of the chart, or a value that does not validate against the schema of its option",
+      "message": "<chart> does not accept these options: <problems>. get_chart_options lists the options of <chart>."
     }
   ],
   "refresh": [

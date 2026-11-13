@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "get_chart_options arguments",
+  "description": "List the options of one chart of query_datasource: the path, the type, the allowed values and the default of each option. Call it before you set options or fieldConfig.",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "timeseries",
+        "barchart",
+        "histogram",
+        "candlestick",
+        "boxplot",
+        "piechart",
+        "funnel",
+        "heatmap",
+        "geomap",
+        "state-timeline",
+        "status-history",
+        "nodeGraph",
+        "sankey",
+        "chord",
+        "treemap",
+        "sunburst",
+        "radar",
+        "parallel",
+        "streamgraph",
+        "bubble"
+      ],
+      "description": "The chart: a type of query_datasource.",
+      "$comment": "Generated from registry/chart-types.json. Do not edit."
+    },
+    "advanced": {
+      "type": "boolean",
+      "default": false,
+      "description": "Also list the advanced options."
+    }
+  },
+  "additionalProperties": false
+}

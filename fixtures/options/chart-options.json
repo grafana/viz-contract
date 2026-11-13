@@ -1,0 +1,92 @@
+{
+  "charts": {
+    "timeseries": {
+      "options": [
+        {
+          "path": "stacking",
+          "description": "Stack the series on each other",
+          "tier": "default",
+          "default": "none",
+          "schema": { "enum": ["none", "normal", "percent"] }
+        },
+        {
+          "path": "lineWidth",
+          "description": "Width of the lines, in pixels",
+          "tier": "default",
+          "default": 1,
+          "schema": { "type": "integer", "minimum": 0, "maximum": 20 }
+        },
+        {
+          "path": "legend.showLegend",
+          "description": "Show the legend",
+          "tier": "default",
+          "default": true,
+          "schema": { "type": "boolean" }
+        },
+        {
+          "path": "legend.placement",
+          "description": "Side of the chart that shows the legend",
+          "tier": "default",
+          "default": "bottom",
+          "schema": { "enum": ["bottom", "right"] }
+        },
+        {
+          "path": "tooltip.mode",
+          "description": "Series that the tooltip shows: the series under the pointer, all series, or no tooltip",
+          "tier": "default",
+          "default": "single",
+          "schema": { "enum": ["single", "multi", "none"] }
+        },
+        {
+          "path": "animation.enabled",
+          "description": "Animate the chart when the data changes",
+          "tier": "advanced",
+          "schema": { "type": "boolean" }
+        }
+      ],
+      "fieldConfig": [
+        {
+          "path": "unit",
+          "description": "Grafana unit ID of the values, for example bytes",
+          "tier": "default",
+          "schema": { "type": "string" }
+        },
+        {
+          "path": "min",
+          "description": "Lowest value of the value axis",
+          "tier": "default",
+          "schema": { "type": "number" }
+        },
+        {
+          "path": "max",
+          "description": "Highest value of the value axis",
+          "tier": "default",
+          "schema": { "type": "number" }
+        },
+        {
+          "path": "decimals",
+          "description": "Number of decimals of the values",
+          "tier": "default",
+          "schema": { "type": "integer", "minimum": 0 }
+        },
+        {
+          "path": "displayName",
+          "description": "Name of the series in the legend and the tooltip",
+          "tier": "default",
+          "schema": { "type": "string" }
+        },
+        {
+          "path": "custom.lineStyle",
+          "description": "Line pattern of the series",
+          "tier": "advanced",
+          "schema": {
+            "type": "object",
+            "properties": { "fill": { "enum": ["solid", "dash", "dot"] } },
+            "required": ["fill"],
+            "additionalProperties": false
+          }
+        }
+      ]
+    }
+  }
+}

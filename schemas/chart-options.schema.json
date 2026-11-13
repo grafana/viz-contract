@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "chart-options.json",
+  "description": "The options of each chart that the model can set. The Renderer build writes this file.",
+  "type": "object",
+  "required": [
+    "charts"
+  ],
+  "properties": {
+    "charts": {
+      "type": "object",
+      "description": "The key is a chart name of registry/chart-types.json.",
+      "propertyNames": {
+        "$ref": "query-datasource-args.schema.json#/properties/type"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/chart"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "chart": {
+      "type": "object",
+      "required": [
+        "options",
+        "fieldConfig"
+      ],
+      "properties": {
+        "options": {
+          "type": "array",
+          "description": "The panel options. A path starts at the options object of the panel.",
+          "items": {
+            "$ref": "#/$defs/option"
+          }
+        },
+        "fieldConfig": {
+          "type": "array",
+          "description": "The field options. A path starts at fieldConfig.defaults of the panel. It is also the id of an override property.",
+          "items": {
+            "$ref": "#/$defs/option"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "option": {
+      "type": "object",
+      "required": [
+        "path",
+        "description",
+        "tier",
+        "schema"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+          "description": "The names of the keys from the root object to the value, joined with dots, for example legend.placement."
+        },
+        "description": {
+          "type": "string",
+          "pattern": "^\\S[^\\n\\r]*$",
+          "description": "What the option changes in the chart, in one line."
+        },
+        "tier": {
+          "enum": [
+            "default",
+            "advanced"
+          ],
+          "description": "advanced is an option that few charts need."
+        },
+        "default": {
+          "description": "The value that the Renderer uses when the panel does not have the option. It validates against schema. With no default, the Renderer decides."
+        },
+        "schema": {
+          "$ref": "#/$defs/valueSchema"
+        }
+      },
+      "additionalProperties": false
+    },
+    "valueSchema": {
+      "type": "object",
+      "description": "The JSON Schema of the value of an option. It uses only these keywords, and it has no reference.",
+      "properties": {
+        "type": {
+          "enum": [
+            "boolean",
+            "integer",
+            "number",
+            "string",
+            "array",
+            "object"
+          ]
+        },
+        "enum": {
+          "type": "array",
+          "minItems": 1
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "maximum": {
+          "type": "number"
+        },
+        "items": {
+          "$ref": "#/$defs/valueSchema"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/valueSchema"
+          }
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": {
+          "type": "boolean"
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    }
+  }
+}

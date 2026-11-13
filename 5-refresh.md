@@ -51,6 +51,9 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   is the `id` of the `RefreshRequest` of the call.
 - `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`)
   and calls `update`.
+- `refresh.18` `options` and `fieldConfig` belong to the chart of `type` (`tool.36`). When the user switches to an
+  alternative, the App removes them from the last tool arguments. The second call of `refresh.10` has no `type`,
+  so it also has no `options` and no `fieldConfig`. Thus a chart never gets the options of another chart.
 - `refresh.14` The App answers the last `RefreshRequest` only. If the call of an older `RefreshRequest` ends, the
   App does not call `update` for it. `update` has no `id`, so the Renderer cannot ignore an old result. A result of
   the last `RefreshRequest` after `refreshTimeoutMs` is not old. The App calls `update` for it (`refresh.15`).
