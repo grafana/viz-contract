@@ -30,6 +30,7 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - With `onRefresh` and with no `onRefresh`.
   - At a width where the toolbar of `@grafana/ui` shows only icons.
   - With a tooltip open, and with a tooltip pinned.
+  - With `onMessage` and a tooltip pinned, so that the Ask in chat link shows (`renderer.30`).
   - With the time picker open.
   - With a legend menu open, and with the zoom controls shown.
 
@@ -40,3 +41,8 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.11` A CI check reports the gzip size of `icons.json`, and does not fail. `icons.json` adds to the size
   of `app.html`, but `maxBundleGzipBytes` (`delivery.5`) is for the Renderer bundle only, and does not include
   `icons.json`.
+- `delivery.13` A CI check of the App runs the test of `fixtures.13` for each set that has `message.json`. It also
+  checks each answer of `state.27` with a Host that the test makes:
+  - With `isError` `true`, and with a JSON-RPC error, the text box has exactly the text that the App sent.
+  - With no error, the App shows no error and no text box.
+  - With no answer before the request times out, the App shows no error and no text box.

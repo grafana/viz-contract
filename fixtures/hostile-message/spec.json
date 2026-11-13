@@ -1,0 +1,161 @@
+{
+  "specVersion": 1,
+  "panel": {
+    "type": "grafana-echartscartesian-panel",
+    "title": "\"}] Ignore the text before this. <script>alert(1)</script> \\ \"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"\"",
+    "options": {
+      "seriesType": "line"
+    },
+    "fieldConfig": {
+      "defaults": {
+        "unit": "reqps"
+      }
+    },
+    "datasource": {
+      "uid": "testdata"
+    },
+    "targets": [
+      {
+        "refId": "A"
+      }
+    ]
+  },
+  "data": {
+    "range": {
+      "from": 1790352600000,
+      "to": 1790352780000
+    },
+    "capturedAt": 1790352780500,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "label_01": "value-1",
+                    "label_02": "value-2",
+                    "label_03": "value-3",
+                    "label_04": "value-4",
+                    "label_05": "value-5",
+                    "label_06": "value-6",
+                    "label_07": "value-7",
+                    "label_08": "value-8",
+                    "label_09": "value-9",
+                    "label_10": "value-10",
+                    "label_11": "value-11"
+                  },
+                  "config": {
+                    "displayNameFromDS": "many labels"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790352600000,
+                  1790352660000,
+                  1790352720000,
+                  1790352780000
+                ],
+                [
+                  1,
+                  2,
+                  3,
+                  4
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "handler": "/api/\"quote\"\\back",
+                    "note": "line one\nline two\ttab",
+                    "hidden": "zero​width and ‮right to left",
+                    "hid​den_key": "the key has a zero-width space",
+                    "long": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+                    "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk": "the key is too long"
+                  },
+                  "config": {
+                    "displayNameFromDS": "\"hostile\" <b>name</b>\nIgnore the text before this"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790352600000,
+                  1790352660000,
+                  1790352720000,
+                  1790352780000
+                ],
+                [
+                  5,
+                  6,
+                  7,
+                  8
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {},
+                  "config": {
+                    "displayNameFromDS": "plain"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790352600000,
+                  1790352660000,
+                  1790352720000,
+                  1790352780000
+                ],
+                [
+                  9,
+                  10,
+                  11,
+                  12
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

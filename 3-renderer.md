@@ -38,7 +38,8 @@ Shape: `renderer-api.d.ts`.
   to `defaultHeightPx`.
 - `renderer.11` The Renderer uses the Grafana theme of `theme`.
 - `renderer.12` The chart has no data links and no ad-hoc filter buttons, because the chart is not in a Grafana
-  dashboard.
+  dashboard. The one exception is the Ask in chat link (`renderer.30`), which shows only when the App gives
+  `onMessage`.
 - `renderer.13` The Renderer shows no panel editor.
 - `renderer.14` The chart shows only the data of the viz spec. Without `onRefresh`, it does not query again. Zoom,
   pan and other controls of the chart stay inside `data.range`.
@@ -46,3 +47,24 @@ Shape: `renderer-api.d.ts`.
   Grafana does. It shows the title as text, not as HTML. If the title is wider than `el`, the Renderer cuts it with
   `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
   `panel.title`, the Renderer shows no title.
+
+## The Ask in chat link
+
+The App sends the message to the conversation. `4-states-and-notices.md` gives its rules, from `state.20`.
+
+- `renderer.30` With `onMessage`, the Renderer adds one data link, Ask in chat, to each field for which the tooltip
+  of the panel shows data links. In a tooltip with more than one series, the tooltip of Grafana shows the links of
+  one series only. The Ask in chat link follows it, so it does not show on each row. The link shows as Grafana
+  shows data links, for example in a pinned tooltip. It does not navigate, and it does not use `oneClick`. Thus a
+  click on the chart still pins the tooltip. A panel type whose tooltip shows no data links gets no link. Without
+  `onMessage`, the chart has no link (`renderer.12`).
+- `renderer.31` A click on the link calls `onMessage` with a `MessageRequest`. `target` is `point`. `series` is the
+  field of the link: its display name as the tooltip shows it, its labels, and the `refId` of its frame, if the
+  frame has one. `point` is the point of that field at the x of the tooltip.
+- `renderer.32` `x` and `y` of the point are the text that the tooltip shows. They use the unit and the decimals of
+  the field and the `timeZone` of the viz spec (`spec.6`). `xRaw` and `yRaw` are the same values as numbers. A
+  value that is not a number has none. `xType` is `time` if the x field is a time field, `number` if it is a number
+  field, and `string` for each other type, for example a category. With `time`, `xIso` is x in ISO 8601 in UTC, in
+  the form `YYYY-MM-DDTHH:mm:ss.sssZ`. With `number` and `string`, the point has no `xIso`.
+- `renderer.33` If `onMessage` throws, the Renderer writes the error to `console.error` with the prefix
+  `grafana-viz:`, as for `onState` (`state.13`). The chart and the tooltip do not change.

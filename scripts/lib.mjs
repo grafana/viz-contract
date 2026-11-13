@@ -91,3 +91,42 @@ export function sourceRequest(args, now, constants) {
     }),
   };
 }
+
+// The text of the message that the App sends for a MessageRequest (state.22 to state.25). null when the text is
+// too long with no labels. patterns is the messages list of registry/messages.json.
+const NOT_SHOWN = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu;
+const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+export function messageText(request, spec, constants, patterns) {
+  const maxValue = constants.maxMessageValueChars.value;
+  const clean = (value) => {
+    const points = [...String(value).replace(NOT_SHOWN, '')];
+    return points.length > maxValue ? points.slice(0, maxValue - 1).join('') + '…' : points.join('');
+  };
+  const quoted = (value) => JSON.stringify(clean(value));
+  const { series, point } = request;
+  const labels = [];
+  for (const [key, value] of Object.entries(series.labels).slice(0, constants.maxMessageLabels.value)) {
+    const k = quoted(key);
+    if (!labels.some(([seen]) => seen === k)) labels.push([k, quoted(value)]);
+  }
+  const isTime = point.xType === 'time' && ISO_UTC.test(point.xIso ?? '');
+  const code = `point-${point.xType === 'time' && !isTime ? 'string' : point.xType}`;
+  const pattern = patterns.find((p) => p.code === code).message;
+  const values = {
+    y: quoted(point.y),
+    series: quoted(series.name),
+    refId: series.refId === undefined ? 'null' : quoted(series.refId),
+    x: quoted(point.x),
+    xIso: point.xIso,
+    chart: quoted(spec.panel.title ?? spec.panel.type),
+    from: new Date(spec.data.range.from).toISOString(),
+    to: new Date(spec.data.range.to).toISOString(),
+  };
+  for (let n = labels.length; n >= 0; n--) {
+    values.labels = `{${labels.slice(0, n).map(([k, v]) => `${k}:${v}`).join(',')}}`;
+    const text = pattern.replace(/<(\w+)>/g, (_, name) => values[name]);
+    if ([...text].length <= constants.maxMessageChars.value) return text;
+  }
+  return null;
+}

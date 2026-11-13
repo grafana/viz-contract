@@ -14,6 +14,7 @@ are in `fixtures/`, one directory for each set.
 | `result.json` | The expected tool result, or the expected tool error | Source, App |
 | `spec.json` | The expected viz spec | App, Renderer |
 | `state.json` | The expected state, error and notices of `onState` | Renderer |
+| `message.json` | `cases`: a list. Each case has a `description`, a `request` (a `MessageRequest`) and the expected `text` of the message, or `null` | App |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -33,6 +34,11 @@ are in `fixtures/`, one directory for each set.
   - `hostile-label`: series names and label values with HTML and script text. The Renderer shows them as text.
   - `title`: the query of `prometheus-line` with a `title` that has HTML text. Each panel of `result.json` and the
     panel of `spec.json` have the title (`tool.31`, `spec.15`). The Renderer shows it as text (`renderer.17`).
+  - `hostile-message`: the set has `spec.json`, `state.json` and `message.json` only. The title, the series names
+    and the labels have quotes, HTML text, control characters and characters that do not show. One series has more
+    labels than `maxMessageLabels`. The cases of `message.json` cover each step of `state.23`, each pattern of
+    `messages.json`, and the length rule of `state.25`.
+  - `message-no-title`: the same files, with no `panel.title`. The text has the panel type (`state.22`).
   - `too-large`: the set has `args.json` and `meta.json` only. The test makes the response at run time: it repeats
     the frames of `prometheus-line` with new label values until the tool result is larger than `maxResultBytes`.
     The expected result is the `too-large` tool error.
@@ -56,3 +62,6 @@ are in `fixtures/`, one directory for each set.
 - `fixtures.12` One error set for each of the errors `invalid-spec`, `unsupported-spec-version`,
   `unsupported-panel-type` and `all-queries-failed` of `states.json`. It has `spec.json` and a `state.json` with the
   state `error` and the error code. The `all-queries-failed` set has two failed queries (`state.18`).
+- `fixtures.13` The App test draws `spec.json`. For each case of `message.json`, it calls the `onMessage` of the App
+  with the `request`. The text of the message that the App sends must equal `text`. If `text` is `null`, the App
+  must send no message (`state.25`).
