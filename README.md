@@ -50,6 +50,9 @@ flowchart TB
 | Viz spec | The JSON object that the App gives to the Renderer |
 | Icon cache | The `react-inlinesvg` cache of the copy of `@grafana/ui` in the App. `Icon` reads an SVG from it, and makes no request for that SVG |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
+| Legend overrides | The overrides that the legend actions of the user make: the hide override and the legend colors. Only the Renderer keeps them (`renderer.41`) |
+| Hide override | The legend override with the `__systemRef` `hideSeriesFrom`. It lists the legend items that show (`renderer.36`) |
+| Legend color | A legend override that gives one legend item a fixed color (`renderer.36`) |
 
 The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 

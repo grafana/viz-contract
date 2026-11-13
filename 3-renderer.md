@@ -49,42 +49,59 @@ Shape: `renderer-api.d.ts`.
 
 ## The legend
 
-The user can click a series in the legend to hide or show it, and pick a new color for it. The overrides that
-these actions make are the legend overrides.
+The user can click an item of the legend to hide or show it, and pick a new color for it. These actions make the
+legend overrides: the hide override and the legend colors.
 
-- `renderer.24` The Renderer gives the panel a `PanelContext` with `onToggleSeriesVisibility` and
-  `onSeriesColorChange`, as `VizPanel` of `@grafana/scenes` does. Thus the legend has the actions of Grafana:
-  - A click on a series shows only that series. A second click on the same series shows all series again.
-  - A click with Ctrl, or with Cmd on macOS, hides or shows only that series. The other series do not change.
-  - A pick in the color picker of a series gives that series the new color.
+- `renderer.34` The Renderer gives the panel `onFieldConfigChange(config, replace)` in `PanelProps`, as `VizPanel`
+  of `@grafana/scenes` does. With `replace` true, `config` is the whole new `fieldConfig`. With no `replace`, the
+  Renderer merges `config` into the current `fieldConfig`, as `VizPanel` does. The panel calls
+  `onFieldConfigChange` for each legend action. The panel gives its legend its own `onToggleSeriesVisibility` and
+  `onSeriesColorChange` in `PanelContext`, so the Renderer does not give them.
+- `renderer.35` The legend has the actions of Grafana:
+  - A click on an item shows only that item. A second click on the same item shows all items again.
+  - For `piechart`, `funnel`, `candlestick`, `boxplot`, `nodeGraph`, `sankey` and `chord`, a click hides or shows
+    only that item. The legend items of these charts are slices, series or nodes, not one field each.
+  - A click with Ctrl, Cmd or Shift hides or shows only that item. The other items do not change.
+  - A pick in the color picker of an item gives that item the new color.
 
   A panel with no legend has no legend actions.
-- `renderer.25` An action changes `panel.fieldConfig.overrides` of the viz spec that the Renderer draws. The
-  Renderer makes the same overrides as `seriesVisibilityConfigFactory` and `changeSeriesColorConfigFactory` of
-  `@grafana/scenes`:
-  - Hide and show change the hide override: the one override with the `__systemRef` `hideSeriesFrom`. Its
-    `byNames` matcher lists the display names of the series that show.
-  - A color pick gives an override with the `byName` matcher on the display name of the series, and the property
-    `color` with the mode `fixed`.
+- `renderer.36` The legend overrides have the shapes of Grafana:
+  - The hide override is the one override with the `__systemRef` `hideSeriesFrom`. Its `byNames` matcher has the
+    mode `exclude` and lists the names of the items that show. Thus each item that is not in the list is hidden.
+  - A legend color is an override with the `byName` matcher on the name of one item, and the property `color`
+    with the mode `fixed`.
+- `renderer.37` After a call of `onFieldConfigChange`, the Renderer compares the new `fieldConfig` with the
+  `fieldConfig` that the panel had. It finds the legend overrides in the difference:
+  - If the `hideSeriesFrom` override is new, changed or removed, that is the new hide override, or no hide
+    override.
+  - Each `byName` color that is new or changed is the new legend color of that name.
 
-  The chart draws again with the change. The state and the notices do not change, so the Renderer does not call
-  `onState` (`state.12`).
-- `renderer.26` The Renderer keeps the legend overrides until `destroy`. At each `update`, it adds them after the
-  overrides of the new viz spec. Thus the legend overrides stay after a refresh (`refresh.12`), a new time range
-  and a new theme (`spec.5`). The hide override replaces a `hideSeriesFrom` override of the new viz spec. A
-  color override of the legend wins over a color override of the new viz spec, because a later override wins in
-  Grafana.
-- `renderer.27` A legend override finds a series by its display name, as `getFieldDisplayName` of `@grafana/data`
-  gives it. The hide override lists the names of the series that show. Each other series is hidden, as in
-  Grafana. Thus a series of the new data with a listed name shows, and a series with a new display name is
-  hidden. For example, the user hides B of the series A and B, and a refresh adds C. Then only A shows. A color
-  override changes only the series with its display name. The Renderer keeps the names that are not in the new
-  data. If such a series comes back in a later `update`, the override applies to it again.
-- `renderer.28` If the hide override hides each series that the Renderer draws, the Renderer removes the hide
-  override and shows all series. For example, the user hides the last series that shows with a Ctrl click. Or the
-  user shows only one series, and a refresh gives data with no series of that display name. This differs from
-  Grafana. In Grafana, the override that hides each series stays.
-- `renderer.29` Only the Renderer has the legend overrides. It does not give them to the App, so the model does
+  The Renderer keeps each legend color as its own override, apart from the overrides of the viz spec. The
+  overrides of the viz spec do not change. This differs from Grafana, where a color pick can change an override
+  of the panel. Then the Renderer draws again with the overrides of `renderer.38`. The state and the notices do not
+  change, so the Renderer does not call `onState` (`state.12`).
+- `renderer.38` The Renderer keeps the legend overrides until `destroy`. Each draw gives the panel the overrides
+  of the viz spec, then the legend overrides:
+  - The hide override replaces a `hideSeriesFrom` override of the viz spec.
+  - For an item with a legend color, the Renderer removes the `color` property from each `byName` override of the
+    viz spec for that name. Some charts read the first color override of a name, and Grafana reads the last one.
+    Thus the legend color wins in each chart.
+
+  Thus the legend overrides stay after each `update`, for example after a refresh (`refresh.12`), a new theme
+  (`spec.5`) or a new time zone (`spec.6`).
+- `renderer.39` A legend override finds an item by its name in the legend. For a chart whose items are fields,
+  the name is the display name that `getFieldDisplayName` of `@grafana/data` gives. For the charts of the second
+  action of `renderer.35`, it is the name of the slice, the series or the node. For example, the user hides B of
+  the series A and B, and a refresh adds the series C. If the names A and B do not change, only A shows. The
+  Renderer keeps the names that are not in the new data. If such an item comes back in a later `update`, the
+  override applies to it again. A display name can change with the data, as in Grafana. For example, if all
+  series have one label, the display name is the label value. If a refresh adds a second label, each display name
+  changes, and the legend overrides do not find the series.
+- `renderer.40` If the hide override hides each item of a draw, the Renderer draws with no hide override. It
+  keeps the hide override for the next draws. For example, the user shows only A, and a refresh gives no A. Then
+  all series show. If a later refresh brings A back, only A shows again. Also, a Ctrl click on the last item that
+  shows makes all items show. This differs from Grafana, where the chart then shows no item.
+- `renderer.41` Only the Renderer has the legend overrides. It does not give them to the App, so the model does
   not get them. They are not in the tool arguments, so a refresh does not send them to the Source (`refresh.9`).
   The Renderer keeps them in memory only, not in `localStorage` (`renderer.8`). A new `render` starts with no
   legend overrides.
