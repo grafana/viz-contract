@@ -15,7 +15,7 @@ specified.
    become frozen. The App then also loads the `icons.json` of that Renderer (`delivery.9`), and fills the icon
    cache from it (`renderer.15`). Thus an older App gets the icons of a newer Renderer. `icons.json` then needs a
    hash, as the bundle has in `delivery.6`, because its SVG goes into the DOM.
-7. Annotations. The chart shows the annotations of the query range, and the user can add an annotation.
+7. Annotations. The chart shows the annotations of the query range.
 8. Edit the chart. The user changes the options of the chart in the App, for example with an options pane.
 9. Transformations. The Renderer runs the Grafana transformations of a panel.
 10. Option docs and model guidance. The model can read the options of each chart and the query rules of each data

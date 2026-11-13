@@ -81,5 +81,22 @@
       "when": "refreshTimeoutMs passes with no result",
       "message": "Refresh failed: no result in time."
     }
+  ],
+  "annotate": [
+    {
+      "code": "annotate-failed",
+      "when": "The App calls setAnnotated(id, false, error) with an error text, or onAnnotate throws",
+      "message": "Annotation not saved: <error>"
+    },
+    {
+      "code": "annotate-failed-no-detail",
+      "when": "The App calls setAnnotated(id, false) with no error text",
+      "message": "Annotation not saved."
+    },
+    {
+      "code": "annotate-timeout",
+      "when": "refreshTimeoutMs passes with no result",
+      "message": "Annotation not saved: no result in time."
+    }
   ]
 }
