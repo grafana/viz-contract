@@ -68,6 +68,11 @@
       "code": "invalid-options",
       "when": "The options or the fieldConfig of the tool arguments have a path that is not an option of the chart, or a value that does not validate against the schema of its option",
       "message": "<chart> does not accept these options: <problems>. get_chart_options lists the options of <chart>."
+    },
+    {
+      "code": "unknown-chart",
+      "when": "The type of the get_chart_options arguments is not a chart of chart-types.json",
+      "message": "<type> is not a chart. The charts are: <charts>."
     }
   ],
   "refresh": [

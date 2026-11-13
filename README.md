@@ -33,7 +33,7 @@ flowchart TB
 | Interface | From | To | Files |
 | --------- | ---- | -- | ----- |
 | Tool arguments | Model | Source | [1-tool.md](1-tool.md), `schemas/query-datasource-args.schema.json` |
-| Chart options | Renderer build, Model | Source | [1-tool.md](1-tool.md), [7-delivery.md](7-delivery.md), `schemas/chart-options.schema.json`, `schemas/chart-options-args.schema.json` |
+| Chart options | Renderer build, Model | Source | [1-tool.md](1-tool.md), [7-delivery.md](7-delivery.md), `schemas/chart-options.schema.json`, `schemas/chart-options-args.schema.json`, `schemas/field-config.schema.json` |
 | Tool result | Source | App | [1-tool.md](1-tool.md), `schemas/tool-result.schema.json` |
 | Viz spec | App | Renderer | [2-viz-spec.md](2-viz-spec.md), `schemas/viz-spec.schema.json` |
 | Renderer API | App | Renderer | [3-renderer.md](3-renderer.md), `renderer-api.d.ts` |

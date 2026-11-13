@@ -1,0 +1,9 @@
+{
+  "isError": true,
+  "content": [
+    {
+      "type": "text",
+      "text": "unknown-chart: linechart is not a chart. The charts are: timeseries, barchart, histogram, candlestick, boxplot, piechart, funnel, heatmap, geomap, state-timeline, status-history, nodeGraph, sankey, chord, treemap, sunburst, radar, parallel, streamgraph, bubble."
+    }
+  ]
+}

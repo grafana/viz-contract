@@ -54,6 +54,8 @@ are in `fixtures/`, one directory for each set.
   - `options-list`: `get_chart_options` with no `advanced`. The text has the line of the advanced options that
     are not listed (`tool.44`).
   - `options-list-advanced`: `get_chart_options` with `advanced` set to true.
+  - `options-list-unknown`: `get_chart_options` with a `type` that is not a chart. The expected result is the
+    `unknown-chart` tool error (`tool.43`).
 
 ## Conformance tests
 

@@ -8,7 +8,7 @@ export const read = (rel) => fs.readFileSync(path.join(CONTRACT, rel), 'utf8');
 export const readJSON = (rel) => JSON.parse(read(rel));
 export const json = (value) => JSON.stringify(value, null, 2) + '\n';
 
-export const SCHEMAS = ['query-datasource-args', 'chart-options-args', 'chart-options', 'tool-result', 'viz-spec', 'registry'];
+export const SCHEMAS = ['query-datasource-args', 'field-config', 'chart-options-args', 'chart-options', 'tool-result', 'viz-spec', 'registry'];
 
 // The summary of the frames and the matcher of the condition rule language (schemas/registry.schema.json).
 const FIELD_TYPES = ['time', 'number', 'string', 'boolean', 'trace', 'geo', 'enum', 'other', 'frame', 'nestedFrames'];
@@ -107,6 +107,13 @@ export function typeText(schema) {
   return JSON.stringify(schema);
 }
 
+// Line 5 of the text of get_chart_options (tool.44).
+const OVERRIDE_FORM =
+  'An override is {"matcher":{"id":"byName","options":"<field name>"},"properties":[{"id":"<path>","value":<value>}]}. The matcher id can also be byRegexp or byFrameRefID.';
+
+// The tool error of get_chart_options for a type that is not a chart (tool.43).
+export const unknownChartText = (type, charts) => `unknown-chart: ${type} is not a chart. The charts are: ${charts.join(', ')}.`;
+
 // The text of get_chart_options for one entry of chart-options.json (tool.44).
 export function optionsText(chart, entry, advanced) {
   const shown = (list) => list.filter((o) => advanced || o.tier !== 'advanced');
@@ -117,6 +124,7 @@ export function optionsText(chart, entry, advanced) {
     ...shown(entry.options).map(line),
     `Field options of ${chart}. Set them in fieldConfig.defaults for all fields, or in the properties of an override.`,
     ...shown(entry.fieldConfig).map(line),
+    OVERRIDE_FORM,
     ...(hidden ? [`Advanced options not listed: ${hidden}. Set advanced to true to list them.`] : []),
   ].join('\n');
 }

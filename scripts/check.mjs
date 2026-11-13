@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, canonical, fits, matches, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary } from './lib.mjs';
+import { CONTRACT, SCHEMAS, canonical, fits, matches, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -119,6 +119,8 @@ for (const set of sets) {
     const entry = chartOptions[args.type];
     const row = charts.find((c) => c.name === args.type);
     const problems = entry ? optionProblems(args, entry, validValue) : [];
+    const form = ajv.getSchema('field-config.schema.json');
+    if (args.fieldConfig && !form(args.fieldConfig)) fail('fixtures', `${set}/args.json: fieldConfig does not have the form of tool.40: ${errorText(form)}`);
     if (!entry) fail('fixtures', `${set}: chart-options.json of the set options has no chart ${args.type}`);
     else if (problems.length) {
       const text = `invalid-options: ${args.type} does not accept these options: ${problems.join('; ')}. get_chart_options lists the options of ${args.type}.`;
@@ -139,10 +141,11 @@ for (const set of sets) {
   }
   if (files['options-args.json']) {
     const { type, advanced } = files['options-args.json'];
-    const text = chartOptions[type] ? optionsText(type, chartOptions[type], advanced === true) : undefined;
+    const known = names.includes(type);
+    const text = !known ? unknownChartText(type, names) : chartOptions[type] ? optionsText(type, chartOptions[type], advanced === true) : undefined;
     const got = files['options-result.json'];
-    if (got?.content?.length !== 1 || got.content[0].text !== text || got.structuredContent !== undefined) {
-      fail('fixtures', `${set}/options-result.json is not the text of tool.44:\n${text}`);
+    if (got?.content?.length !== 1 || got.content[0].text !== text || got.structuredContent !== undefined || (got.isError === true) === known) {
+      fail('fixtures', `${set}/options-result.json is not the result of tool.43 and tool.44:\n${text}`);
     }
   }
   if (set.startsWith('smoke-')) {
@@ -168,7 +171,7 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
     }
   }
 }
-for (const s of ['options', 'options-invalid', 'options-list', 'options-list-advanced']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
+for (const s of ['options', 'options-invalid', 'options-list', 'options-list-advanced', 'options-list-unknown']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
 for (const c of names) if (!sets.includes(`smoke-${c}`)) fail('fixtures', `no smoke set for ${c}`);
 for (const code of [...SPEC_ERRORS, 'all-queries-failed']) if (!sets.includes(`error-${code}`)) fail('fixtures', `no error set for ${code}`);
 const pickRuleOf = (set) => {

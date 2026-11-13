@@ -89,72 +89,11 @@
     },
     "options": {
       "type": "object",
-      "description": "Optional options of the chart, as the options of a Grafana panel JSON, for example {\"legend\": {\"placement\": \"right\"}}. Needs type. Do not guess an option: get_chart_options lists the options of each chart."
+      "description": "Optional panel options of the chart, as in a Grafana panel JSON. Needs type. Do not guess: get_chart_options lists them."
     },
     "fieldConfig": {
       "type": "object",
-      "description": "Optional field options of the chart, as the fieldConfig of a Grafana panel JSON. Needs type. get_chart_options lists the field options of each chart.",
-      "properties": {
-        "defaults": {
-          "type": "object",
-          "description": "The field options of all fields."
-        },
-        "overrides": {
-          "type": "array",
-          "description": "The field options of some fields. The id of a property is the path of a field option.",
-          "items": {
-            "type": "object",
-            "required": [
-              "matcher",
-              "properties"
-            ],
-            "properties": {
-              "matcher": {
-                "type": "object",
-                "required": [
-                  "id",
-                  "options"
-                ],
-                "properties": {
-                  "id": {
-                    "enum": [
-                      "byName",
-                      "byRegexp",
-                      "byFrameRefID"
-                    ]
-                  },
-                  "options": {
-                    "type": "string",
-                    "minLength": 1
-                  }
-                },
-                "additionalProperties": false
-              },
-              "properties": {
-                "type": "array",
-                "minItems": 1,
-                "items": {
-                  "type": "object",
-                  "required": [
-                    "id",
-                    "value"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "value": {}
-                  },
-                  "additionalProperties": false
-                }
-              }
-            },
-            "additionalProperties": false
-          }
-        }
-      },
-      "additionalProperties": false
+      "description": "Optional field options of the chart: defaults and overrides, as in a Grafana panel JSON. Needs type. get_chart_options lists them."
     }
   },
   "dependentRequired": {
