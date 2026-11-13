@@ -96,7 +96,7 @@ for (const set of sets) {
   if (files['args.json'] && files['spec.json']) {
     const want = { from: files['args.json'].from ?? constants.defaultFrom.value, to: files['args.json'].to ?? constants.defaultTo.value };
     if (JSON.stringify(files['spec.json'].timeRange) !== JSON.stringify(want)) {
-      fail('fixtures', `${set}/spec.json: timeRange is not the from and to of args.json (spec.16)`);
+      fail('fixtures', `${set}/spec.json: timeRange is not the from and to of args.json (spec.17)`);
     }
   }
   const result = files['result.json'];
@@ -191,6 +191,18 @@ for (const f of proseFiles) read(f).split('\n').forEach((line, i) => linkHits(li
 for (const f of jsonFiles) for (const t of textOf(readJSON(f))) linkHits(t).forEach((l) => publicHits.push(`${f}: link to a repository that is not public: ${l}`));
 for (const h of publicHits) fail('public-text', h);
 if (!publicHits.length) pass('public-text', 'no internal text');
+
+// A rule ID is defined at the start of a list item, for example "- `renderer.1` ...". Each ID is defined one time.
+const ruleDefs = new Map();
+for (const f of proseFiles.filter((p) => p.endsWith('.md'))) {
+  read(f).split('\n').forEach((line, i) => {
+    const id = /^\s*- `([a-z]+\.[0-9]+)` /.exec(line)?.[1];
+    if (id) ruleDefs.set(id, [...(ruleDefs.get(id) ?? []), `${f}:${i + 1}`]);
+  });
+}
+const dupIds = [...ruleDefs].filter(([, at]) => at.length > 1);
+for (const [id, at] of dupIds) fail('rule-ids', `${id} is defined more than one time: ${at.join(', ')}`);
+if (!dupIds.length) pass('rule-ids', `${ruleDefs.size} rule IDs, each defined one time`);
 
 // 6. package.json keeps the placeholder version. The release workflow sets the version from the tag.
 const PLACEHOLDER = '0.0.0-development';

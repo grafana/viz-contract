@@ -156,7 +156,7 @@ version.
 
 ## Not in this contract
 
-1. Behavior inside one part. For example, the tooltip is Renderer UI.
+1. Behavior inside one part that no rule of the contract gives.
 2. Size changes and display modes between the App and the Host. The
    [MCP Apps specification](https://github.com/modelcontextprotocol/ext-apps) gives them.
 3. Items that are not specified yet. [future.md](future.md) lists them in priority order.

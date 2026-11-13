@@ -80,17 +80,19 @@ range. Reset goes back to the reset range of `renderer.45`. A pan is a drag that
 - `renderer.43` With `onRefresh`, each zoom, zoom out, Reset and pan calls `onRefresh` one time with the cause
   `timeRange` and the `from` and `to` of the new time range. Thus it changes the time range as a pick of the time
   picker does (`refresh.3`). After the call, the chart is busy, as for each refresh (`refresh.4`, `refresh.5`). For
-  zoom, zoom out and pan, `from` and `to` are epoch milliseconds.
+  zoom, zoom out and pan, `from` and `to` are epoch milliseconds as decimal strings, for example `"1790352577294"`.
 - `renderer.44` A double click on the plot area and the Zoom out button of the time picker each do one zoom out. A
   zoom out keeps the center of the time range and makes it wider, as Grafana does. Without `onRefresh`, it stays
   inside `data.range` (`renderer.42`).
 - `renderer.45` The Renderer keeps a reset range. At `render`, the reset range is the `timeRange` of the viz spec
-  (`spec.16`). If the viz spec has no `timeRange`, the reset range is its `data.range`. Each pick of the time
+  (`spec.17`). If the viz spec has no `timeRange`, the reset range is its `data.range`. Each pick of the time
   picker sets the reset range to the pick. A zoom, a zoom out, a pan, a Reset and a call of `update` do not change
   it. For example, after a pick A, a zoom, a pick B and a zoom, the reset range is B. With `onRefresh`, Reset
   calls `onRefresh` with the `from` and `to` of the reset range. A relative range stays relative. Thus later
   refreshes move with the clock (`refresh.3`). The Renderer sends an integer as its decimal string, as the Source
   does (`tool.6`). For example, `1790352577294` becomes `"1790352577294"`.
+- `renderer.48` If no zoom, zoom out or pan came after the last change of the reset range or after the last
+  Reset, Reset does nothing. Thus Reset sends no query for the time range that the chart already asked for.
 - `renderer.46` A pan calls `onRefresh` only at the end of the drag. It does not call `onRefresh` while the drag
   continues, because data source requests can be slow or expensive.
 - `renderer.47` While the chart is busy, zoom, zoom out, Reset and pan do nothing.

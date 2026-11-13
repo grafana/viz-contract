@@ -23,7 +23,7 @@ Shape: `schemas/viz-spec.schema.json`.
   `code` and a `message` from `registry/notices.json`.
 - `spec.15` `panel.title` is a copy of the `title` of the panel of the tool result, or of the alternative that the
   user picked. If that panel has no `title`, the viz spec has no `panel.title`.
-- `spec.16` `timeRange` is a copy of the `from` and `to` of the tool arguments, with no change. A relative value,
+- `spec.17` `timeRange` is a copy of the `from` and `to` of the tool arguments, with no change. A relative value,
   for example `now-6h`, stays relative. If the tool arguments have no `from` or no `to`, the App writes `defaultFrom`
   or `defaultTo`. The Renderer uses the `timeRange` of the viz spec of `render` for Reset (`renderer.45`).
   `data.range` is the absolute form of the same range at the time of the query (`tool.14`).
