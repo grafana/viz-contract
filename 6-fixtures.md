@@ -33,6 +33,11 @@ are in `fixtures/`, one directory for each set.
   - `hostile-label`: series names and label values with HTML and script text. The Renderer shows them as text.
   - `title`: the query of `prometheus-line` with a `title` that has HTML text. Each panel of `result.json` and the
     panel of `spec.json` have the title (`tool.31`, `spec.15`). The Renderer shows it as text (`renderer.17`).
+  - `adhoc-filters`: the query of `prometheus-line` with one ad-hoc filter in `filters`. The response has only the
+    series of the ad-hoc filter. `result.json` and `spec.json` have the `filters` (`tool.35`, `spec.16`). The set has
+    no `request.json`, because the text of a query with an ad-hoc filter can differ between two correct Sources
+    (`tool.33`). Each other set with a Prometheus data source has an empty `filters` list in `result.json` and
+    `spec.json`. A set with the test data source has no `filters`.
   - `too-large`: the set has `args.json` and `meta.json` only. The test makes the response at run time: it repeats
     the frames of `prometheus-line` with new label values until the tool result is larger than `maxResultBytes`.
     The expected result is the `too-large` tool error.

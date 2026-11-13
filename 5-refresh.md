@@ -1,4 +1,4 @@
-# 5. Refresh and the time picker
+# 5. Refresh, the time picker and ad-hoc filters
 
 The user can ask for new data from the chart. The Renderer asks the App, and the App calls the tool again.
 
@@ -30,6 +30,13 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
 - `refresh.15` `update` removes the `refresh-failed`, `refresh-failed-no-detail` and `refresh-timeout` messages.
   Thus a late result after `refreshTimeoutMs` draws the new viz spec and removes `refresh-timeout`. A late
   `setRefreshed` does nothing (`refresh.6`), because the user already sees `refresh-timeout`.
+- `refresh.16` When the user clicks "Filter for value", "Filter out value" or the remove button of an ad-hoc filter
+  (`renderer.18`, `renderer.19`), the Renderer calls `onRefresh` with the cause `filters` and the full new list.
+  "Filter for value" adds an ad-hoc filter with the operator `=` at the end of the `filters` of the viz spec.
+  "Filter out value" adds one with the operator `!=`. The remove button leaves out its ad-hoc filter. The list
+  that the user sees changes only when the App calls `update`.
+- `refresh.17` While the chart is busy (`refresh.4`), the ad-hoc filter buttons and the remove buttons are also
+  disabled.
 
 ## The App
 
@@ -43,6 +50,9 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
     picks again.
   - For the cause `timeRange`, `from` and `to` are the values of the `RefreshRequest`. The App keeps these arguments
     as the new last tool arguments.
+  - For the cause `filters`, `filters` is the list of the `RefreshRequest`. If the list is empty, the arguments
+    have no `filters`. The App keeps these arguments as the new last tool arguments. Thus a later refresh keeps
+    the ad-hoc filters.
 - `refresh.10` If the call gives the `type-mismatch` tool error, the App calls `render_grafana_app` again with no
   `type`. It draws the chart of the result. If that chart is not the old chart, the App adds the `chart-changed`
   notice to the viz spec of this refresh only. The App knows the error by the code at the start of the text

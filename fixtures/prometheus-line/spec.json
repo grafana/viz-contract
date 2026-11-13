@@ -1364,5 +1364,6 @@
       }
     }
   },
-  "grafanaUrl": "http://localhost:3000"
+  "grafanaUrl": "http://localhost:3000",
+  "filters": []
 }

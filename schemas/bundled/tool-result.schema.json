@@ -42,6 +42,10 @@
       "type": "string",
       "format": "uri",
       "description": "The base URL of the Grafana that the Source queries."
+    },
+    "filters": {
+      "$ref": "#/$defs/query-datasource-args.properties.filters",
+      "description": "The ad-hoc filters that the Source added to the queries. Present, and possibly empty, only when the Source can add an ad-hoc filter to the queries of this data source."
     }
   },
   "$defs": {
@@ -218,6 +222,38 @@
             }
           }
         }
+      }
+    },
+    "query-datasource-args.properties.filters": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Optional ad-hoc filters. Each one applies to all queries. The chart sends them when the user filters from the tooltip. A model writes the condition in the query, and does not use filters.",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "operator",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the label or of the field, for example handler."
+          },
+          "operator": {
+            "enum": [
+              "=",
+              "!="
+            ],
+            "description": "= keeps only the data where key has value. != leaves out that data."
+          },
+          "value": {
+            "type": "string",
+            "description": "The value, as text."
+          }
+        },
+        "additionalProperties": false
       }
     },
     "query-datasource-args.properties.type": {

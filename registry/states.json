@@ -63,6 +63,11 @@
       "code": "too-large",
       "when": "The structured content of the tool result is larger than maxResultBytes",
       "message": "The result is larger than <maxResultBytes> bytes. Use a shorter range, a larger intervalMs or fewer series."
+    },
+    {
+      "code": "filters-unsupported",
+      "when": "The arguments have filters, and the Source cannot add an ad-hoc filter to the queries of this data source",
+      "message": "This data source does not support filters. Remove filters, and write the condition in the query."
     }
   ],
   "refresh": [

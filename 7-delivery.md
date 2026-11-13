@@ -32,6 +32,8 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - With a tooltip open, and with a tooltip pinned.
   - With the time picker open.
   - With a legend menu open, and with the zoom controls shown.
+  - With an ad-hoc filter above the chart, and with the ad-hoc filter buttons in a pinned tooltip
+    (`renderer.18`, `renderer.19`).
 
   The check finds only the icons of these states. An icon of a state that the check does not draw can still make a
   request.

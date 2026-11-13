@@ -23,6 +23,8 @@ Shape: `schemas/viz-spec.schema.json`.
   `code` and a `message` from `registry/notices.json`.
 - `spec.15` `panel.title` is a copy of the `title` of the panel of the tool result, or of the alternative that the
   user picked. If that panel has no `title`, the viz spec has no `panel.title`.
+- `spec.16` `filters` is a copy of the `filters` of the tool result (`tool.35`). If the tool result has no
+  `filters`, the viz spec has none.
 
 ## What the Renderer reads
 

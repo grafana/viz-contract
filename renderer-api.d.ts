@@ -25,8 +25,8 @@ export interface RenderOptions {
   /** Called when the Renderer shows a new final state or new notices. */
   onState?: (state: RenderState) => void;
   /**
-   * Called when the user clicks Refresh or picks a time range. The Renderer shows Refresh and the time picker
-   * only when the App gives this option.
+   * Called when the user clicks Refresh, picks a time range, or adds or removes an ad-hoc filter. The Renderer
+   * shows Refresh, the time picker and the ad-hoc filter buttons only when the App gives this option.
    */
   onRefresh?: (request: RefreshRequest) => void;
 }
@@ -69,9 +69,21 @@ export interface Notice {
 /**
  * A refresh. id is a new value for each call of onRefresh. The App gives it to setRefreshed. For timeRange, from
  * and to are the range that the user picked. A relative range, for example now-6h to now, stays relative. An
- * absolute range is in epoch milliseconds.
+ * absolute range is in epoch milliseconds. For filters, filters is the full new list of ad-hoc filters, not only
+ * the change. It can be empty.
  */
 export type RefreshRequest = { id: string } & (
   | { cause: 'refresh' }
   | { cause: 'timeRange'; from: string; to: string }
+  | { cause: 'filters'; filters: AdHocFilter[] }
 );
+
+/** An ad-hoc filter. It has the shape of an entry of filters in the tool arguments and in the viz spec. */
+export interface AdHocFilter {
+  /** Name of the label or of the field. */
+  key: string;
+  /** = keeps only the data where key has value. != leaves out that data. */
+  operator: '=' | '!=';
+  /** The value, as text. */
+  value: string;
+}

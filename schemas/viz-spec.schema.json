@@ -93,6 +93,10 @@
       "type": "string",
       "format": "uri",
       "description": "The base URL of the Grafana that ran the query."
+    },
+    "filters": {
+      "$ref": "query-datasource-args.schema.json#/properties/filters",
+      "description": "The ad-hoc filters of the tool result. With this field, the Renderer can show the ad-hoc filter buttons."
     }
   },
   "$defs": {

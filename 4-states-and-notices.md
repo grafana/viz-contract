@@ -57,9 +57,13 @@ placeholder.
   - The final state is not `ready`.
   - The chart shows one or more notices.
   - A refresh with the cause `timeRange` completes (`refresh.9`).
+  - A refresh with the cause `filters` completes (`refresh.9`).
   - The user switches to an alternative chart (`spec.2`).
 - `state.15` The model context is one text item. It names the chart, the time range of the tool arguments and the
   absolute range of `data.range`, the state, the error message if there is one, and the message of each notice.
+- `state.20` If the last tool arguments have `filters`, the model context also names each ad-hoc filter: the `key`,
+  the `operator` and the `value`. After the user removes the last ad-hoc filter, the model context says that the
+  chart has no ad-hoc filter. Thus the model knows that the chart does not show all the data of its query.
 - `state.16` The App does not send model context for a first draw that is `ready` with no notices. The chart is
   then what the model asked for.
 - `state.17` The Host uses the model context in a later turn, not in the turn of the tool call. A new model context

@@ -86,6 +86,38 @@
       "maxLength": 100,
       "$comment": "Generated from registry/constants.json (maxTitleChars). Do not edit.",
       "description": "Optional title of the chart, for example HTTP requests by handler. The chart shows it as a panel title."
+    },
+    "filters": {
+      "type": "array",
+      "uniqueItems": true,
+      "description": "Optional ad-hoc filters. Each one applies to all queries. The chart sends them when the user filters from the tooltip. A model writes the condition in the query, and does not use filters.",
+      "items": {
+        "type": "object",
+        "required": [
+          "key",
+          "operator",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the label or of the field, for example handler."
+          },
+          "operator": {
+            "enum": [
+              "=",
+              "!="
+            ],
+            "description": "= keeps only the data where key has value. != leaves out that data."
+          },
+          "value": {
+            "type": "string",
+            "description": "The value, as text."
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false,
