@@ -49,12 +49,12 @@ Shape: `renderer-api.d.ts`.
 
 ## The legend
 
-The user can hide, show and color the items of the legend, as in Grafana. The panel decides what each action does
-on its chart. These rules give only what the App and the user see after an `update`.
+The user can hide, show and color the items of the legend, as in a Grafana panel. The panel decides what each
+action does on its chart. These rules give only what the App and the user see after an `update`.
 
-- `renderer.34` A legend action changes the legend overrides: the `fieldConfig` overrides that the Renderer draws
-  with. It does not change the viz spec of the App. The state and the notices do not change, so the Renderer does
-  not call `onState` (`state.12`).
+- `renderer.34` A legend action changes the legend overrides: the `fieldConfig` overrides that the user makes with
+  the legend. The Renderer draws with them. A legend action does not change the viz spec of the App. The state and
+  the notices do not change, so the Renderer does not call `onState` (`state.12`).
 - `renderer.35` The Renderer keeps the legend overrides until `destroy`. At each `update`, it draws the new viz
   spec with the legend overrides. A legend override wins over an override of the viz spec. Thus the legend
   overrides stay after each `update`, for example after a refresh (`refresh.12`), a new theme (`spec.5`) or a new
@@ -64,6 +64,8 @@ on its chart. These rules give only what the App and the user see after an `upda
   item gets a new name in the new data, the legend overrides take it as a new item. For example, a refresh that
   adds a label to each series can change each display name, as in Grafana. The Renderer keeps the change for a
   name that is not in the new data. If that item comes back in a later `update`, the change applies to it again.
+  Thus the chart can be empty, as in a Grafana panel. For example, the user shows only A, and a refresh gives no
+  A. Then the chart shows no series until A comes back or the user changes the legend.
 - `renderer.37` Only the Renderer has the legend overrides. It does not give them to the App, so the model does
   not get them. They are not in the tool arguments, so a refresh does not send them to the Source (`refresh.9`).
   The Renderer keeps them in memory only, not in `localStorage` (`renderer.8`). A new `render` starts with no
