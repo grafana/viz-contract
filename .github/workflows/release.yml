@@ -157,7 +157,9 @@ jobs:
           npm publish --ignore-scripts
 
   go-proxy:
-    # Its own job, so that a failure here does not stop the npm publish. A re-run of this job only is safe.
+    # Its own job, so that a failure here does not stop the npm publish. After a failure, use "Re-run failed jobs".
+    # "Re-run all jobs" does not run this job again: the release job finds the version on npm and sets
+    # release=false.
     needs: release
     if: needs.release.outputs.release == 'true'
     runs-on: ubuntu-latest
@@ -176,9 +178,12 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: Fetch the Go module from the Go proxy
+        id: proxy
         # The first request makes proxy.golang.org fetch the tag, and go checks the sum with sum.golang.org.
         # GOPROXY has no direct fallback, so the check fails if only GitHub has the tag.
         # The proxy can need some time for a new tag, so the step tries again.
+        # The proxy never changes a version that it has. If the tag moved to another commit, the proxy still gives
+        # the old commit, so the step compares Origin.Hash with the commit of the tag.
         env:
           VERSION: ${{ needs.release.outputs.version }}
           GOPROXY: https://proxy.golang.org
@@ -193,7 +198,12 @@ jobs:
                 echo "$module@v$VERSION has no embed.go"
                 exit 1
               fi
-              echo "The Go proxy gives $module@v$VERSION"
+              hash="$(jq -r '.Origin.Hash // empty' <<<"$out")"
+              if [ "$hash" != "$GITHUB_SHA" ]; then
+                echo "The Go proxy gives $module@v$VERSION at ${hash:-an unknown commit}, not $GITHUB_SHA"
+                exit 1
+              fi
+              echo "The Go proxy gives $module@v$VERSION at $GITHUB_SHA"
               exit 0
             fi
             echo "Try $i of 6 failed: $(jq -r '.Error // empty' <<<"$out")"
@@ -202,20 +212,27 @@ jobs:
           exit 1
       - name: Comment on the merged pull request
         # The comment tells the author and the reviewers of the pull request that made the release. GITHUB_TOKEN
-        # gives the access, so the step needs no other secret.
-        if: failure()
+        # gives the access, so the step needs no other secret. The step runs only when the proxy step failed, not
+        # when checkout or setup-go failed. A failed re-run does not comment again: the marker finds the comment.
+        if: failure() && steps.proxy.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.release.outputs.version }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          body="The Go proxy does not give the Go module of v$VERSION, so Go code cannot fetch it. See $RUN_URL. After a fix, re-run the go-proxy job."
+          marker="<!-- go-proxy v$VERSION -->"
+          body="$marker
+          The Go proxy does not give the Go module of v$VERSION, or gives another commit, so Go code cannot fetch the tagged version. See $RUN_URL. After a fix, use \"Re-run failed jobs\" on that run."
           prs="$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[] | select(.merged_at) | .number')"
           if [ -z "$prs" ]; then
             echo "No merged pull request has $GITHUB_SHA, so no comment"
             exit 0
           fi
           for pr in $prs; do
+            if gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$pr/comments" --jq '.[].body' | grep -qF "$marker"; then
+              echo "#$pr already has the comment for v$VERSION"
+              continue
+            fi
             gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" -f body="$body" --silent
             echo "Commented on #$pr"
           done
