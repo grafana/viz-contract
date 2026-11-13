@@ -46,3 +46,36 @@ Shape: `renderer-api.d.ts`.
   Grafana does. It shows the title as text, not as HTML. If the title is wider than `el`, the Renderer cuts it with
   `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
   `panel.title`, the Renderer shows no title.
+
+## Add an annotation
+
+The user can add an annotation to a chart with a time axis. The App saves it. The annotation query and the annotation
+frames are in `2-viz-spec.md` (`spec.12`).
+
+Shape: `onAnnotate`, `AnnotateRequest` and `setAnnotated` in `renderer-api.d.ts`.
+
+- `renderer.18` The Renderer shows the Add annotation UI only if the App gives `onAnnotate` and the chart has a time
+  axis. Without `onAnnotate`, the Renderer shows no Add annotation UI.
+- `renderer.19` The user adds an annotation in one of two ways: a click on a point of the time axis, or a drag over
+  a range of it. The Renderer then shows a form with a text field and a tags field.
+- `renderer.20` When the user saves the form, the Renderer calls `onAnnotate` with a new `id`, the `time` of the
+  point or the start of the range, the `timeEnd` of the end of a range, the `text` and the `tags`. `time` and
+  `timeEnd` are epoch milliseconds. A point has no `timeEnd`. The Renderer does not call `onAnnotate` if `text` is
+  empty.
+- `renderer.21` After the call of `onAnnotate`, the form is busy and the user cannot save it again. The chart stays.
+- `renderer.22` The busy state ends at the first of these events:
+  - The App calls `setAnnotated(id, true)`. The Renderer closes the form and shows the annotation on the chart.
+  - The App calls `setAnnotated(id, false, error)`. The form stays open with its text. The Renderer shows the
+    `annotate-failed` message of `states.json`. With no `error`, it shows `annotate-failed-no-detail`.
+  - `refreshTimeoutMs` passes with no result. The Renderer shows `annotate-timeout`.
+- `renderer.23` `setAnnotated` gives the result of the last `onAnnotate` call only. A call with an `id` that is not
+  the `id` of the last `AnnotateRequest`, a call before the first `onAnnotate`, a second call for the same
+  annotation, and a call after the timeout do nothing.
+- `renderer.24` If `onAnnotate` throws, the Renderer writes the error to `console.error` with the prefix
+  `grafana-viz:`. The busy state ends as with `setAnnotated(<id>, false, <error message>)`.
+- `renderer.25` This is a rule for the App. The App gives `onAnnotate` only if it can save an annotation. If it has
+  no way to save, it does not give `onAnnotate`, and `renderer.18` applies. How the App saves is not in this
+  contract.
+- `renderer.26` After `setAnnotated(<id>, true)`, the App can call `update` with a viz spec that has the new
+  annotation in `data.annotations`. If it does not, the Renderer keeps the new annotation on the chart until the next
+  `update`.

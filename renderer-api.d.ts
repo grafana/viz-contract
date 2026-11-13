@@ -29,6 +29,11 @@ export interface RenderOptions {
    * only when the App gives this option.
    */
   onRefresh?: (request: RefreshRequest) => void;
+  /**
+   * Called when the user saves a new annotation. The Renderer shows the Add annotation UI only when the App gives
+   * this option, and only on a chart with a time axis.
+   */
+  onAnnotate?: (request: AnnotateRequest) => void;
 }
 
 export interface RenderHandle {
@@ -39,6 +44,11 @@ export interface RenderHandle {
    * text that the Renderer shows.
    */
   setRefreshed(id: string, ok: boolean, error?: string): void;
+  /**
+   * Gives the result of the annotation with this id. id is the id of the AnnotateRequest. With ok false, error is
+   * the text that the Renderer shows.
+   */
+  setAnnotated(id: string, ok: boolean, error?: string): void;
   /** Removes the chart and its listeners. */
   destroy(): void;
 }
@@ -75,3 +85,16 @@ export type RefreshRequest = { id: string } & (
   | { cause: 'refresh' }
   | { cause: 'timeRange'; from: string; to: string }
 );
+
+/**
+ * An annotation that the user saves. id is a new value for each call of onAnnotate. The App gives it to
+ * setAnnotated. time is in epoch milliseconds. timeEnd is present only for a range, and is not less than time.
+ * text is not empty. tags can be empty.
+ */
+export interface AnnotateRequest {
+  id: string;
+  time: number;
+  timeEnd?: number;
+  text: string;
+  tags: string[];
+}
