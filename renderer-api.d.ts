@@ -26,13 +26,13 @@ export interface RenderOptions {
   onState?: (state: RenderState) => void;
   /**
    * Called when the user clicks Refresh or picks a time range, and for each zoom, zoom out, Reset and pan of the
-   * chart (renderer.19). The Renderer shows Refresh and the time picker only when the App gives this option.
+   * chart (renderer.43). The Renderer shows Refresh and the time picker only when the App gives this option.
    */
   onRefresh?: (request: RefreshRequest) => void;
 }
 
 export interface RenderHandle {
-  /** Draws a new viz spec in the same element. */
+  /** Draws a new viz spec in the same element. It keeps the legend overrides of the user (renderer.35). */
   update(spec: unknown): void;
   /**
    * Gives the result of the refresh with this id. id is the id of the RefreshRequest. With ok false, error is the

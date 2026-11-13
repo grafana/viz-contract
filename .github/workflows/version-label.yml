@@ -19,7 +19,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          sparse-checkout: scripts/version.mjs
+          sparse-checkout: |
+            scripts/version.mjs
+            go.mod
           sparse-checkout-cone-mode: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -29,3 +31,9 @@ jobs:
         env:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
         run: node scripts/version.mjs labels "$LABELS"
+      - name: Check the Go module path
+        # With version:major, go.mod must have the module path of the next major version, for example /v2.
+        # The last tag comes from origin, so the checkout needs no history.
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: node scripts/version.mjs gomod-labels "$LABELS"

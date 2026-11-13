@@ -45,28 +45,52 @@ Shape: `renderer-api.d.ts`.
   `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
   `panel.title`, the Renderer shows no title.
 
+## The legend
+
+The user can hide, show and color the items of the legend, as in a Grafana panel. The panel decides what each
+action does on its chart. These rules give only what the App and the user see after an `update`.
+
+- `renderer.34` A legend action changes the legend overrides: the `fieldConfig` overrides that the user makes with
+  the legend. The Renderer draws with them. A legend action does not change the viz spec of the App. The state and
+  the notices do not change, so the Renderer does not call `onState` (`state.12`).
+- `renderer.35` The Renderer keeps the legend overrides until `destroy`. At each `update`, it draws the new viz
+  spec with the legend overrides. A legend override wins over an override of the viz spec. Thus the legend
+  overrides stay after each `update`, for example after a refresh (`refresh.12`), a new theme (`spec.5`) or a new
+  time zone (`spec.6`).
+- `renderer.36` A legend override finds an item by the name that the legend shows for it. For example, for a chart
+  whose items are fields, the name is the display name that `getFieldDisplayName` of `@grafana/data` gives. If an
+  item gets a new name in the new data, the legend overrides take it as a new item. For example, a refresh that
+  adds a label to each series can change each display name, as in Grafana. The Renderer keeps the change for a
+  name that is not in the new data. If that item comes back in a later `update`, the change applies to it again.
+  Thus the chart can be empty, as in a Grafana panel. For example, the user shows only A, and a refresh gives no
+  A. Then the chart shows no series until A comes back or the user changes the legend.
+- `renderer.37` Only the Renderer has the legend overrides. It does not give them to the App, so the model does
+  not get them. They are not in the tool arguments, so a refresh does not send them to the Source (`refresh.9`).
+  The Renderer keeps them in memory only, not in `localStorage` (`renderer.8`). A new `render` starts with no
+  legend overrides.
+
 ## Zoom and pan
 
 A zoom is a drag across the plot area that selects a part of the time range. A zoom out shows a wider time
-range. Reset goes back to the reset range of `renderer.21`. A pan is a drag that moves the time range.
+range. Reset goes back to the reset range of `renderer.45`. A pan is a drag that moves the time range.
 
-- `renderer.18` Without `onRefresh`, the chart shows only the data of the viz spec, and the Renderer does not
+- `renderer.42` Without `onRefresh`, the chart shows only the data of the viz spec, and the Renderer does not
   query again. Zoom, zoom out, Reset and pan work in the Renderer only, on that data. They stay inside
   `data.range`. Reset shows all of `data.range`.
-- `renderer.19` With `onRefresh`, each zoom, zoom out, Reset and pan calls `onRefresh` one time with the cause
+- `renderer.43` With `onRefresh`, each zoom, zoom out, Reset and pan calls `onRefresh` one time with the cause
   `timeRange` and the `from` and `to` of the new time range. Thus it changes the time range as a pick of the time
   picker does (`refresh.3`). After the call, the chart is busy, as for each refresh (`refresh.4`, `refresh.5`). For
   zoom, zoom out and pan, `from` and `to` are epoch milliseconds.
-- `renderer.20` A double click on the plot area and the Zoom out button of the time picker each do one zoom out. A
+- `renderer.44` A double click on the plot area and the Zoom out button of the time picker each do one zoom out. A
   zoom out keeps the center of the time range and makes it wider, as Grafana does. Without `onRefresh`, it stays
-  inside `data.range` (`renderer.18`).
-- `renderer.21` The Renderer keeps a reset range. At `render`, the reset range is the `timeRange` of the viz spec
+  inside `data.range` (`renderer.42`).
+- `renderer.45` The Renderer keeps a reset range. At `render`, the reset range is the `timeRange` of the viz spec
   (`spec.16`). If the viz spec has no `timeRange`, the reset range is its `data.range`. Each pick of the time
   picker sets the reset range to the pick. A zoom, a zoom out, a pan, a Reset and a call of `update` do not change
   it. For example, after a pick A, a zoom, a pick B and a zoom, the reset range is B. With `onRefresh`, Reset
   calls `onRefresh` with the `from` and `to` of the reset range. A relative range stays relative. Thus later
   refreshes move with the clock (`refresh.3`). The Renderer sends an integer as its decimal string, as the Source
   does (`tool.6`). For example, `1790352577294` becomes `"1790352577294"`.
-- `renderer.22` A pan calls `onRefresh` only at the end of the drag. It does not call `onRefresh` while the drag
+- `renderer.46` A pan calls `onRefresh` only at the end of the drag. It does not call `onRefresh` while the drag
   continues, because data source requests can be slow or expensive.
-- `renderer.23` While the chart is busy, zoom, zoom out, Reset and pan do nothing.
+- `renderer.47` While the chart is busy, zoom, zoom out, Reset and pan do nothing.
