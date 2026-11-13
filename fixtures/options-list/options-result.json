@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Options of timeseries. Set them in options.\nstacking: \"none\" | \"normal\" | \"percent\" = \"none\" // Stack the series on each other\nlineWidth: integer 0..20 = 1 // Width of the lines, in pixels\nlegend.showLegend: boolean = true // Show the legend\nlegend.placement: \"bottom\" | \"right\" = \"bottom\" // Side of the chart that shows the legend\ntooltip.mode: \"single\" | \"multi\" | \"none\" = \"single\" // Series that the tooltip shows: the series under the pointer, all series, or no tooltip\nField options of timeseries. Set them in fieldConfig.defaults for all fields, or in the properties of an override.\nunit: string // Grafana unit ID of the values, for example bytes\nmin: number // Lowest value of the value axis\nmax: number // Highest value of the value axis\ndecimals: integer >=0 // Number of decimals of the values\ndisplayName: string // Name of the series in the legend and the tooltip\nAn override is {\"matcher\":{\"id\":\"byName\",\"options\":\"<field name>\"},\"properties\":[{\"id\":\"<path>\",\"value\":<value>}]}. The matcher id can also be byRegexp or byFrameRefID.\nAdvanced options not listed: 2. Set advanced to true to list them."
+    }
+  ]
+}

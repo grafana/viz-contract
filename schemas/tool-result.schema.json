@@ -66,7 +66,7 @@
     },
     "panel": {
       "type": "object",
-      "description": "The panel ID and the options preset of the chart, and the unit and the title of the tool arguments.",
+      "description": "The panel ID and the options preset of the chart, and the unit and the title of the tool arguments. The panel of the chart also has the options and the fieldConfig of the tool arguments.",
       "required": [
         "type",
         "options"

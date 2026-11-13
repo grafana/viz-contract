@@ -1,0 +1,43 @@
+{
+  "datasourceUid": "lgtm-prometheus",
+  "queries": [
+    {
+      "refId": "A",
+      "expr": "sum by (handler) (rate(grafana_http_request_duration_seconds_count[5m]))",
+      "legendFormat": "{{handler}}",
+      "format": "time_series"
+    }
+  ],
+  "from": "now-15m",
+  "to": "now",
+  "unit": "reqps",
+  "type": "timeseries",
+  "options": {
+    "stacking": "normal",
+    "lineWidth": 2,
+    "legend": {
+      "placement": "right"
+    }
+  },
+  "fieldConfig": {
+    "defaults": {
+      "min": 0
+    },
+    "overrides": [
+      {
+        "matcher": {
+          "id": "byName",
+          "options": "/api/health"
+        },
+        "properties": [
+          {
+            "id": "custom.lineStyle",
+            "value": {
+              "fill": "dash"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

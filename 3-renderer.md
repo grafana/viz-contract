@@ -46,3 +46,6 @@ Shape: `renderer-api.d.ts`.
   Grafana does. It shows the title as text, not as HTML. If the title is wider than `el`, the Renderer cuts it with
   `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
   `panel.title`, the Renderer shows no title.
+- `renderer.38` The Renderer applies each option of `panel.options` and `panel.fieldConfig` that
+  `chart-options.json` lists (`delivery.14`), of each `tier`. A setting of a panel editor, for example an editor
+  mode, does not turn off an `advanced` option.

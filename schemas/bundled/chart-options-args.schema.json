@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "get_chart_options arguments",
+  "description": "List the options of one chart. Call it before you set options or fieldConfig of query_datasource.",
+  "type": "object",
+  "required": [
+    "type"
+  ],
+  "properties": {
+    "type": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A chart type of query_datasource."
+    },
+    "advanced": {
+      "type": "boolean",
+      "default": false,
+      "description": "Also list the advanced options."
+    }
+  },
+  "additionalProperties": false,
+  "$comment": "Generated from schemas/chart-options-args.schema.json. Do not edit."
+}

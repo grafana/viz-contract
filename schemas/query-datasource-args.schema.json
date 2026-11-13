@@ -86,7 +86,23 @@
       "maxLength": 100,
       "$comment": "Generated from registry/constants.json (maxTitleChars). Do not edit.",
       "description": "Optional title of the chart, for example HTTP requests by handler. The chart shows it as a panel title."
+    },
+    "options": {
+      "type": "object",
+      "description": "Optional panel options of the chart, as in a Grafana panel JSON. Needs type. Do not guess: get_chart_options lists them."
+    },
+    "fieldConfig": {
+      "type": "object",
+      "description": "Optional field options of the chart: defaults and overrides, as in a Grafana panel JSON. Needs type. get_chart_options lists them."
     }
+  },
+  "dependentRequired": {
+    "options": [
+      "type"
+    ],
+    "fieldConfig": [
+      "type"
+    ]
   },
   "additionalProperties": false
 }

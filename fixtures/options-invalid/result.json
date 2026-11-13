@@ -1,0 +1,9 @@
+{
+  "isError": true,
+  "content": [
+    {
+      "type": "text",
+      "text": "invalid-options: timeseries does not accept these options: options.legend.position is not an option; options.lineWidth must be integer 0..20; options.tooltip must be object; fieldConfig.defaults.min must be number; fieldConfig.overrides[0].custom.lineColor is not an option. get_chart_options lists the options of timeseries."
+    }
+  ]
+}
