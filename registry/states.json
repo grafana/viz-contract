@@ -95,8 +95,8 @@
     },
     {
       "code": "annotate-timeout",
-      "when": "refreshTimeoutMs passes with no result",
-      "message": "Annotation not saved: no result in time."
+      "when": "annotateTimeoutMs passes with no result",
+      "message": "No answer in time. The annotation can still be saved. Check the chart before you save again."
     }
   ]
 }

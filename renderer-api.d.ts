@@ -31,7 +31,7 @@ export interface RenderOptions {
   onRefresh?: (request: RefreshRequest) => void;
   /**
    * Called when the user saves a new annotation. The Renderer shows the Add annotation UI only when the App gives
-   * this option, and only on a chart with a time axis.
+   * this option, and only on a chart with a time axis. The user opens the form with a Ctrl or Cmd click or drag.
    */
   onAnnotate?: (request: AnnotateRequest) => void;
 }
@@ -46,7 +46,7 @@ export interface RenderHandle {
   setRefreshed(id: string, ok: boolean, error?: string): void;
   /**
    * Gives the result of the annotation with this id. id is the id of the AnnotateRequest. With ok false, error is
-   * the text that the Renderer shows.
+   * the text that the Renderer shows. With ok true, the Renderer keeps the annotation on the chart until destroy.
    */
   setAnnotated(id: string, ok: boolean, error?: string): void;
   /** Removes the chart and its listeners. */

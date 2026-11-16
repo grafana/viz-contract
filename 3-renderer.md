@@ -54,31 +54,67 @@ frames are in `2-viz-spec.md` (`spec.12`).
 
 Shape: `onAnnotate`, `AnnotateRequest` and `setAnnotated` in `renderer-api.d.ts`.
 
-- `renderer.18` The Renderer shows the Add annotation UI only if the App gives `onAnnotate` and the chart has a time
-  axis. Without `onAnnotate`, the Renderer shows no Add annotation UI.
-- `renderer.19` The user adds an annotation in one of two ways: a click on a point of the time axis, or a drag over
-  a range of it. The Renderer then shows a form with a text field and a tags field.
-- `renderer.20` When the user saves the form, the Renderer calls `onAnnotate` with a new `id`, the `time` of the
+### Open the form
+
+- `renderer.49` The Renderer shows the Add annotation UI only if the App gives `onAnnotate` and the chart has a time
+  axis. Without `onAnnotate`, the Renderer shows no Add annotation UI. The App gives the same `onAnnotate` for each
+  chart. It does not need to know which charts have a time axis.
+- `renderer.50` The user opens the form with Ctrl or Cmd held down: a click on a point of the time axis, or a drag
+  over a range of it. The Renderer then shows a form with a text field, a tags field, a Save button and a Cancel
+  button.
+- `renderer.51` A click or a drag with no Ctrl and no Cmd does not open the form. It keeps its other meaning, for
+  example the pinned tooltip or a zoom. Thus a gesture has one meaning when the App gives both `onRefresh` and
+  `onAnnotate`. Grafana uses the same keys (the `click` handler and `maybeZoomAction` in
+  [TooltipPlugin2.tsx](https://github.com/grafana/grafana/blob/main/packages/grafana-ui/src/components/uPlot/plugins/TooltipPlugin2.tsx)).
+- `renderer.52` The Renderer shows one form at most. If the form is open and not busy, a new Ctrl or Cmd click or
+  drag moves the form to the new point or range. The form keeps its text, its tags and its message. If the form is
+  busy, a new Ctrl or Cmd click or drag does nothing.
+- `renderer.53` The user closes the form with Cancel or the Escape key. The Renderer does not call `onAnnotate`. If
+  the form is busy, Cancel and the Escape key do nothing. The busy state ends after `annotateTimeoutMs` at the
+  latest (`renderer.56`).
+
+### Save the form
+
+- `renderer.54` When the user saves the form, the Renderer calls `onAnnotate` with a new `id`, the `time` of the
   point or the start of the range, the `timeEnd` of the end of a range, the `text` and the `tags`. `time` and
   `timeEnd` are epoch milliseconds. A point has no `timeEnd`. The Renderer does not call `onAnnotate` if `text` is
   empty.
-- `renderer.21` After the call of `onAnnotate`, the form is busy and the user cannot save it again. The chart stays.
-- `renderer.22` The busy state ends at the first of these events:
+- `renderer.55` After the call of `onAnnotate`, the form is busy and the user cannot save it again. The chart stays.
+- `renderer.56` The busy state ends at the first of these events:
   - The App calls `setAnnotated(id, true)`. The Renderer closes the form and shows the annotation on the chart.
-  - The App calls `setAnnotated(id, false, error)`. The form stays open with its text. The Renderer shows the
-    `annotate-failed` message of `states.json`. With no `error`, it shows `annotate-failed-no-detail`.
-  - `refreshTimeoutMs` passes with no result. The Renderer shows `annotate-timeout`.
-- `renderer.23` `setAnnotated` gives the result of the last `onAnnotate` call only. A call with an `id` that is not
-  the `id` of the last `AnnotateRequest`, a call before the first `onAnnotate`, a second call for the same
-  annotation, and a call after the timeout do nothing.
-- `renderer.24` If `onAnnotate` throws, the Renderer writes the error to `console.error` with the prefix
+  - The App calls `setAnnotated(id, false, error)`. The form stays open with its text and its tags. The Renderer
+    shows the `annotate-failed` message of `states.json`. With no `error`, it shows `annotate-failed-no-detail`.
+  - `annotateTimeoutMs` passes with no result. The form stays open with its text and its tags. The Renderer shows
+    `annotate-timeout`. The save can still work, so this message tells the user to check before they save again.
+- `renderer.57` `setAnnotated` gives the result of the last `onAnnotate` call only. A call with an `id` that is not
+  the `id` of the last `AnnotateRequest` does nothing. A call before the first `onAnnotate` and a second call for
+  the same annotation also do nothing.
+- `renderer.58` A result after `annotateTimeoutMs` is not old if the user did not save again. A late
+  `setAnnotated(id, true)` closes the form and shows the annotation on the chart, as in `renderer.56`. A late
+  `setAnnotated(id, false, error)` does nothing, because the user already sees `annotate-timeout`.
+- `renderer.59` If `onAnnotate` throws, the Renderer writes the error to `console.error` with the prefix
   `grafana-viz:`. The busy state ends as with `setAnnotated(<id>, false, <error message>)`.
-- `renderer.25` This is a rule for the App. The App gives `onAnnotate` only if it can save an annotation. If it has
-  no way to save, it does not give `onAnnotate`, and `renderer.18` applies. How the App saves is not in this
+- `renderer.60` The Renderer shows the `annotate-failed`, `annotate-failed-no-detail` and `annotate-timeout`
+  messages in the form. A message goes away when the form closes, and when the user saves the form again.
+
+### Update and destroy
+
+- `renderer.61` `update` does not close the form. The form keeps its point or range, its text, its tags, its busy
+  state and its message. A later `setAnnotated` applies as before the `update`. If the chart of the new viz spec has
+  no time axis, the Renderer closes the form.
+- `renderer.62` After `destroy`, a call of `setAnnotated` does nothing.
+
+### The saved annotations
+
+- `renderer.63` The saved annotations are the annotations of the `setAnnotated(<id>, true)` calls of a handle. The
+  Renderer keeps them until `destroy`. At each `update`, it draws them with the annotations of `data.annotations`.
+  Thus a refresh or a new time range does not remove a saved annotation from the chart. The Renderer keeps them in
+  memory only, not in `localStorage` (`renderer.8`). A new `render` starts with no saved annotations.
+- `renderer.64` This is a rule for the App. The App does not add a saved annotation to `data.annotations`, because
+  `data` is a copy of the tool result (`spec.4`). The Renderer already draws it (`renderer.63`).
+- `renderer.65` This is a rule for the App. The App gives `onAnnotate` only if it can save an annotation. If it has
+  no way to save, it does not give `onAnnotate`, and `renderer.49` applies. How the App saves is not in this
   contract.
-- `renderer.26` After `setAnnotated(<id>, true)`, the App can call `update` with a viz spec that has the new
-  annotation in `data.annotations`. If it does not, the Renderer keeps the new annotation on the chart until the next
-  `update`.
 
 ## The legend
 
