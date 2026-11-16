@@ -91,8 +91,12 @@ range. Reset goes back to the reset range of `renderer.45`. A pan is a drag that
   calls `onRefresh` with the `from` and `to` of the reset range. A relative range stays relative. Thus later
   refreshes move with the clock (`refresh.3`). The Renderer sends an integer as its decimal string, as the Source
   does (`tool.6`). For example, `1790352577294` becomes `"1790352577294"`.
-- `renderer.48` If no zoom, zoom out or pan came after the last change of the reset range or after the last
-  Reset, Reset does nothing. Thus Reset sends no query for the time range that the chart already asked for.
+- `renderer.48` With `onRefresh`, Reset does nothing while the chart shows the reset range. The chart shows the
+  reset range after `render`. It also shows it after an `update` that ends the busy state of a pick of the time
+  picker or of a Reset (`refresh.5`), or that comes after the timeout of that pick or Reset (`refresh.15`). The
+  chart stops showing the reset range when a zoom, a zoom out or a pan calls `onRefresh`. This is also true if
+  that refresh fails, because the App keeps the new range (`refresh.9`). A pick or a Reset whose refresh fails or
+  times out does not show the reset range. Thus the user can try Reset again.
 - `renderer.46` A pan calls `onRefresh` only at the end of the drag. It does not call `onRefresh` while the drag
   continues, because data source requests can be slow or expensive.
 - `renderer.47` While the chart is busy, zoom, zoom out, Reset and pan do nothing.
