@@ -24,6 +24,22 @@ Shape: `schemas/viz-spec.schema.json`.
 - `spec.15` `panel.title` is a copy of the `title` of the panel of the tool result, or of the alternative that the
   user picked. If that panel has no `title`, the viz spec has no `panel.title`.
 
+## The Explore link
+
+- `spec.16` If the viz spec has `grafanaUrl`, the App can show a link that opens the queries of the chart in Grafana
+  Explore. The App opens it with `ui/open-link`, as the link of `spec.7`.
+- `spec.17` The Explore URL is `grafanaUrl` with the path `/explore` after it, and two query parameters:
+  `schemaVersion` and `panes`. `schemaVersion` is the value of the constant `exploreSchemaVersion`. If `grafanaUrl`
+  has a path, for a Grafana under a sub path, `/explore` comes after that path.
+- `spec.18` `panes` is a JSON object with one entry, the pane. Its key can be any string. The pane has these fields:
+  - `datasource` is the `uid` of `panel.datasource`.
+  - `queries` is a copy of `panel.targets`. A query with no `datasource` gets `panel.datasource`. A query with a
+    `datasource` keeps it.
+  - `range` has the `from` and the `to` of `data.range`, each as a string of epoch milliseconds. Thus Explore shows
+    the time range of the chart. A relative range would show the data of a later time.
+- `spec.19` Grafana reads `panes` from the version `exploreMinGrafanaVersion`. An older Grafana opens an empty
+  Explore. The tool result does not give the Grafana version, so the App always makes the URL of `spec.17`.
+
 ## What the Renderer reads
 
 - `spec.9` The Renderer ignores the fields that it does not know. Thus a new optional field does not break the

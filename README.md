@@ -151,6 +151,8 @@ version.
 | `maxTitleChars` | 100 | characters | yes | Longest title of the tool arguments |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
+| `exploreSchemaVersion` | 1 | version | no | The schemaVersion of the state in an Explore URL |
+| `exploreMinGrafanaVersion` | 10.2 | version | no | First Grafana version that reads the panes of an Explore URL |
 <!-- constants:end -->
 
 ## Not in this contract

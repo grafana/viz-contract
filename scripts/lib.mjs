@@ -78,6 +78,20 @@ export function resolveTime(t, now) {
 }
 
 // The /api/ds/query request body of the Source (tool.5, tool.6 and tool.12).
+// The Explore link of a viz spec (spec.17, spec.18), in the shape of explore.json.
+export function exploreLink(spec, constants) {
+  const { datasource, targets } = spec.panel;
+  return {
+    url: `${spec.grafanaUrl.replace(/\/+$/, '')}/explore`,
+    schemaVersion: String(constants.exploreSchemaVersion.value),
+    pane: {
+      datasource: datasource.uid,
+      queries: targets.map((q) => ({ ...q, datasource: q.datasource ?? datasource })),
+      range: { from: String(spec.data.range.from), to: String(spec.data.range.to) },
+    },
+  };
+}
+
 export function sourceRequest(args, now, constants) {
   const from = args.from ?? constants.defaultFrom.value;
   const to = args.to ?? constants.defaultTo.value;

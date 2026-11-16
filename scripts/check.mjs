@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, fits, matches, read, readJSON, sourceRequest, summary } from './lib.mjs';
+import { CONTRACT, SCHEMAS, exploreLink, fits, matches, read, readJSON, sourceRequest, summary } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -92,6 +92,9 @@ for (const set of sets) {
   }
   if (files['request.json'] && JSON.stringify(files['request.json']) !== JSON.stringify(sourceRequest(files['args.json'], files['meta.json'].now, constants))) {
     fail('fixtures', `${set}/request.json is not the request of tool.5, tool.6 and tool.12`);
+  }
+  if (files['explore.json'] && JSON.stringify(files['explore.json']) !== JSON.stringify(exploreLink(files['spec.json'], constants))) {
+    fail('fixtures', `${set}/explore.json is not the Explore link of spec.17 and spec.18`);
   }
   const result = files['result.json'];
   if (files['response.json'] && result && !result.isError) {

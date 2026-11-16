@@ -14,6 +14,7 @@ are in `fixtures/`, one directory for each set.
 | `result.json` | The expected tool result, or the expected tool error | Source, App |
 | `spec.json` | The expected viz spec | App, Renderer |
 | `state.json` | The expected state, error and notices of `onState` | Renderer |
+| `explore.json` | The expected Explore link of `spec.json`: `url`, the URL with no query part, `schemaVersion` and `pane` | App |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -24,7 +25,8 @@ are in `fixtures/`, one directory for each set.
 ## Sets
 
 - `fixtures.4` Focus sets for the time series chart:
-  - `prometheus-line`: a Prometheus range query with one series for each label value.
+  - `prometheus-line`: a Prometheus range query with one series for each label value. Its `explore.json` gives the
+    Explore link (`spec.16` to `spec.18`).
   - `no-data`: a query that gives frames with no rows.
   - `partial-error`: one correct query and one failed query. The response has the HTTP status 400, as Grafana gives
     for a partial failure.
@@ -50,6 +52,9 @@ are in `fixtures/`, one directory for each set.
   `request.json`, the request body must equal it. The tool result must equal `result.json`, but the test does not
   compare `grafanaUrl`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
+- `fixtures.13` The App test makes the Explore link of `spec.json` for each set with `explore.json`. The URL with
+  no query part must equal `url`. The parameter `schemaVersion` must equal `schemaVersion`. The one pane of `panes`
+  must equal `pane`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response
   has a secret, an internal host name or a private URL.

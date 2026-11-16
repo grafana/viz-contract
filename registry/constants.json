@@ -11,5 +11,7 @@
   "maxAppNoteChars":      { "value": 200, "unit": "characters", "meaning": "Longest note in the text line of render_grafana_app", "changeable": true },
   "maxTitleChars":        { "value": 100, "unit": "characters", "meaning": "Longest title of the tool arguments", "changeable": true },
   "deprecationDays":      { "value": 30, "unit": "days", "meaning": "Shortest deprecation period of a change to a frozen interface", "changeable": true },
-  "specVersion":          { "value": 1, "unit": "version", "meaning": "The viz spec version that this contract gives" }
+  "specVersion":          { "value": 1, "unit": "version", "meaning": "The viz spec version that this contract gives" },
+  "exploreSchemaVersion": { "value": 1, "unit": "version", "meaning": "The schemaVersion of the state in an Explore URL" },
+  "exploreMinGrafanaVersion": { "value": "10.2", "unit": "version", "meaning": "First Grafana version that reads the panes of an Explore URL" }
 }
