@@ -56,9 +56,10 @@ are in `fixtures/`, one directory for each set.
 - `fixtures.17` Sets for the chart options. Each one uses the `chart-options.json` of the set `options`. That file
   is an example with a few options of the time series chart. It is not the file of a Renderer.
   - `options`: the query of `prometheus-line` with a `type`, `options`, and a `fieldConfig` that has an override.
-    The panel of the chart in `result.json` has them. The panels of the alternatives do not (`tool.41`).
-  - `options-invalid`: a path that is not an option, a value that does not validate, and a value that must be an
-    object, in `options`, in `fieldConfig.defaults` and in an override. The set has no `response.json`, because
+    One key of `options` has dots. The panel of the chart in `result.json` has the options as nested objects. The
+    panels of the alternatives do not have them (`tool.41`).
+  - `options-invalid`: a path that is not an option, a value that does not validate, a value that must be an
+    object, and a path that is set two times, in `options`, in `fieldConfig.defaults` and in an override. The set has no `response.json`, because
     the Source does not query. The expected result is the `invalid-options` tool error (`tool.39`).
   - `options-list`: `get_chart_options` with no `advanced`. The text has the line of the advanced options that
     are not listed (`tool.44`).

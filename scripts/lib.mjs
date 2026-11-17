@@ -148,9 +148,13 @@ function findOptions(root, list, prefix = '', out = { found: [], wrong: [] }) {
 export function optionProblems(args, entry, valid) {
   const check = (root, list, prefix) => {
     const { found, wrong } = findOptions(root, list);
+    // A path that two keys give, for example legend.placement and legend: { placement }, is set two times (tool.38).
+    const times = new Map();
+    for (const [p] of found) times.set(p, (times.get(p) ?? 0) + 1);
     return [
       ...wrong.map(([p, type]) => [p, type ? `must be ${type}` : 'is not an option']),
-      ...found.filter(([, value, o]) => !valid(o.schema, value)).map(([p, , o]) => [p, `must be ${typeText(o.schema)}`]),
+      ...[...times].filter(([, n]) => n > 1).map(([p]) => [p, 'is set two times']),
+      ...found.filter(([p, value, o]) => times.get(p) === 1 && !valid(o.schema, value)).map(([p, , o]) => [p, `must be ${typeText(o.schema)}`]),
     ]
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
       .map(([p, text]) => `${prefix}${p} ${text}`);
@@ -172,15 +176,19 @@ export function optionProblems(args, entry, valid) {
 // The panel of the chart with the options and the fieldConfig of the tool arguments (tool.41). panel is the panel
 // of tool.22 and tool.31.
 export function panelWithOptions(panel, args, entry) {
-  const options = structuredClone(panel.options);
-  for (const [p, value] of findOptions(args.options, entry.options).found) {
-    const keys = p.split('.');
-    const last = keys.pop();
-    keys.reduce((node, key) => (node[key] ??= {}), options)[last] = value;
-  }
-  const out = { ...panel, options };
+  // Writes each option at its path, as nested objects, also when the key of the arguments had dots.
+  const write = (target, root, list) => {
+    for (const [p, value] of findOptions(root, list).found) {
+      const keys = p.split('.');
+      const last = keys.pop();
+      keys.reduce((node, key) => (node[key] ??= {}), target)[last] = structuredClone(value);
+    }
+    return target;
+  };
+  const out = { ...panel, options: write(structuredClone(panel.options), args.options, entry.options) };
   if (args.fieldConfig) {
     out.fieldConfig = structuredClone(args.fieldConfig);
+    if (args.fieldConfig.defaults) out.fieldConfig.defaults = write({}, args.fieldConfig.defaults, entry.fieldConfig);
     if (args.unit) out.fieldConfig.defaults = { ...out.fieldConfig.defaults, unit: args.unit };
   }
   return out;

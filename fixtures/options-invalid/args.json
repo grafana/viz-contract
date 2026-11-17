@@ -15,8 +15,10 @@
     "tooltip": "multi",
     "lineWidth": 40,
     "legend": {
-      "position": "right"
-    }
+      "position": "right",
+      "showLegend": true
+    },
+    "legend.showLegend": false
   },
   "fieldConfig": {
     "defaults": {

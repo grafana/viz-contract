@@ -17,7 +17,8 @@
     "lineWidth": 2,
     "legend": {
       "placement": "right"
-    }
+    },
+    "tooltip.mode": "multi"
   },
   "fieldConfig": {
     "defaults": {
