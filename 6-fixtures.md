@@ -65,9 +65,20 @@ are in `fixtures/`, one directory for each set.
 - `fixtures.12` One error set for each of the errors `invalid-spec`, `unsupported-spec-version`,
   `unsupported-panel-type` and `all-queries-failed` of `states.json`. It has `spec.json` and a `state.json` with the
   state `error` and the error code. The `all-queries-failed` set has two failed queries (`state.18`).
-- `fixtures.13` The App test draws `spec.json`. For each case of `message.json`, it calls the `onMessage` of the App
+- `fixtures.13` Focus sets for the gauge chart and the stat chart. Each set has `spec.json` and `state.json`. Only
+  the Renderer test uses them (`fixtures.10`):
+  - `gauge-thresholds` and `stat-thresholds`: `panel.fieldConfig.defaults` has the unit `percent`, a `min`, a `max`
+    and three threshold steps. No tool argument sets these fields. The state is `ready`.
+  - `gauge-no-data` and `stat-no-data`: the frame has a number field and no rows. The state is `no-data`
+    (`state.4`).
+- `fixtures.14` Pick sets for the limits of the rule `single-value`. The number fields count over all frames:
+  - `pick-single-value-frames`: three frames with one row each, as a Prometheus instant query gives. The chart is
+    `stat`.
+  - `pick-single-value-over-limit`: eleven such frames. That is more number fields than the rule allows, so the
+    chart is the chart of the rule `default`.
+- `fixtures.15` The App test draws `spec.json`. For each case of `message.json`, it calls the `onMessage` of the App
   with the `request`. The text of the message that the App sends must equal `text`. If `text` is `null`, the App
   must send no message (`state.25`).
-- `fixtures.14` The Renderer test draws `spec.json` with `onMessage`. For each case of `message.json` with
+- `fixtures.16` The Renderer test draws `spec.json` with `onMessage`. For each case of `message.json` with
   `renderer` `true`, it opens the tooltip at the x of `point.xRaw`, and clicks Ask in chat for the series
   `series.name`. `onMessage` must get one `MessageRequest` that equals `request` (`renderer.31`, `renderer.32`).

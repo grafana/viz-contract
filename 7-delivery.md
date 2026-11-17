@@ -61,7 +61,7 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - While the chart is busy, an action calls `onRefresh` (`renderer.47`).
   - With no `onRefresh`, an action makes a network request, or the time range on screen leaves `data.range`
     (`renderer.42`).
-- `delivery.13` A CI check of the App runs the test of `fixtures.13` for each set that has `message.json`. It also
+- `delivery.13` A CI check of the App runs the test of `fixtures.15` for each set that has `message.json`. It also
   checks each answer of `state.27` with a Host that the test makes:
   - With `isError` `true`, and with a JSON-RPC error, the text box has exactly the text that the App sent.
   - With no error, the App shows no error and no text box.
@@ -92,4 +92,4 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - While the chart is busy with a refresh, the user cannot open and save the form (`renderer.67`).
   - With no `onAnnotate`, or with the `smoke-histogram` fixture and `onAnnotate`, the pinned tooltip has an Add
     annotation button, or a Ctrl or Cmd click opens the form (`renderer.49`).
-- `delivery.15` A CI check of the Renderer runs the test of `fixtures.14` for each set that has `message.json`.
+- `delivery.15` A CI check of the Renderer runs the test of `fixtures.16` for each set that has `message.json`.

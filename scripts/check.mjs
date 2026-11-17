@@ -81,7 +81,7 @@ const isMessageRequest = (r) =>
   optional(r.series.refId, 'string') &&
   isText(r.point?.x) && isText(r.point.y) && X_TYPES.includes(r.point.xType) &&
   optional(r.point.xIso, 'string') && optional(r.point.xRaw, 'number') && optional(r.point.yRaw, 'number');
-// A case with renderer true is a point of spec.json (fixtures.14): a time series field with the name, the labels
+// A case with renderer true is a point of spec.json (fixtures.16): a time series field with the name, the labels
 // and the refId of the series, and a row at xRaw whose value is yRaw. x and y are the formatted text, which only
 // the Renderer test can check.
 const isSpecPoint = (spec, { series, point }) =>
