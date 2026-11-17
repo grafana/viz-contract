@@ -81,16 +81,15 @@ repositories or internal documents. The check command includes a public text che
 
 ## Preparing a contribution
 
-Search existing issues and open PRs for overlapping work. Link related work and dependencies;
-coordinate with maintainers before substantial changes. Keep each PR focused on one change.
-Describe the affected contract rules, compatibility impact, and validation performed. Update fixtures
-with changed contract rules, including valid and invalid examples where appropriate.
+Search existing issues and open PRs for overlapping work. Link related work and dependencies.
+Coordinate with maintainers before substantial changes. Describe the affected contract rules,
+compatibility impact, and validation performed.
 
-AI-assisted contributions are welcome. Read and understand every change, including generated schemas;
-the contributor remains responsible for correctness and for answering review questions. Report
-checks that could not run rather than claiming they passed.
+AI-assisted contributions are welcome. Read and understand every change, including generated schemas.
+The contributor remains responsible for correctness and for answering review questions.
+Report checks that could not run rather than claiming they passed.
 
-Agents must also read [AGENTS.md](AGENTS.md). Report vulnerabilities through
+Report vulnerabilities through
 [Grafana's security reporting page](https://grafana.com/legal/report-a-security-issue/), not public issues.
 
 ## Signed commits
@@ -98,17 +97,20 @@ Agents must also read [AGENTS.md](AGENTS.md). Report vulnerabilities through
 Every contributed commit must have a signature that GitHub verifies, including commits authored
 with an agent. A `Signed-off-by` trailer (`git commit -s`) is not a cryptographic signature.
 
-Follow the GitHub setup links in [Grafana’s signing guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md#submit-a-pull-request)
+Follow the GitHub setup links in [Grafana's signing guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md#submit-a-pull-request)
 with your own identity and register the public signing key with GitHub. Once configured:
 
 ```bash
 git config --local commit.gpgsign true
-git commit -S -m "docs: clarify contribution guidance"
-git log --show-signature -1
+git commit -m "docs: clarify contribution guidance"
 ```
 
-Follow the verification-status link in [Grafana’s signing guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md#submit-a-pull-request)
-on every commit in the PR; local signing alone does not guarantee GitHub verification.
+Follow the verification-status link in [Grafana's signing guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md#submit-a-pull-request)
+to check every commit in the PR. Local signing alone does not guarantee GitHub verification.
 If signing fails, fix the key or signing-agent setup rather than disabling signing. Preserve original
-authorship when repairing signatures. Coordinate before rewriting published history; agents must
+authorship when repairing signatures. Coordinate before rewriting published history. Agents must
 obtain explicit approval before doing so. Do not re-sign another contributor's commits as your own.
+
+For local SSH signature verification with `git log --show-signature`, first configure
+`gpg.ssh.allowedSignersFile` with the trusted signing identity and public key. An error about a
+missing allowed-signers file means local verification is not configured. It does not mean signing failed.

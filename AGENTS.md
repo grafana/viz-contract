@@ -1,28 +1,27 @@
 # Agent guidance
 
-## Contribution workflow
+This repository defines the contract. Implementations live in consumer repositories.
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) and applicable directory instructions before editing.
-Keep changes focused and follow surrounding conventions. Add comments for non-obvious reasons,
-not to narrate self-explanatory code. Follow CONTRIBUTING.md for generation and validation commands.
+## Every change
 
-Use the contributor's configured signing identity for every commit. Never disable signing to get
-past an error or fabricate an identity. Preserve authorship; get explicit approval before rewriting
-published history. Follow the signing setup in CONTRIBUTING.md.
+- Change affected prose, schemas, registries, and fixtures in one PR.
+- Give a new rule a new ID. Never reuse a removed ID or change an existing ID's meaning.
+- Write fixed values only in `registry/constants.json`.
+- Do not hand-edit generated output (`schemas/bundled/`, the constants table in README.md).
+  Run `node scripts/generate.mjs`. Inspect relevant generated diffs instead of reading all output.
+- Read one fixture set as an example, not the whole `fixtures/` directory.
+- Validate: `npm ci --ignore-scripts` in `scripts` once, then `node scripts/check.mjs` from the root.
+- Do not edit CHANGELOG.md, the package version, or tags. State the needed `version:` label in the PR.
 
-Before `git push`, stop, summarize changes and validation, and obtain explicit human approval.
-A request to open a PR does not by itself authorize pushing. Report unavailable or skipped checks.
+## Read only when needed
 
-## Repository essentials
+- Change to a shape or a compatibility promise: [8-versioning.md](8-versioning.md).
+- Choosing the version label: [Version and changelog](CONTRIBUTING.md#version-and-changelog).
+- Signing error: [Signed commits](CONTRIBUTING.md#signed-commits). Never disable signing.
 
-Read README.md, CONTRIBUTING.md, and `8-versioning.md` before contract changes.
-Change prose, schemas, registries, and fixtures together. Never reuse rule IDs or change an existing
-ID's meaning. Define constants in `registry/constants.json`; regenerate derived outputs rather than
-editing them by hand. Preserve compatibility promises and document affected consumers in the PR.
+## Git
 
-Use the existing version labels and release process. Do not manually edit the placeholder package
-version, CHANGELOG.md, or release tags. Contributors without label permissions should state the
-required labels in the PR and ask a maintainer to apply them.
-
-All references must be public. This repository defines the contract; implementations live in consumer
-repositories. Validate contract changes with the schema and fixture checks described in CONTRIBUTING.md.
+- Sign every commit with the contributor's configured identity.
+- Get explicit approval before `git push` and before rewriting published history.
+  A request to open a PR does not authorize a push.
+- Report checks you skipped or could not run.
