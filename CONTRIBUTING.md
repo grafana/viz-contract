@@ -78,3 +78,39 @@ the contract does not open issues in those repositories.
 The contract is public. Link only public sources: the Grafana source code and docs, the MCP and MCP Apps
 specifications, the dataplane contract, and the public mcp-grafana code and docs. Do not link private
 repositories or internal documents. The check command includes a public text check.
+
+## Preparing a contribution
+
+Search existing issues and open PRs for overlapping work. Link related work and dependencies;
+coordinate with maintainers before substantial changes. Keep each PR focused on one change.
+Describe the problem, resulting behavior, and validation performed. Include regression tests with
+bug fixes and meaningful coverage with new functionality. Include before/after screenshots for
+visible UI changes, and check keyboard access, semantic HTML, accessible names, and theme behavior.
+
+AI-assisted contributions are welcome. Read and understand every change, including generated tests;
+the contributor remains responsible for correctness and for answering review questions. Report
+checks that could not run rather than claiming they passed.
+
+Read the [testing guide](contribute/testing.md) for shared quality standards and local commands.
+Agents must also read [AGENTS.md](AGENTS.md). Report vulnerabilities through
+[Grafana's security reporting page](https://grafana.com/legal/report-a-security-issue/), not public issues.
+
+## Signed commits
+
+Every contributed commit must have a signature that GitHub verifies, including commits authored
+with an agent. A `Signed-off-by` trailer (`git commit -s`) is not a cryptographic signature.
+
+Follow the GitHub setup links in [Grafana’s signing guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md#submit-a-pull-request)
+with your own identity and register the public signing key with GitHub. Once configured:
+
+```bash
+git config --local commit.gpgsign true
+git commit -S -m "docs: clarify contribution guidance"
+git log --show-signature -1
+```
+
+Follow the verification-status link in [Grafana’s signing guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md#submit-a-pull-request)
+on every commit in the PR; local signing alone does not guarantee GitHub verification.
+If signing fails, fix the key or signing-agent setup rather than disabling signing. Preserve original
+authorship when repairing signatures. Coordinate before rewriting published history; agents must
+obtain explicit approval before doing so. Do not re-sign another contributor's commits as your own.
