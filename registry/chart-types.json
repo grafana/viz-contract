@@ -172,7 +172,7 @@
       "options": {},
       "fits": [{ "fieldCountByType.number": { "min": 1, "max": 10 } }],
       "description": "One arc for each value, between a minimum and a maximum",
-      "dataShape": "1 to 10 number fields; the last value of each field is shown"
+      "dataShape": "1 to 10 number fields; a reducer gives one value for each field, by default the last value"
     },
     {
       "name": "stat",
@@ -180,7 +180,7 @@
       "options": {},
       "fits": [{ "fieldCountByType.number": { "min": 1, "max": 10 } }],
       "description": "One large number for each value",
-      "dataShape": "1 to 10 number fields; the last value of each field is shown"
+      "dataShape": "1 to 10 number fields; a reducer gives one value for each field, by default the last value"
     }
   ]
 }
