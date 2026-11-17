@@ -66,7 +66,7 @@
     },
     {
       "code": "invalid-options",
-      "when": "The options or the fieldConfig of the tool arguments have a path that is not an option of the chart, or a value that does not validate against the schema of its option, or the fieldConfig does not have the form of field-config.schema.json",
+      "when": "The options or the fieldConfig of the tool arguments have a path that is not an option of the chart, a path that is set two times, or a value that does not validate against the schema of its option, or the fieldConfig does not have the form of field-config.schema.json",
       "message": "<chart> does not accept these options: <problems>. get_chart_options lists the options of <chart>."
     },
     {

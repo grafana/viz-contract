@@ -85,6 +85,19 @@
             "required": ["fill"],
             "additionalProperties": false
           }
+        },
+        {
+          "path": "custom.spanNulls",
+          "description": "Connect the points across missing values: always, never, or up to a gap in milliseconds",
+          "tier": "advanced",
+          "default": false,
+          "schema": { "anyOf": [{ "type": "boolean" }, { "type": "number", "minimum": 0 }] }
+        },
+        {
+          "path": "custom.axisSoftMin",
+          "description": "Soft lowest value of the value axis",
+          "tier": "advanced",
+          "schema": { "type": ["number", "null"] }
         }
       ]
     }

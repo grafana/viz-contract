@@ -84,15 +84,30 @@
       "description": "The JSON Schema of the value of an option. It uses only these keywords, and it has no reference.",
       "properties": {
         "type": {
-          "enum": [
-            "boolean",
-            "integer",
-            "number",
-            "string",
-            "array",
-            "object"
+          "description": "One type, or a list of types for a value that can have more than one, for example a number or null.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/valueType"
+            },
+            {
+              "type": "array",
+              "minItems": 2,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/valueType"
+              }
+            }
           ]
         },
+        "anyOf": {
+          "type": "array",
+          "minItems": 2,
+          "description": "The value validates against one or more of these schemas, for example a boolean or a number with a minimum.",
+          "items": {
+            "$ref": "#/$defs/valueSchema"
+          }
+        },
+        "const": {},
         "enum": {
           "type": "array",
           "minItems": 1
@@ -124,6 +139,17 @@
       },
       "minProperties": 1,
       "additionalProperties": false
+    },
+    "valueType": {
+      "enum": [
+        "boolean",
+        "integer",
+        "number",
+        "string",
+        "array",
+        "object",
+        "null"
+      ]
     }
   }
 }

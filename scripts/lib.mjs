@@ -94,8 +94,11 @@ export function sourceRequest(args, now, constants) {
 
 // The type text of an option (tool.45).
 export function typeText(schema) {
+  if (schema.anyOf) return schema.anyOf.map(typeText).join(' | ');
+  if (schema.const !== undefined) return JSON.stringify(schema.const);
   if (schema.enum) return schema.enum.map((v) => JSON.stringify(v)).join(' | ');
-  if (schema.type === 'boolean' || schema.type === 'string') return schema.type;
+  if (Array.isArray(schema.type)) return schema.type.map((type) => typeText({ ...schema, type })).join(' | ');
+  if (schema.type === 'boolean' || schema.type === 'string' || schema.type === 'null') return schema.type;
   if (schema.type === 'integer' || schema.type === 'number') {
     const { minimum: min, maximum: max } = schema;
     if (min !== undefined && max !== undefined) return `${schema.type} ${min}..${max}`;
@@ -154,8 +157,10 @@ export function optionProblems(args, entry, valid, overrideSchema) {
     // A path that two keys give, for example legend.placement and legend: { placement }, is set two times (tool.38).
     const times = new Map();
     for (const [p] of found) times.set(p, (times.get(p) ?? 0) + 1);
+    // One problem for each path (tool.39): two keys can give the same path that is not an option.
+    const wrongOnce = wrong.filter(([p], i) => wrong.findIndex(([q]) => q === p) === i);
     return [
-      ...wrong.map(([p, type]) => [p, type ? `must be ${type}` : 'is not an option']),
+      ...wrongOnce.map(([p, type]) => [p, type ? `must be ${type}` : 'is not an option']),
       ...[...times].filter(([, n]) => n > 1).map(([p]) => [p, 'is set two times']),
       ...found.filter(([p, value, o]) => times.get(p) === 1 && !valid(o.schema, value)).map(([p, , o]) => [p, `must be ${typeText(o.schema)}`]),
     ]
@@ -168,11 +173,15 @@ export function optionProblems(args, entry, valid, overrideSchema) {
   if (overrides !== undefined && !Array.isArray(overrides)) problems.push('fieldConfig.overrides must be array');
   (Array.isArray(overrides) ? overrides : []).forEach((override, n) => {
     if (!valid(overrideSchema, override)) return problems.push(`fieldConfig.overrides[${n}] must be ${OVERRIDE_FORM}`);
-    for (const { id, value } of override.properties) {
+    // One problem for each id, in the order of the first property that has the id (tool.40).
+    const ids = override.properties.map((p) => p.id);
+    override.properties.forEach(({ id, value }, i) => {
+      if (ids.indexOf(id) !== i) return;
       const option = entry.fieldConfig.find((o) => o.path === id);
       if (!option) problems.push(`fieldConfig.overrides[${n}].${id} is not an option`);
+      else if (ids.lastIndexOf(id) !== i) problems.push(`fieldConfig.overrides[${n}].${id} is set two times`);
       else if (!valid(option.schema, value)) problems.push(`fieldConfig.overrides[${n}].${id} must be ${typeText(option.schema)}`);
-    }
+    });
   });
   for (const key of Object.keys(others).sort()) problems.push(`fieldConfig.${key} is not an option`);
   return problems;

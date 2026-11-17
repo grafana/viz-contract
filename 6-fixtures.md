@@ -58,10 +58,17 @@ are in `fixtures/`, one directory for each set.
   - `options`: the query of `prometheus-line` with a `type`, `options`, and a `fieldConfig` that has an override.
     One key of `options` has dots. The panel of the chart in `result.json` has the options as nested objects. The
     panels of the alternatives do not have them (`tool.41`).
-  - `options-invalid`: a path that is not an option, a value that does not validate, a value that must be an
-    object, and a path that is set two times, in `options`, in `fieldConfig.defaults` and in an override. It also
-    has an override and a key of `fieldConfig` that do not have the form of `tool.40`. The set has no `response.json`, because
-    the Source does not query. The expected result is the `invalid-options` tool error (`tool.39`).
+  - `options-invalid`: each problem of `tool.38` to `tool.40`. The set has no `response.json`, because the Source
+    does not query. The expected result is the `invalid-options` tool error. The arguments have these parts:
+    - In `options`: a path that is not an option, the same path from two keys, a path that is set two times, a
+      value that does not validate, and a value that must be an object.
+    - In `fieldConfig.defaults`: a path that is not an option, a path that is set two times, and a value that does
+      not validate.
+    - In the first override: an `id` that is not an option, a value that does not validate, and an `id` that is
+      set two times.
+    - Two overrides that do not have the override form: one has a matcher that is not allowed, and one has no
+      `properties`.
+    - A key of `fieldConfig` that is not `defaults` or `overrides`.
   - `options-list`: `get_chart_options` with no `advanced`. The text has the line of the advanced options that
     are not listed (`tool.44`).
   - `options-list-advanced`: `get_chart_options` with `advanced` set to true.
@@ -78,7 +85,8 @@ are in `fixtures/`, one directory for each set.
 - `fixtures.18` For a set of `fixtures.17`, the Source test gives the `chart-options.json` of the set `options` to
   the Source in place of the file of the Renderer. A set with `options-args.json` is a test of
   `get_chart_options`: the test gives `options-args.json` to the tool, and the tool result must equal
-  `options-result.json`.
+  `options-result.json`. `chart-options.json` and `options-args.json` validate against their schemas, as the files
+  of `fixtures.2` do.
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response

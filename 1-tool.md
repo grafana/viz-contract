@@ -97,7 +97,8 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   object. If the path of a key is the path of an option, the value of the key is the value of that option, and the
   Source does not read the keys inside it. If the path is the start of the path of an option, the value must be an
   object, and the Source reads its keys. Otherwise the path is not an option. If two keys give the path of the
-  same option, the path is set two times, and the Source does not check its values.
+  same option, the path is set two times, and the Source does not check its values. If two keys give the same path
+  that is not an option, or the same path whose value must be an object, the path has one problem.
 - `tool.39` The Source checks `options` and `fieldConfig` before it queries. Each path must be an option of the
   chart, and each value must validate against the `schema` of its option. If one is not correct, the Source returns
   the `invalid-options` tool error of `states.json`, and does not query. `<problems>` has one problem for each path
@@ -120,9 +121,12 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
     `override` definition of the schema. `<override>` is the override form of `tool.44`. The Source does not
     check the properties of this override.
 
-  The Source does not use the message of a schema library, so the text is the same in each Source. The matchers
-  are those of Grafana: `byName` takes the name of a field, `byRegexp` takes a regular expression for the names,
-  and `byFrameRefID` takes the `refId` of a query. The Source does not check that a matcher matches a field.
+  In an override, two properties with the same `id` are the problem `fieldConfig.overrides[<n>].<id> is set two
+  times`, as in `tool.38`. Each `id` of an override has one problem at most, and the problems of an override are
+  in the order of its properties. The Source does not use the message of a schema library, so the text is the
+  same in each Source. The matchers are those of Grafana: `byName` takes the name of a field, `byRegexp` takes a
+  regular expression for the names, and `byFrameRefID` takes the `refId` of a query. The Source does not check
+  that a matcher matches a field.
 - `tool.41` The `panel.options` of the chart is the `options` of the chart row, and then each option of the
   arguments at its path. The Source writes a path as nested objects, also when the key of the arguments had dots.
   The `panel.fieldConfig` of the chart is the `fieldConfig` of the arguments, with each path of its `defaults`
@@ -153,8 +157,13 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   entries with the `tier` `advanced`, and `<n>` is the number of these entries. The text has line 6 only when `<n>`
   is more than 0.
 - `tool.45` The type text of an option comes from its `schema`. The first of these that applies gives it:
+  - With `anyOf`: the type text of each schema of the list, joined with ` | `, for example
+    `boolean | number >=0`.
+  - With `const`: the value as JSON.
   - With `enum`: each value as JSON, joined with ` | `.
-  - With the `type` `boolean` or `string`: the `type`.
+  - With a list of types as the `type`: for each type of the list, the type text of the schema with only that
+    type, joined with ` | `, for example `number | null`.
+  - With the `type` `boolean`, `string` or `null`: the `type`.
   - With the `type` `integer` or `number`: the `type`. With a `minimum` and a `maximum`, ` <minimum>..<maximum>`
     follows. With only one, ` >=<minimum>` or ` <=<maximum>` follows.
   - With the `type` `array` and `items`: `array of `, and then the type text of `items`.

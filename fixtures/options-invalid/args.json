@@ -16,13 +16,24 @@
     "lineWidth": 40,
     "legend": {
       "position": "right",
-      "showLegend": true
+      "showLegend": true,
+      "foo": 1
     },
-    "legend.showLegend": false
+    "legend.showLegend": false,
+    "legend.foo": 2
   },
   "fieldConfig": {
     "defaults": {
-      "min": "0"
+      "min": "0",
+      "custom": {
+        "lineStyle": {
+          "fill": "dash"
+        },
+        "lineColor": "red"
+      },
+      "custom.lineStyle": {
+        "fill": "dot"
+      }
     },
     "overrides": [
       {
@@ -34,6 +45,18 @@
           {
             "id": "custom.lineColor",
             "value": "red"
+          },
+          {
+            "id": "decimals",
+            "value": -1
+          },
+          {
+            "id": "min",
+            "value": 1
+          },
+          {
+            "id": "min",
+            "value": 2
           }
         ]
       },
@@ -48,6 +71,12 @@
             "value": 2
           }
         ]
+      },
+      {
+        "matcher": {
+          "id": "byFrameRefID",
+          "options": "A"
+        }
       }
     ],
     "mappings": []
