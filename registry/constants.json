@@ -1,6 +1,7 @@
 {
   "maxResultBytes":       { "value": 1048576, "unit": "bytes", "meaning": "Largest structuredContent of the tool result", "changeable": true },
   "refreshTimeoutMs":     { "value": 60000, "unit": "ms", "meaning": "Time before a refresh with no result fails" },
+  "annotateTimeoutMs":    { "value": 60000, "unit": "ms", "meaning": "Time before an annotation save with no result stops being busy" },
   "defaultHeightPx":      { "value": 400, "unit": "px", "meaning": "Chart height when the element height is 0" },
   "defaultFrom":          { "value": "now-1h", "unit": "time", "meaning": "from when the tool arguments have none" },
   "defaultTo":            { "value": "now", "unit": "time", "meaning": "to when the tool arguments have none" },

@@ -34,6 +34,12 @@ export interface RenderOptions {
    * gives this option.
    */
   onMessage?: (request: MessageRequest) => void;
+  /**
+   * Called when the user saves a new annotation. The Renderer shows the Add annotation UI only when the App gives
+   * this option, and only on a chart with a time axis. The user opens the form with the Add annotation button of
+   * the pinned tooltip, or with a Ctrl or Cmd click or drag.
+   */
+  onAnnotate?: (request: AnnotateRequest) => void;
 }
 
 export interface RenderHandle {
@@ -44,6 +50,11 @@ export interface RenderHandle {
    * text that the Renderer shows.
    */
   setRefreshed(id: string, ok: boolean, error?: string): void;
+  /**
+   * Gives the result of the annotation with this id. id is the id of the AnnotateRequest. With ok false, error is
+   * the text that the Renderer shows. With ok true, the Renderer keeps the annotation on the chart until destroy.
+   */
+  setAnnotated(id: string, ok: boolean, error?: string): void;
   /** Removes the chart and its listeners. */
   destroy(): void;
 }
@@ -80,6 +91,19 @@ export type RefreshRequest = { id: string } & (
   | { cause: 'refresh' }
   | { cause: 'timeRange'; from: string; to: string }
 );
+
+/**
+ * An annotation that the user saves. id is a new value for each call of onAnnotate. The App gives it to
+ * setAnnotated. time is in epoch milliseconds. timeEnd is present only for a range, and is not less than time.
+ * text is not empty. tags can be empty. text and each tag have no white space at the start or the end.
+ */
+export interface AnnotateRequest {
+  id: string;
+  time: number;
+  timeEnd?: number;
+  text: string;
+  tags: string[];
+}
 
 /**
  * A message about a part of the chart, for the conversation. The App makes the text. A later version can add a

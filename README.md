@@ -51,6 +51,8 @@ flowchart TB
 | Icon cache | The `react-inlinesvg` cache of the copy of `@grafana/ui` in the App. `Icon` reads an SVG from it, and makes no request for that SVG |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
 | Legend overrides | The `fieldConfig` overrides that the user makes with the legend: hide, show and color an item. Only the Renderer keeps them (`renderer.37`) |
+| Time axis | An x axis that the panel draws from a field of type `time`. For example, a `timeseries` chart has a time axis. A `barchart` has one only if its categories are a `time` field. A `histogram` has none |
+| Saved annotations | The annotations that the user adds from the chart and that the App saves. Only the Renderer keeps them (`renderer.63`) |
 | Reset range | The time range that Reset asks for: the `timeRange` of the viz spec of `render`, or the last pick of the time picker (`renderer.45`) |
 
 The Renderer draws the panels of the package `@plugins/grafana-echarts`.
@@ -141,6 +143,7 @@ version.
 | ---- | ----- | ---- | ---------- | ------- |
 | `maxResultBytes` | 1048576 | bytes | yes | Largest structuredContent of the tool result |
 | `refreshTimeoutMs` | 60000 | ms | no | Time before a refresh with no result fails |
+| `annotateTimeoutMs` | 60000 | ms | no | Time before an annotation save with no result stops being busy |
 | `defaultHeightPx` | 400 | px | no | Chart height when the element height is 0 |
 | `defaultFrom` | now-1h | time | no | from when the tool arguments have none |
 | `defaultTo` | now | time | no | to when the tool arguments have none |
