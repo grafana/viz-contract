@@ -1,0 +1,85 @@
+{
+  "specVersion": 1,
+  "panel": {
+    "type": "grafana-echartsstat-panel",
+    "options": {},
+    "fieldConfig": {
+      "defaults": {
+        "unit": "percent",
+        "min": 0,
+        "max": 100,
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {
+              "value": null,
+              "color": "green"
+            },
+            {
+              "value": 70,
+              "color": "orange"
+            },
+            {
+              "value": 90,
+              "color": "red"
+            }
+          ]
+        }
+      }
+    },
+    "datasource": {
+      "uid": "testdata"
+    },
+    "targets": [
+      {
+        "refId": "A"
+      }
+    ]
+  },
+  "data": {
+    "range": {
+      "from": 1790349877294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "cpu",
+                  "type": "number"
+                },
+                {
+                  "name": "memory",
+                  "type": "number"
+                },
+                {
+                  "name": "disk",
+                  "type": "number"
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  52
+                ],
+                [
+                  78
+                ],
+                [
+                  94
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
