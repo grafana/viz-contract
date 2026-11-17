@@ -96,7 +96,7 @@
     {
       "code": "annotate-timeout",
       "when": "annotateTimeoutMs passes with no result",
-      "message": "No answer in time. The annotation can still be saved. Check the chart before you save again."
+      "message": "No answer in time. The save can still complete, and the annotation then shows on the chart. A second save can make a second annotation."
     }
   ]
 }

@@ -32,6 +32,7 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - With a tooltip open, and with a tooltip pinned.
   - With the time picker open.
   - With a legend menu open, and with the zoom controls shown.
+  - With `onAnnotate`: with a tooltip pinned, and with the Add annotation form open with a message.
 
   The check finds only the icons of these states. An icon of a state that the check does not draw can still make a
   request.
@@ -59,3 +60,26 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - While the chart is busy, an action calls `onRefresh` (`renderer.47`).
   - With no `onRefresh`, an action makes a network request, or the time range on screen leaves `data.range`
     (`renderer.42`).
+- `delivery.14` A CI check of the Renderer draws the `prometheus-line` fixture with `onAnnotate`. The check acts as
+  the App. It makes `annotateTimeoutMs` pass with a clock of the test. It fails in these cases:
+  - The pinned tooltip has no Add annotation button, or a click on the button does not open the form
+    (`renderer.66`).
+  - A Ctrl or Cmd click or drag does not open the form, or a click or a drag with no Ctrl and no Cmd opens it
+    (`renderer.50`, `renderer.51`).
+  - A save does not call `onAnnotate` one time with the `time`, the `timeEnd`, the `text` and the `tags` of the
+    form, or a save with a `text` of white space only calls it (`renderer.54`).
+  - While the form is busy, a save, Cancel or the Escape key changes the form or calls `onAnnotate`
+    (`renderer.53`, `renderer.55`).
+  - After `setAnnotated(<id>, true)`, the form is open, or the chart does not show the annotation
+    (`renderer.56`).
+  - After `setAnnotated(<id>, false, <error>)`, `setAnnotated(<id>, false)` and the timeout, the form does not
+    show the message of `states.json` for that case, or it loses its text or its tags (`renderer.56`).
+  - After the timeout and a change of the text, a late `setAnnotated(<id>, true)` closes the form, or the chart
+    does not show the annotation (`renderer.58`).
+  - After the timeout and a second save, `setAnnotated(<id>, true)` with the `id` of the first save changes the
+    form, or the chart does not show the first annotation (`renderer.57`, `renderer.58`).
+  - After an `update`, the chart does not show a saved annotation, or the open form loses its text
+    (`renderer.61`, `renderer.63`).
+  - While the chart is busy with a refresh, the user cannot open and save the form (`renderer.67`).
+  - With no `onAnnotate`, or with the `smoke-histogram` fixture and `onAnnotate`, the pinned tooltip has an Add
+    annotation button, or a Ctrl or Cmd click opens the form (`renderer.49`).

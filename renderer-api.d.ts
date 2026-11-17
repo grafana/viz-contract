@@ -31,7 +31,8 @@ export interface RenderOptions {
   onRefresh?: (request: RefreshRequest) => void;
   /**
    * Called when the user saves a new annotation. The Renderer shows the Add annotation UI only when the App gives
-   * this option, and only on a chart with a time axis. The user opens the form with a Ctrl or Cmd click or drag.
+   * this option, and only on a chart with a time axis. The user opens the form with the Add annotation button of
+   * the pinned tooltip, or with a Ctrl or Cmd click or drag.
    */
   onAnnotate?: (request: AnnotateRequest) => void;
 }
@@ -89,7 +90,7 @@ export type RefreshRequest = { id: string } & (
 /**
  * An annotation that the user saves. id is a new value for each call of onAnnotate. The App gives it to
  * setAnnotated. time is in epoch milliseconds. timeEnd is present only for a range, and is not less than time.
- * text is not empty. tags can be empty.
+ * text is not empty. tags can be empty. text and each tag have no white space at the start or the end.
  */
 export interface AnnotateRequest {
   id: string;
