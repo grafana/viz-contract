@@ -30,6 +30,7 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - With `onRefresh` and with no `onRefresh`.
   - At a width where the toolbar of `@grafana/ui` shows only icons.
   - With a tooltip open, and with a tooltip pinned.
+  - With `onMessage` and a tooltip pinned, so that the Ask in chat link shows (`renderer.30`).
   - With the time picker open.
   - With a legend menu open, and with the zoom controls shown.
   - With `onAnnotate`: with a tooltip pinned, and with the Add annotation form open with a message.
@@ -60,6 +61,14 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - While the chart is busy, an action calls `onRefresh` (`renderer.47`).
   - With no `onRefresh`, an action makes a network request, or the time range on screen leaves `data.range`
     (`renderer.42`).
+- `delivery.13` A CI check of the App runs the test of `fixtures.15` for each set that has `message.json`. It also
+  checks each answer of `state.27` with a Host that the test makes:
+  - With `isError` `true`, and with a JSON-RPC error, the text box has exactly the text that the App sent.
+  - With no error, the App shows no error and no text box.
+  - With no answer in `messageTimeoutMs`, the App shows no error and no text box, and a new call of `onMessage`
+    sends a message. The test uses a fake clock, so it does not wait.
+  - While the Host has not answered, the App shows that it sends the message, and a second call of `onMessage`
+    sends no message.
 - `delivery.14` A CI check of the Renderer draws the `prometheus-line` fixture with `onAnnotate`. The check acts as
   the App. It makes `annotateTimeoutMs` pass with a clock of the test. It fails in these cases:
   - The pinned tooltip has no Add annotation button, or a click on the button does not open the form
@@ -83,3 +92,4 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - While the chart is busy with a refresh, the user cannot open and save the form (`renderer.67`).
   - With no `onAnnotate`, or with the `smoke-histogram` fixture and `onAnnotate`, the pinned tooltip has an Add
     annotation button, or a Ctrl or Cmd click opens the form (`renderer.49`).
+- `delivery.15` A CI check of the Renderer runs the test of `fixtures.16` for each set that has `message.json`.

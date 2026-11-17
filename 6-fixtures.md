@@ -14,6 +14,7 @@ are in `fixtures/`, one directory for each set.
 | `result.json` | The expected tool result, or the expected tool error | Source, App |
 | `spec.json` | The expected viz spec | App, Renderer |
 | `state.json` | The expected state, error and notices of `onState` | Renderer |
+| `message.json` | `cases`: a list. Each case has a `description`, a `request` (a `MessageRequest`), the expected `text` of the message or `null`, and `renderer`. With `renderer` `true`, the Renderer must give the `request` for a point of `spec.json` | App, Renderer |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -33,6 +34,14 @@ are in `fixtures/`, one directory for each set.
   - `hostile-label`: series names and label values with HTML and script text. The Renderer shows them as text.
   - `title`: the query of `prometheus-line` with a `title` that has HTML text. Each panel of `result.json` and the
     panel of `spec.json` have the title (`tool.31`, `spec.15`). The Renderer shows it as text (`renderer.17`).
+  - `hostile-message`: the set has `spec.json`, `state.json` and `message.json` only. The title, the series names
+    and the labels have quotes, HTML text, control characters and characters that do not show. One series has more
+    labels than `maxMessageLabels`. `spec.json` has a `timeZone`, so the text of x does not depend on the browser.
+    The cases of `message.json` cover each step of `state.23`, each pattern of `messages.json`, and the length rule
+    of `state.25`. A case with `renderer` `true` is a point of `spec.json`. A case with `renderer` `false` tests
+    the App only. Its series or its point can be absent from `spec.json`, for example a category x, because the
+    App uses the `request` as it is.
+  - `message-no-title`: the same files, with no `panel.title`. The text has the panel type (`state.22`).
   - `too-large`: the set has `args.json` and `meta.json` only. The test makes the response at run time: it repeats
     the frames of `prometheus-line` with new label values until the tool result is larger than `maxResultBytes`.
     The expected result is the `too-large` tool error.
@@ -67,3 +76,9 @@ are in `fixtures/`, one directory for each set.
     `stat`.
   - `pick-single-value-over-limit`: eleven such frames. That is more number fields than the rule allows, so the
     chart is the chart of the rule `default`.
+- `fixtures.15` The App test draws `spec.json`. For each case of `message.json`, it calls the `onMessage` of the App
+  with the `request`. The text of the message that the App sends must equal `text`. If `text` is `null`, the App
+  must send no message (`state.25`).
+- `fixtures.16` The Renderer test draws `spec.json` with `onMessage`. For each case of `message.json` with
+  `renderer` `true`, it opens the tooltip at the x of `point.xRaw`, and clicks Ask in chat for the series
+  `series.name`. `onMessage` must get one `MessageRequest` that equals `request` (`renderer.31`, `renderer.32`).
