@@ -1,12 +1,19 @@
 {
-  "chart": "barchart",
+  "chart": "stat",
   "panel": {
-    "type": "grafana-echartscartesian-panel",
-    "options": {
-      "seriesType": "bar"
-    }
+    "type": "grafana-echartsstat-panel",
+    "options": {}
   },
   "alternatives": [
+    {
+      "chart": "barchart",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "options": {
+          "seriesType": "bar"
+        }
+      }
+    },
     {
       "chart": "histogram",
       "panel": {
@@ -32,6 +39,13 @@
         "options": {
           "seriesType": "funnel"
         }
+      }
+    },
+    {
+      "chart": "gauge",
+      "panel": {
+        "type": "grafana-echartsgauge-panel",
+        "options": {}
       }
     }
   ],

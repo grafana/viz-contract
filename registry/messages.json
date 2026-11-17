@@ -1,0 +1,19 @@
+{
+  "messages": [
+    {
+      "code": "point-time",
+      "when": "The user clicks Ask in chat in the tooltip, and x is a time",
+      "message": "Explain the value <y> of <series> <labels> (query <refId>) at the time <x> (<xIso>) in the chart <chart>, from <from> to <to>."
+    },
+    {
+      "code": "point-number",
+      "when": "The user clicks Ask in chat in the tooltip, and x is a number",
+      "message": "Explain the value <y> of <series> <labels> (query <refId>) at the x value <x> in the chart <chart>, from <from> to <to>."
+    },
+    {
+      "code": "point-string",
+      "when": "The user clicks Ask in chat in the tooltip, and x is a category",
+      "message": "Explain the value <y> of <series> <labels> (query <refId>) for the category <x> in the chart <chart>, from <from> to <to>."
+    }
+  ]
+}

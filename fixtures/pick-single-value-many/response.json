@@ -1,0 +1,43 @@
+{
+  "status": 200,
+  "body": {
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "cpu",
+                  "type": "number"
+                },
+                {
+                  "name": "memory",
+                  "type": "number"
+                },
+                {
+                  "name": "disk",
+                  "type": "number"
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  52
+                ],
+                [
+                  78
+                ],
+                [
+                  94
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -57,6 +57,29 @@
     "data": {
       "$ref": "#/$defs/tool-result.$defs.data"
     },
+    "timeRange": {
+      "type": "object",
+      "description": "The from and to of the tool arguments, with no change. A relative value, for example now-6h, stays relative. The Renderer uses it for Reset.",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "to": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "notices": {
       "type": "array",
       "description": "Notices of the App, for example chart-changed. The Renderer shows them with its own notices.",
@@ -115,12 +138,14 @@
       "$comment": "Generated from registry/panel-types.json. Do not edit.",
       "enum": [
         "grafana-echartscartesian-panel",
+        "grafana-echartsgauge-panel",
         "grafana-echartsgeo-panel",
         "grafana-echartsheatmap-panel",
         "grafana-echartshierarchy-panel",
         "grafana-echartsmultivariate-panel",
         "grafana-echartsparttowhole-panel",
         "grafana-relations-panel",
+        "grafana-echartsstat-panel",
         "grafana-echartsstatetimeline-panel",
         "grafana-echartsstatushistory-panel",
         "grafana-echartsstream-panel"
@@ -142,6 +167,53 @@
             "unit": {
               "type": "string",
               "minLength": 1
+            },
+            "min": {
+              "type": "number",
+              "description": "The minimum of the value range, as in a Grafana panel."
+            },
+            "max": {
+              "type": "number",
+              "description": "The maximum of the value range, as in a Grafana panel."
+            },
+            "thresholds": {
+              "type": "object",
+              "description": "The threshold steps, as in a Grafana panel. The first step has the value null, which is the base.",
+              "required": [
+                "mode",
+                "steps"
+              ],
+              "properties": {
+                "mode": {
+                  "enum": [
+                    "absolute",
+                    "percentage"
+                  ]
+                },
+                "steps": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "value",
+                      "color"
+                    ],
+                    "properties": {
+                      "value": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "color": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                }
+              }
             }
           }
         },

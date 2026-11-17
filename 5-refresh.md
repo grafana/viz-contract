@@ -49,8 +49,8 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   (`tool.25`).
 - `refresh.11` If the call gives another tool error, the App calls `setRefreshed(<id>, false, <message>)`. `<id>`
   is the `id` of the `RefreshRequest` of the call.
-- `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`)
-  and calls `update`.
+- `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`,
+  `spec.17`) and calls `update`.
 - `refresh.18` `options` and `fieldConfig` belong to the chart of `type` (`tool.36`). When the user switches to an
   alternative, the App removes them from the last tool arguments. The second call of `refresh.10` has no `type`,
   so it also has no `options` and no `fieldConfig`. Thus a chart never gets the options of another chart.

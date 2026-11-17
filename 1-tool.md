@@ -55,7 +55,7 @@ gives the tool result. [Chart options](#chart-options) gives the shapes of the c
 ## The chart
 
 The Source reads `registry/chart-types.json` and `registry/pick.json`. No other part reads them at run time. The
-Renderer build reads `chart-types.json` (`delivery.14`).
+Renderer build reads `chart-types.json` (`delivery.16`).
 
 - `tool.18` With no `type`, the Source picks the chart. It makes the summary of the frames that
   `registry.schema.json` defines in the condition rule language. It takes the first rule of `pick.json` whose
@@ -82,7 +82,7 @@ options of a chart with the `get_chart_options` tool, and the Source checks each
 
 Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_chart_options`.
 `schemas/field-config.schema.json` gives the form of `fieldConfig`. `schemas/chart-options.schema.json` gives
-`chart-options.json`, the file of the Renderer that lists the options of each chart (`delivery.14`).
+`chart-options.json`, the file of the Renderer that lists the options of each chart (`delivery.16`).
 
 - `tool.36` `options` and `fieldConfig` have the form of the `options` and the `fieldConfig` of a Grafana panel
   JSON. They belong to the chart of `type`. Thus arguments that have one of them and no `type` do not validate

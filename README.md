@@ -50,8 +50,12 @@ flowchart TB
 | Renderer | The browser bundle that draws a viz spec |
 | Viz spec | The JSON object that the App gives to the Renderer |
 | Icon cache | The `react-inlinesvg` cache of the copy of `@grafana/ui` in the App. `Icon` reads an SVG from it, and makes no request for that SVG |
-| Chart option | A panel option or a field option of a chart that the model can set (`tool.36`). `chart-options.json` of the Renderer lists the chart options of each chart (`delivery.14`) |
+| Chart option | A panel option or a field option of a chart that the model can set (`tool.36`). `chart-options.json` of the Renderer lists the chart options of each chart (`delivery.16`) |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
+| Legend overrides | The `fieldConfig` overrides that the user makes with the legend: hide, show and color an item. Only the Renderer keeps them (`renderer.37`) |
+| Time axis | An x axis that the panel draws from a field of type `time`. For example, a `timeseries` chart has a time axis. A `barchart` has one only if its categories are a `time` field. A `histogram` has none |
+| Saved annotations | The annotations that the user adds from the chart and that the App saves. Only the Renderer keeps them (`renderer.63`) |
+| Reset range | The time range that Reset asks for: the `timeRange` of the viz spec of `render`, or the last pick of the time picker (`renderer.45`) |
 
 The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 
@@ -141,6 +145,7 @@ version.
 | ---- | ----- | ---- | ---------- | ------- |
 | `maxResultBytes` | 1048576 | bytes | yes | Largest structuredContent of the tool result |
 | `refreshTimeoutMs` | 60000 | ms | no | Time before a refresh with no result fails |
+| `annotateTimeoutMs` | 60000 | ms | no | Time before an annotation save with no result stops being busy |
 | `defaultHeightPx` | 400 | px | no | Chart height when the element height is 0 |
 | `defaultFrom` | now-1h | time | no | from when the tool arguments have none |
 | `defaultTo` | now | time | no | to when the tool arguments have none |
@@ -150,13 +155,17 @@ version.
 | `maxAppNotes` | 5 | notes | yes | Most notes of the Source that render_grafana_app adds to its text line |
 | `maxAppNoteChars` | 200 | characters | yes | Longest note in the text line of render_grafana_app |
 | `maxTitleChars` | 100 | characters | yes | Longest title of the tool arguments |
+| `maxMessageChars` | 1000 | characters | yes | Longest text of a message that the App sends to the conversation |
+| `maxMessageLabels` | 10 | labels | yes | Most labels of the series in a message |
+| `maxMessageValueChars` | 100 | characters | yes | Longest value or label key in a message, for example a series name or a label value |
+| `messageTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a message |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
 <!-- constants:end -->
 
 ## Not in this contract
 
-1. Behavior inside one part. For example, zoom, pan and the Reset button are Renderer UI.
+1. Behavior inside one part that no rule of the contract gives.
 2. Size changes and display modes between the App and the Host. The
    [MCP Apps specification](https://github.com/modelcontextprotocol/ext-apps) gives them.
 3. Items that are not specified yet. [future.md](future.md) lists them in priority order.

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, canonical, fits, matches, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, canonical, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -40,7 +40,7 @@ if (old.length) fail('generated', `not current: ${old.join(', ')}. Run node scri
 else pass('generated', 'schemas, bundled schemas and the constants table are current');
 
 // 3. The registries are valid, and they agree with each other.
-const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', pick: 'pick', states: 'states', notices: 'notices' };
+const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', pick: 'pick', states: 'states', notices: 'notices', messages: 'messages' };
 for (const [file, def] of Object.entries(defs)) {
   const v = ajv.getSchema(`registry.schema.json#/$defs/${def}`);
   if (v(readJSON(`registry/${file}.json`))) pass('registry', `${file}.json is valid`);
@@ -52,7 +52,10 @@ const names = charts.map((c) => c.name);
 const rules = readJSON('registry/pick.json').rules;
 const states = readJSON('registry/states.json');
 const noticeCodes = readJSON('registry/notices.json').notices.map((n) => n.code);
+const messagePatterns = readJSON('registry/messages.json').messages;
+const X_TYPES = ['time', 'number', 'string'];
 const rel = [
+  [X_TYPES.every((t) => messagePatterns.some((m) => m.code === `point-${t}`)), 'each xType of the Renderer API has a message pattern'],
   [new Set(names).size === names.length, 'chart names are unique'],
   [charts.every((c) => panels.includes(c.panel)), 'each chart names a panel of panel-types.json'],
   [panels.every((p) => charts.some((c) => c.panel === p)), 'each panel has a chart'],
@@ -71,13 +74,36 @@ const fileSchema = {
   'chart-options.json': 'chart-options',
   'options-args.json': 'chart-options-args',
 };
-// The chart options sets (fixtures.14) use the chart-options.json of the set options.
+// The chart options sets (fixtures.17) use the chart-options.json of the set options.
 const chartOptions = readJSON('fixtures/options/chart-options.json').charts;
 const valueAjv = newAjv();
 const validValue = (schema, value) => valueAjv.compile(schema)(value);
 let fixtureFailures = failures;
 const SPEC_ERRORS = ['invalid-spec', 'unsupported-spec-version', 'unsupported-panel-type'];
 const constants = readJSON('registry/constants.json');
+// The shape of MessageRequest in renderer-api.d.ts.
+const isText = (v) => typeof v === 'string';
+const optional = (v, type) => v === undefined || typeof v === type;
+const isMessageRequest = (r) =>
+  r?.target === 'point' &&
+  isText(r.series?.name) &&
+  r.series.labels && typeof r.series.labels === 'object' && Object.values(r.series.labels).every(isText) &&
+  optional(r.series.refId, 'string') &&
+  isText(r.point?.x) && isText(r.point.y) && X_TYPES.includes(r.point.xType) &&
+  optional(r.point.xIso, 'string') && optional(r.point.xRaw, 'number') && optional(r.point.yRaw, 'number');
+// A case with renderer true is a point of spec.json (fixtures.16): a time series field with the name, the labels
+// and the refId of the series, and a row at xRaw whose value is yRaw. x and y are the formatted text, which only
+// the Renderer test can check.
+const isSpecPoint = (spec, { series, point }) =>
+  point.xType === 'time' && typeof point.xRaw === 'number' && point.xIso === new Date(point.xRaw).toISOString() &&
+  Object.values(spec.data.results).flatMap((r) => r.frames || []).some((f) => {
+    const fields = f.schema?.fields || [];
+    const t = fields.findIndex((x) => x.type === 'time');
+    const row = t < 0 ? -1 : f.data.values[t].indexOf(point.xRaw);
+    return row >= 0 && f.schema.refId === series.refId && fields.some((x, i) =>
+      x.type === 'number' && (x.config?.displayNameFromDS ?? x.name) === series.name &&
+      JSON.stringify(x.labels ?? {}) === JSON.stringify(series.labels) && f.data.values[i][row] === point.yRaw);
+  });
 for (const set of sets) {
   const files = Object.fromEntries(fs.readdirSync(path.join(FIX, set)).filter((f) => f.endsWith('.json')).map((f) => [f, readJSON(`fixtures/${set}/${f}`)]));
   for (const [f, data] of Object.entries(files)) {
@@ -102,6 +128,26 @@ for (const set of sets) {
   }
   if (files['request.json'] && JSON.stringify(files['request.json']) !== JSON.stringify(sourceRequest(files['args.json'], files['meta.json'].now, constants))) {
     fail('fixtures', `${set}/request.json is not the request of tool.5, tool.6 and tool.12`);
+  }
+  if (files['args.json'] && files['spec.json']) {
+    const want = { from: files['args.json'].from ?? constants.defaultFrom.value, to: files['args.json'].to ?? constants.defaultTo.value };
+    if (JSON.stringify(files['spec.json'].timeRange) !== JSON.stringify(want)) {
+      fail('fixtures', `${set}/spec.json: timeRange is not the from and to of args.json (spec.17)`);
+    }
+  }
+  if (files['message.json']) {
+    const cases = files['message.json'].cases;
+    if (!Array.isArray(cases) || !cases.length || !files['spec.json']) fail('fixtures', `${set}/message.json: it needs cases and a spec.json`);
+    else {
+      cases.forEach((c, i) => {
+        const where = `${set}/message.json: case ${i + 1}`;
+        if (!isMessageRequest(c.request)) fail('fixtures', `${where}: request is not a MessageRequest`);
+        else if (typeof c.renderer !== 'boolean') fail('fixtures', `${where}: renderer is not true or false`);
+        else if (c.renderer && !isSpecPoint(files['spec.json'], c.request)) fail('fixtures', `${where}: renderer is true, but the request is not a point of spec.json`);
+        else if (c.text !== messageText(c.request, files['spec.json'], constants, messagePatterns)) fail('fixtures', `${where}: text is not the text of state.22 to state.25`);
+        else if (c.text !== null && [...c.text].length > constants.maxMessageChars.value) fail('fixtures', `${where}: text is longer than maxMessageChars`);
+      });
+    }
   }
   const result = files['result.json'];
   if (files['response.json'] && result && !result.isError) {
@@ -162,11 +208,11 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
   for (const [name, list] of Object.entries(entry)) {
     const paths = list.map((o) => o.path);
     for (const o of list) {
-      if (o.default !== undefined && !validValue(o.schema, o.default)) fail('fixtures', `chart-options.json: the default of ${chart} ${o.path} does not validate (delivery.18)`);
-      if (paths.some((p) => p !== o.path && p.startsWith(`${o.path}.`))) fail('fixtures', `chart-options.json: ${chart} ${o.path} is the start of another path (delivery.15)`);
+      if (o.default !== undefined && !validValue(o.schema, o.default)) fail('fixtures', `chart-options.json: the default of ${chart} ${o.path} does not validate (delivery.20)`);
+      if (paths.some((p) => p !== o.path && p.startsWith(`${o.path}.`))) fail('fixtures', `chart-options.json: ${chart} ${o.path} is the start of another path (delivery.17)`);
       if (paths.filter((p) => p === o.path).length > 1) fail('fixtures', `chart-options.json: ${chart} has ${o.path} two times`);
       if (name === 'options' && preset.some((p) => p === o.path || p.startsWith(`${o.path}.`) || o.path.startsWith(`${p}.`))) {
-        fail('fixtures', `chart-options.json: ${chart} ${o.path} is in the options of the chart row (delivery.15)`);
+        fail('fixtures', `chart-options.json: ${chart} ${o.path} is in the options of the chart row (delivery.17)`);
       }
     }
   }
@@ -244,6 +290,18 @@ for (const f of proseFiles) read(f).split('\n').forEach((line, i) => linkHits(li
 for (const f of jsonFiles) for (const t of textOf(readJSON(f))) linkHits(t).forEach((l) => publicHits.push(`${f}: link to a repository that is not public: ${l}`));
 for (const h of publicHits) fail('public-text', h);
 if (!publicHits.length) pass('public-text', 'no internal text');
+
+// A rule ID is defined at the start of a list item, for example "- `renderer.1` ...". Each ID is defined one time.
+const ruleDefs = new Map();
+for (const f of proseFiles.filter((p) => p.endsWith('.md'))) {
+  read(f).split('\n').forEach((line, i) => {
+    const id = /^\s*- `([a-z]+\.[0-9]+)` /.exec(line)?.[1];
+    if (id) ruleDefs.set(id, [...(ruleDefs.get(id) ?? []), `${f}:${i + 1}`]);
+  });
+}
+const dupIds = [...ruleDefs].filter(([, at]) => at.length > 1);
+for (const [id, at] of dupIds) fail('rule-ids', `${id} is defined more than one time: ${at.join(', ')}`);
+if (!dupIds.length) pass('rule-ids', `${ruleDefs.size} rule IDs, each defined one time`);
 
 // 6. package.json keeps the placeholder version. The release workflow sets the version from the tag.
 const PLACEHOLDER = '0.0.0-development';
