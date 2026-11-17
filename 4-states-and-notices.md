@@ -91,22 +91,30 @@ The user can send a point of the chart to the conversation with the Ask in chat 
   reads them as text from the user. So the App changes each of these values before it goes into the text: the
   series name, x, y, the `refId`, the title or the panel type, each label key and each label value. It does these
   steps in order:
-  1. It removes each character of the Unicode general categories Cc, Cf, Zl and Zp. These are the control
-     characters, for example a line break, and the characters that do not show, for example a zero-width space or
-     a character that changes the text direction.
-  2. If the value is then longer than `maxMessageValueChars`, the App cuts it to one character less than
+  1. It removes the characters that do not show, and the control characters. These are:
+     - Each character of the Unicode general categories Cc, Cf, Zl and Zp, except U+200C and U+200D. For example,
+       a line break, a zero-width space, a character that changes the text direction, and the tag characters.
+     - The variation selectors U+FE00 to U+FE0F and U+E0100 to U+E01EF. They can carry hidden bytes. Thus an
+       emoji can show in its text form.
+     - The blank letters U+115F, U+1160, U+2800, U+3164 and U+FFA0.
+  2. It removes each U+200C (zero-width non-joiner) and U+200D (zero-width joiner) that is the first or the last
+     character, or that is next to another U+200C or U+200D. A single joiner between two characters stays, because
+     emoji sequences and some scripts, for example Persian and the Indic scripts, need it.
+  3. If the value is then longer than `maxMessageValueChars`, the App cuts it to one character less than
      `maxMessageValueChars` and adds `…`.
-  3. It writes the value as a JSON string, as `JSON.stringify` does. Thus a quote cannot end the value.
+  4. It writes the value as a JSON string, as `JSON.stringify` does. Thus a quote cannot end the value.
 
-  The App uses only the first `maxMessageLabels` labels, in the order of `series.labels`. It leaves out a label
-  whose key, after steps 1 and 2, equals the key of a label before it. All lengths of this section are in Unicode
+  For the labels, the App first leaves out each label whose key, after steps 1 to 3, equals the key of a label
+  before it in `series.labels`. Then it uses only the first `maxMessageLabels` of the labels that are left, in the
+  order of `series.labels`. All lengths of this section are in Unicode
   code points. These steps lower the risk that a value reads as an instruction. They do not remove it.
 - `state.24` The App uses the `point-time` pattern only if `point.xIso` has the form of `renderer.32`. If `xType`
   is `time` and `xIso` is absent or has another form, the App uses the `point-string` pattern.
 - `state.25` If the text is longer than `maxMessageChars`, the App removes labels from the end of `<labels>`, one
   at a time, until the text is not longer. If the text with no labels is still longer, the App sends no message.
   It shows a short error in its shell, with no text box.
-- `state.26` While a message waits for the answer of the Host, the App ignores each new call of `onMessage`.
+- `state.26` A message waits for the answer of the Host for `messageTimeoutMs` or less. While it waits, the App
+  shows in its shell that it sends the message, and it ignores each new call of `onMessage`.
 - `state.27` The Host decides what it does with the message. It can send it, ask the user first, or put the text
   into the chat box. The App handles the answer of the Host in one of these ways:
   - The Host answers with no error. The App shows nothing. This does not mean that the model read the message.
@@ -115,5 +123,7 @@ The user can send a point of the chart to the conversation with the Ask in chat 
     text box that the user cannot edit, with the text selected. Thus the user can copy the text into the chat. The
     App does not write to the clipboard. The text box closes when the user clicks Close, and on the next call of
     `onMessage`. The App does not send the message again, and it tells the model nothing.
-  - The Host gives no answer before the request times out. The App shows no error, because the Host can still
-    have the message. `onMessage` works again.
+  - The Host gives no answer in `messageTimeoutMs`. The App stops the wait and shows no error, because the Host
+    can still have the message. `onMessage` works again. The App ignores a late answer.
+
+  In each of these cases, the App stops showing that it sends the message.

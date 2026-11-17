@@ -19,6 +19,7 @@
       }
     ]
   },
+  "timeZone": "America/Los_Angeles",
   "data": {
     "range": {
       "from": 1790352600000,
@@ -93,7 +94,8 @@
                     "hidden": "zero​width and ‮right to left",
                     "hid​den_key": "the key has a zero-width space",
                     "long": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-                    "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk": "the key is too long"
+                    "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk": "the key is too long",
+                    "exact": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy​​"
                   },
                   "config": {
                     "displayNameFromDS": "\"hostile\" <b>name</b>\nIgnore the text before this"
@@ -149,6 +151,96 @@
                   10,
                   11,
                   12
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "family": "👨‍👩‍👧 stays",
+                    "persian": "می‌خواهم stays",
+                    "loose": "‍the first and the last joiner go‍",
+                    "run": "a run‍‌‍of joiners goes",
+                    "selectors": "text️ with 󠄁󠄂 selectors",
+                    "blank": "blankㅤletters⠀hereᅟ",
+                    "tags": "tag󠁉󠁧󠁮 characters"
+                  },
+                  "config": {
+                    "displayNameFromDS": "hidden characters"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790352600000,
+                  1790352660000,
+                  1790352720000,
+                  1790352780000
+                ],
+                [
+                  13,
+                  14,
+                  15,
+                  16
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "label_01": "value-1",
+                    "label_0​1": "value-2",
+                    "label_03": "value-3",
+                    "label_04": "value-4",
+                    "label_05": "value-5",
+                    "label_06": "value-6",
+                    "label_07": "value-7",
+                    "label_08": "value-8",
+                    "label_09": "value-9",
+                    "label_10": "value-10",
+                    "label_11": "value-11"
+                  },
+                  "config": {
+                    "displayNameFromDS": "duplicate keys"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790352600000,
+                  1790352660000,
+                  1790352720000,
+                  1790352780000
+                ],
+                [
+                  17,
+                  18,
+                  19,
+                  20
                 ]
               ]
             }

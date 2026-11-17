@@ -64,4 +64,8 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   checks each answer of `state.27` with a Host that the test makes:
   - With `isError` `true`, and with a JSON-RPC error, the text box has exactly the text that the App sent.
   - With no error, the App shows no error and no text box.
-  - With no answer before the request times out, the App shows no error and no text box.
+  - With no answer in `messageTimeoutMs`, the App shows no error and no text box, and a new call of `onMessage`
+    sends a message. The test uses a fake clock, so it does not wait.
+  - While the Host has not answered, the App shows that it sends the message, and a second call of `onMessage`
+    sends no message.
+- `delivery.14` A CI check of the Renderer runs the test of `fixtures.14` for each set that has `message.json`.

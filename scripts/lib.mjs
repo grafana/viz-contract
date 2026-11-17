@@ -94,22 +94,27 @@ export function sourceRequest(args, now, constants) {
 
 // The text of the message that the App sends for a MessageRequest (state.22 to state.25). null when the text is
 // too long with no labels. patterns is the messages list of registry/messages.json.
-const NOT_SHOWN = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu;
+// Step 1 of state.23: Cc, Cf (but not the joiners U+200C and U+200D), Zl, Zp, the variation selectors and the
+// blank letters. Step 2: a joiner that is first, last or next to another joiner.
+const NOT_SHOWN = /(?![‌‍])[\p{Cc}\p{Cf}\p{Zl}\p{Zp}︀-️\u{e0100}-\u{e01ef}ᅟᅠ⠀ㅤﾠ]/gu;
+const LOOSE_JOINERS = /^[‌‍]+|[‌‍]+$|[‌‍]{2,}/gu;
 const ISO_UTC = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 export function messageText(request, spec, constants, patterns) {
   const maxValue = constants.maxMessageValueChars.value;
   const clean = (value) => {
-    const points = [...String(value).replace(NOT_SHOWN, '')];
+    const points = [...String(value).replace(NOT_SHOWN, '').replace(LOOSE_JOINERS, '')];
     return points.length > maxValue ? points.slice(0, maxValue - 1).join('') + '…' : points.join('');
   };
   const quoted = (value) => JSON.stringify(clean(value));
   const { series, point } = request;
   const labels = [];
-  for (const [key, value] of Object.entries(series.labels).slice(0, constants.maxMessageLabels.value)) {
+  // First the duplicate keys go, then the cap (state.23).
+  for (const [key, value] of Object.entries(series.labels)) {
     const k = quoted(key);
     if (!labels.some(([seen]) => seen === k)) labels.push([k, quoted(value)]);
   }
+  labels.splice(constants.maxMessageLabels.value);
   const isTime = point.xType === 'time' && ISO_UTC.test(point.xIso ?? '');
   const code = `point-${point.xType === 'time' && !isTime ? 'string' : point.xType}`;
   const pattern = patterns.find((p) => p.code === code).message;

@@ -81,6 +81,19 @@ const isMessageRequest = (r) =>
   optional(r.series.refId, 'string') &&
   isText(r.point?.x) && isText(r.point.y) && X_TYPES.includes(r.point.xType) &&
   optional(r.point.xIso, 'string') && optional(r.point.xRaw, 'number') && optional(r.point.yRaw, 'number');
+// A case with renderer true is a point of spec.json (fixtures.14): a time series field with the name, the labels
+// and the refId of the series, and a row at xRaw whose value is yRaw. x and y are the formatted text, which only
+// the Renderer test can check.
+const isSpecPoint = (spec, { series, point }) =>
+  point.xType === 'time' && typeof point.xRaw === 'number' && point.xIso === new Date(point.xRaw).toISOString() &&
+  Object.values(spec.data.results).flatMap((r) => r.frames || []).some((f) => {
+    const fields = f.schema?.fields || [];
+    const t = fields.findIndex((x) => x.type === 'time');
+    const row = t < 0 ? -1 : f.data.values[t].indexOf(point.xRaw);
+    return row >= 0 && f.schema.refId === series.refId && fields.some((x, i) =>
+      x.type === 'number' && (x.config?.displayNameFromDS ?? x.name) === series.name &&
+      JSON.stringify(x.labels ?? {}) === JSON.stringify(series.labels) && f.data.values[i][row] === point.yRaw);
+  });
 for (const set of sets) {
   const files = Object.fromEntries(fs.readdirSync(path.join(FIX, set)).filter((f) => f.endsWith('.json')).map((f) => [f, readJSON(`fixtures/${set}/${f}`)]));
   for (const [f, data] of Object.entries(files)) {
@@ -119,6 +132,8 @@ for (const set of sets) {
       cases.forEach((c, i) => {
         const where = `${set}/message.json: case ${i + 1}`;
         if (!isMessageRequest(c.request)) fail('fixtures', `${where}: request is not a MessageRequest`);
+        else if (typeof c.renderer !== 'boolean') fail('fixtures', `${where}: renderer is not true or false`);
+        else if (c.renderer && !isSpecPoint(files['spec.json'], c.request)) fail('fixtures', `${where}: renderer is true, but the request is not a point of spec.json`);
         else if (c.text !== messageText(c.request, files['spec.json'], constants, messagePatterns)) fail('fixtures', `${where}: text is not the text of state.22 to state.25`);
         else if (c.text !== null && [...c.text].length > constants.maxMessageChars.value) fail('fixtures', `${where}: text is longer than maxMessageChars`);
       });

@@ -2,6 +2,7 @@
   "cases": [
     {
       "description": "The viz spec has no panel.title. The chart in the text is the panel type.",
+      "renderer": true,
       "request": {
         "target": "point",
         "series": {

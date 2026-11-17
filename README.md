@@ -153,6 +153,7 @@ version.
 | `maxMessageChars` | 1000 | characters | yes | Longest text of a message that the App sends to the conversation |
 | `maxMessageLabels` | 10 | labels | yes | Most labels of the series in a message |
 | `maxMessageValueChars` | 100 | characters | yes | Longest value or label key in a message, for example a series name or a label value |
+| `messageTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a message |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
 <!-- constants:end -->
