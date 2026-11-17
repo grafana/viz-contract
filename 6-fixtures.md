@@ -41,6 +41,11 @@ are in `fixtures/`, one directory for each set.
 - `fixtures.6` One pick set for each rule of `registry/pick.json`. It has the frames and the expected chart name. A
   test makes sure that each rule has a set.
 - `fixtures.7` One `type-mismatch` set. Its `result.json` is the expected tool error.
+- `fixtures.13` Focus sets for the gauge chart and the stat chart. Each set has `spec.json` and `state.json`:
+  - `gauge-thresholds`: `panel.fieldConfig.defaults` has the unit `percent`, a `min`, a `max` and three threshold
+    steps. The state is `ready`.
+  - `gauge-no-data` and `stat-no-data`: the frame has a number field and no rows. The state is `no-data`
+    (`state.4`).
 
 ## Conformance tests
 

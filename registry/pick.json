@@ -20,6 +20,12 @@
       "chart": "timeseries"
     },
     {
+      "id": "single-value",
+      "reason": "The frames have 1 to 10 number fields, no string field, and not more than one row in each frame.",
+      "when": { "hasFieldType.string": false, "fieldCountByType.number": { "min": 1, "max": 10 }, "rowCountMax": 1 },
+      "chart": "stat"
+    },
+    {
       "id": "few-parts",
       "reason": "The frames have one string field, one number field and 2 to 10 rows.",
       "when": {
