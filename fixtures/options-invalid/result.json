@@ -3,7 +3,7 @@
   "content": [
     {
       "type": "text",
-      "text": "invalid-options: timeseries does not accept these options: options.legend.position is not an option; options.legend.showLegend is set two times; options.lineWidth must be integer 0..20; options.tooltip must be object; fieldConfig.defaults.min must be number; fieldConfig.overrides[0].custom.lineColor is not an option. get_chart_options lists the options of timeseries."
+      "text": "invalid-options: timeseries does not accept these options: options.legend.position is not an option; options.legend.showLegend is set two times; options.lineWidth must be integer 0..20; options.tooltip must be object; fieldConfig.defaults.min must be number; fieldConfig.overrides[0].custom.lineColor is not an option; fieldConfig.overrides[1] must be {\"matcher\":{\"id\":\"byName\"|\"byRegexp\"|\"byFrameRefID\",\"options\":\"<name, regular expression or refId>\"},\"properties\":[{\"id\":\"<path>\",\"value\":<value>}]}; fieldConfig.mappings is not an option. get_chart_options lists the options of timeseries."
     }
   ]
 }

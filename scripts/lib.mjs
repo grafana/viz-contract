@@ -107,9 +107,9 @@ export function typeText(schema) {
   return JSON.stringify(schema);
 }
 
-// Line 5 of the text of get_chart_options (tool.44).
+// The override form of line 5 of the text of get_chart_options (tool.44), and of the problem of tool.40.
 const OVERRIDE_FORM =
-  'An override is {"matcher":{"id":"byName","options":"<field name>"},"properties":[{"id":"<path>","value":<value>}]}. The matcher id can also be byRegexp or byFrameRefID.';
+  '{"matcher":{"id":"byName"|"byRegexp"|"byFrameRefID","options":"<name, regular expression or refId>"},"properties":[{"id":"<path>","value":<value>}]}';
 
 // The tool error of get_chart_options for a type that is not a chart (tool.43).
 export const unknownChartText = (type, charts) => `unknown-chart: ${type} is not a chart. The charts are: ${charts.join(', ')}.`;
@@ -124,7 +124,7 @@ export function optionsText(chart, entry, advanced) {
     ...shown(entry.options).map(line),
     `Field options of ${chart}. Set them in fieldConfig.defaults for all fields, or in the properties of an override.`,
     ...shown(entry.fieldConfig).map(line),
-    OVERRIDE_FORM,
+    `An override is ${OVERRIDE_FORM}.`,
     ...(hidden ? [`Advanced options not listed: ${hidden}. Set advanced to true to list them.`] : []),
   ].join('\n');
 }
@@ -145,7 +145,10 @@ function findOptions(root, list, prefix = '', out = { found: [], wrong: [] }) {
 
 // The problems of the options and the fieldConfig of the tool arguments (tool.39). valid(schema, value) is true
 // when the value validates. The paths of the fixtures are ASCII, so the order of < is the code point order.
-export function optionProblems(args, entry, valid) {
+// overrideSchema is the override definition of field-config.schema.json (tool.40).
+export function optionProblems(args, entry, valid, overrideSchema) {
+  const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  const { defaults, overrides, ...others } = args.fieldConfig ?? {};
   const check = (root, list, prefix) => {
     const { found, wrong } = findOptions(root, list);
     // A path that two keys give, for example legend.placement and legend: { placement }, is set two times (tool.38).
@@ -159,17 +162,19 @@ export function optionProblems(args, entry, valid) {
       .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
       .map(([p, text]) => `${prefix}${p} ${text}`);
   };
-  const problems = [
-    ...check(args.options, entry.options, 'options.'),
-    ...check(args.fieldConfig?.defaults, entry.fieldConfig, 'fieldConfig.defaults.'),
-  ];
-  (args.fieldConfig?.overrides ?? []).forEach((override, n) => {
+  const problems = check(args.options, entry.options, 'options.');
+  if (defaults !== undefined && !isObject(defaults)) problems.push('fieldConfig.defaults must be object');
+  else problems.push(...check(defaults, entry.fieldConfig, 'fieldConfig.defaults.'));
+  if (overrides !== undefined && !Array.isArray(overrides)) problems.push('fieldConfig.overrides must be array');
+  (Array.isArray(overrides) ? overrides : []).forEach((override, n) => {
+    if (!valid(overrideSchema, override)) return problems.push(`fieldConfig.overrides[${n}] must be ${OVERRIDE_FORM}`);
     for (const { id, value } of override.properties) {
       const option = entry.fieldConfig.find((o) => o.path === id);
       if (!option) problems.push(`fieldConfig.overrides[${n}].${id} is not an option`);
       else if (!valid(option.schema, value)) problems.push(`fieldConfig.overrides[${n}].${id} must be ${typeText(option.schema)}`);
     }
   });
+  for (const key of Object.keys(others).sort()) problems.push(`fieldConfig.${key} is not an option`);
   return problems;
 }
 

@@ -59,7 +59,8 @@ are in `fixtures/`, one directory for each set.
     One key of `options` has dots. The panel of the chart in `result.json` has the options as nested objects. The
     panels of the alternatives do not have them (`tool.41`).
   - `options-invalid`: a path that is not an option, a value that does not validate, a value that must be an
-    object, and a path that is set two times, in `options`, in `fieldConfig.defaults` and in an override. The set has no `response.json`, because
+    object, and a path that is set two times, in `options`, in `fieldConfig.defaults` and in an override. It also
+    has an override and a key of `fieldConfig` that do not have the form of `tool.40`. The set has no `response.json`, because
     the Source does not query. The expected result is the `invalid-options` tool error (`tool.39`).
   - `options-list`: `get_chart_options` with no `advanced`. The text has the line of the advanced options that
     are not listed (`tool.44`).

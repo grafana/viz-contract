@@ -78,6 +78,7 @@ const fileSchema = {
 const chartOptions = readJSON('fixtures/options/chart-options.json').charts;
 const valueAjv = newAjv();
 const validValue = (schema, value) => valueAjv.compile(schema)(value);
+const overrideSchema = readJSON('schemas/field-config.schema.json').$defs.override;
 let fixtureFailures = failures;
 const SPEC_ERRORS = ['invalid-spec', 'unsupported-spec-version', 'unsupported-panel-type'];
 const constants = readJSON('registry/constants.json');
@@ -164,9 +165,12 @@ for (const set of sets) {
   if (args?.options || args?.fieldConfig) {
     const entry = chartOptions[args.type];
     const row = charts.find((c) => c.name === args.type);
-    const problems = entry ? optionProblems(args, entry, validValue) : [];
+    const problems = entry ? optionProblems(args, entry, validValue, overrideSchema) : [];
+    // optionProblems and the schema must agree on the form of fieldConfig (tool.40).
     const form = ajv.getSchema('field-config.schema.json');
-    if (args.fieldConfig && !form(args.fieldConfig)) fail('fixtures', `${set}/args.json: fieldConfig does not have the form of tool.40: ${errorText(form)}`);
+    if (args.fieldConfig && !form(args.fieldConfig) && !problems.some((p) => /^fieldConfig\.(overrides\[\d+\] must be|defaults must be|overrides must be|[^.[]+ is not an option)/.test(p))) {
+      fail('fixtures', `${set}/args.json: fieldConfig does not have the form of tool.40, and the problems do not say so: ${errorText(form)}`);
+    }
     if (!entry) fail('fixtures', `${set}: chart-options.json of the set options has no chart ${args.type}`);
     else if (problems.length) {
       const text = `invalid-options: ${args.type} does not accept these options: ${problems.join('; ')}. get_chart_options lists the options of ${args.type}.`;

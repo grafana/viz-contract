@@ -106,16 +106,23 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   `<path>` starts with `options.`, `fieldConfig.defaults.` or `fieldConfig.overrides[<n>].`. `<n>` is the index of
   the override, from 0. `<type>` is the type text of the option (`tool.45`). For a value that must be an object
   (`tool.38`), `<type>` is `object`. The problems of `options` come first, then the problems of
-  `fieldConfig.defaults`, each in the code point order of the paths. The problems of the overrides come last, in
-  the order of the arguments. For example: `invalid-options: timeseries does not accept these options:
+  `fieldConfig.defaults`, each in the code point order of the paths. The problems of the overrides come next, in
+  the order of the arguments. The other keys of `fieldConfig` come last, in code point order (`tool.40`). For
+  example: `invalid-options: timeseries does not accept these options:
   options.legend.position is not an option; options.lineWidth must be integer 0..20. get_chart_options lists the
   options of timeseries.`
-- `tool.40` The schema of the tool arguments gives `fieldConfig` as an object only. Before the check of `tool.39`,
-  the Source validates `fieldConfig` against `schemas/field-config.schema.json`. If it does not validate, the
-  Source returns a tool error with the validation message, as in `tool.4`, and does not query. The Source checks
-  the properties of an override, and not its matcher. The matchers are those of Grafana: `byName` takes the name of
-  a field, `byRegexp` takes a regular expression for the names, and `byFrameRefID` takes the `refId` of a query. A
-  matcher that matches no field is not an error.
+- `tool.40` The schema of the tool arguments gives `fieldConfig` as an object only.
+  `schemas/field-config.schema.json` gives its form, and the Source checks the form in the check of `tool.39`. A
+  part that does not have the form is a problem of `invalid-options`:
+  - `fieldConfig.<key> is not an option`, for a key that is not `defaults` or `overrides`.
+  - `fieldConfig.defaults must be object` and `fieldConfig.overrides must be array`.
+  - `fieldConfig.overrides[<n>] must be <override>`, for an override that does not validate against the
+    `override` definition of the schema. `<override>` is the override form of `tool.44`. The Source does not
+    check the properties of this override.
+
+  The Source does not use the message of a schema library, so the text is the same in each Source. The matchers
+  are those of Grafana: `byName` takes the name of a field, `byRegexp` takes a regular expression for the names,
+  and `byFrameRefID` takes the `refId` of a query. The Source does not check that a matcher matches a field.
 - `tool.41` The `panel.options` of the chart is the `options` of the chart row, and then each option of the
   arguments at its path. The Source writes a path as nested objects, also when the key of the arguments had dots.
   The `panel.fieldConfig` of the chart is the `fieldConfig` of the arguments, with each path of its `defaults`
@@ -136,8 +143,8 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   3. `Field options of <chart>. Set them in fieldConfig.defaults for all fields, or in the properties of an
      override.`
   4. One line for each entry of the `fieldConfig` list of the chart, in the order of the file.
-  5. `An override is {"matcher":{"id":"byName","options":"<field name>"},"properties":[{"id":"<path>","value":<value>}]}.
-     The matcher id can also be byRegexp or byFrameRefID.` This is one line of the text.
+  5. `An override is <override>.` `<override>` is the override form:
+     `{"matcher":{"id":"byName"|"byRegexp"|"byFrameRefID","options":"<name, regular expression or refId>"},"properties":[{"id":"<path>","value":<value>}]}`
   6. `Advanced options not listed: <n>. Set advanced to true to list them.`
 
   The line of an entry is `<path>: <type>`, then ` = <default>` if the entry has a `default`, then

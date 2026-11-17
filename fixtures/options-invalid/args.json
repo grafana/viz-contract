@@ -36,7 +36,20 @@
             "value": "red"
           }
         ]
+      },
+      {
+        "matcher": {
+          "id": "byType",
+          "options": "number"
+        },
+        "properties": [
+          {
+            "id": "decimals",
+            "value": 2
+          }
+        ]
       }
-    ]
+    ],
+    "mappings": []
   }
 }
