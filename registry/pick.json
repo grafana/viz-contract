@@ -21,7 +21,7 @@
     },
     {
       "id": "single-value",
-      "reason": "The frames have 1 to 10 number fields, no string field, and not more than one row in each frame.",
+      "reason": "The frames have 1 to 10 number fields, no string field, and the largest frame has one row.",
       "when": { "hasFieldType.string": false, "fieldCountByType.number": { "min": 1, "max": 10 }, "rowCountMax": 1 },
       "chart": "stat"
     },

@@ -1,0 +1,309 @@
+{
+  "status": 200,
+  "body": {
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-1"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  10
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-2"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  17
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-3"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  24
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-4"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  31
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-5"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  38
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-6"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  45
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-7"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  52
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-8"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  59
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-9"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  66
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-10"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  73
+                ]
+              ]
+            }
+          },
+          {
+            "schema": {
+              "fields": [
+                {
+                  "name": "Time",
+                  "type": "time"
+                },
+                {
+                  "name": "Value",
+                  "type": "number",
+                  "labels": {
+                    "instance": "host-11"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353477294
+                ],
+                [
+                  80
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
