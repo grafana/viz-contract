@@ -176,6 +176,11 @@
           "description": "The messages of a failed refresh that the Renderer shows",
           "type": "array",
           "items": { "type": "object", "$ref": "#/$defs/message", "unevaluatedProperties": false }
+        },
+        "annotate": {
+          "description": "The messages of an annotation that is not saved, that the Renderer shows",
+          "type": "array",
+          "items": { "type": "object", "$ref": "#/$defs/message", "unevaluatedProperties": false }
         }
       },
       "additionalProperties": false
