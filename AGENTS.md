@@ -4,8 +4,7 @@
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) and applicable directory instructions before editing.
 Keep changes focused and follow surrounding conventions. Add comments for non-obvious reasons,
-not to narrate self-explanatory code. Read [contribute/testing.md](contribute/testing.md) before
-writing or running tests; it routes to the checked-in shared testing skills and local commands.
+not to narrate self-explanatory code. Follow CONTRIBUTING.md for generation and validation commands.
 
 Use the contributor's configured signing identity for every commit. Never disable signing to get
 past an error or fabricate an identity. Preserve authorship; get explicit approval before rewriting
@@ -25,5 +24,5 @@ Use the existing version labels and release process. Do not manually edit the pl
 version, CHANGELOG.md, or release tags. Contributors without label permissions should state the
 required labels in the PR and ask a maintainer to apply them.
 
-All references must be public. This repository defines a contract, not a React application;
-use schema/fixture checks and tooling tests, not browser tests unless UI code is actually added.
+All references must be public. This repository defines the contract; implementations live in consumer
+repositories. Validate contract changes with the schema and fixture checks described in CONTRIBUTING.md.

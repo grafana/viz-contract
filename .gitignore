@@ -20,7 +20,3 @@ node_modules/
 *.pem
 *.key
 .DS_Store
-
-# Contributor guidance and vendored public testing skills.
-!/contribute/
-!/.claude/
