@@ -112,19 +112,33 @@ to `/api/ds/query` (`tool.13`).
   also have `discriminators`.
 - `tool.33` If Grafana does not serve the query types, or the request fails, the Source gives no query type note.
   It does not return a tool error for this. It gives the notes of `tool.29` as before.
-- `tool.34` The query type of a query is the first item for which each `field` and `value` of its `discriminators`
-  matches the same field of the query. If no item matches, it is the item with no `discriminators`. If there is no
-  such item, the query has no query type and gets no note.
-- `tool.35` The Source gives one note for each query type of the queries of the failed entries, in the order of
-  those entries. A query type that two failed entries use gets one note. The note is `Plugin fields of <plugin>
-  query type <name>. Required: <required>. All: <fields>.` `<required>` lists `spec.schema.required` in the order
-  of the response. `<fields>` lists the names of `spec.schema.properties` in ascending order of their Unicode code
-  points. A comma and a space are between names. If `<required>` is empty, the note has no `Required:` sentence.
-  `Required:` is before `All:`. Thus the cut of `tool.30` leaves out the end of `<fields>` first. The schema has
-  only the fields of the plugin. It does not have the fields that each query can have, for example `refId`,
-  `datasource`, `intervalMs` and `maxDataPoints`. Thus the note says `Plugin fields`, and the model keeps those
-  fields in its query. The Source gives these notes before the notes of `tool.29`. Thus `maxAppNotes` does not
-  leave them out when many entries fail.
+- `tool.34` The Source finds the query type of a query in two steps. First it reads only the items that have one
+  or more `discriminators`, in the order of the response. The query type is the first of these items for which
+  each `field` and `value` of its `discriminators` matches the same field of the query. If none of these items
+  matches, the query type is the first item with no `discriminators`. If there is no such item, the query has no
+  query type and gets no note. Thus an item with no `discriminators` is only a fallback, also when it is first in
+  the response.
+- `tool.35` A failed query is a query of the call whose `refId` is the key of an entry of `data.results` that has
+  an `error`. The order of the failed queries is the order in which the model gave the queries of the call.
+  `data.results` is a JSON object, and thus it gives no order. The Source gives one note for each query type of
+  the failed queries, in the order of the first failed query that has each query type. A query type that two
+  failed queries have gets one note.
 - `tool.36` The query types are not in the `render_grafana_app` description and not in the structured content.
   Thus they add no tokens to `tools/list`, and the model reads them only in a turn with a failed query.
+- `tool.37` The query type note is `Plugin fields of <plugin> query type <name>. Set: <discriminators>. Required:
+  <required>. All: <fields>.` `<discriminators>` lists each of the `discriminators` of the item as `<field>=<value>`,
+  in the order of the response. `<required>` lists `spec.schema.required` in the order of the response. `<fields>`
+  lists the names of `spec.schema.properties` in ascending order of their Unicode code points. A comma and a space
+  are between the parts of each list. If a list is empty, the note does not have the sentence of that list. The
+  schema can leave out a field of the `discriminators`, for example `queryType`. Thus the note has `Set:`, and the
+  model does not lose the field that selects the query type. The sentences are in the order `Set:`, `Required:`,
+  `All:`. Thus the cut of `tool.30` leaves out the end of `<fields>` first. The schema has only the fields of the
+  plugin. It does not have the fields that each query can have, for example `refId`, `datasource`, `intervalMs`
+  and `maxDataPoints`. Thus the note says `Plugin fields`, and the model keeps those fields in its query.
+- `tool.38` When the Source has a query type note, it gives its notes in this order: (1) the note of `tool.29` for
+  the first failed query, (2) the query type notes in the order of `tool.35`, (3) the notes of `tool.29` for the
+  other failed queries, in the order of `tool.35`. Thus the model always reads one `error`. Step 3 of `tool.30`
+  leaves out notes from the end of this order: first the notes of the other failed queries, then the last query
+  type notes. When the failed queries have `maxAppNotes` or more query types, the model does not read a note for
+  each query type.
 
