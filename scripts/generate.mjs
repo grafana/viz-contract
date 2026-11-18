@@ -28,9 +28,7 @@ export function generate() {
   args.properties.type.$comment = GENERATED.replace('%s', 'chart-types.json');
   args.properties.type.enum = charts.map((c) => c.name);
   args.properties.type.description =
-    'Optional chart to draw. With no type, the chart comes from the data. Each chart needs: ' +
-    charts.map((c) => `${c.name} (${c.dataShape})`).join(', ') +
-    '.';
+    'Optional chart to draw. With no type, the chart comes from the data. get_chart_options gives the data that a chart needs.';
   out.set('schemas/query-datasource-args.schema.json', args);
 
   const result = readJSON('schemas/tool-result.schema.json');

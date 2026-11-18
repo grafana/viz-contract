@@ -192,7 +192,7 @@ for (const set of sets) {
   if (files['options-args.json']) {
     const { type, advanced } = files['options-args.json'];
     const known = names.includes(type);
-    const text = !known ? unknownChartText(type, names) : chartOptions[type] ? optionsText(type, chartOptions[type], advanced === true) : undefined;
+    const text = !known ? unknownChartText(type, names) : chartOptions[type] ? optionsText(type, charts.find((c) => c.name === type).dataShape, chartOptions[type], advanced === true) : undefined;
     const got = files['options-result.json'];
     if (got?.content?.length !== 1 || got.content[0].text !== text || got.structuredContent !== undefined || (got.isError === true) === known) {
       fail('fixtures', `${set}/options-result.json is not the result of tool.43 and tool.44:\n${text}`);
