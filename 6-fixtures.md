@@ -79,6 +79,12 @@ are in `fixtures/`, one directory for each set.
   - `options-list-advanced`: `get_chart_options` with `advanced` set to true.
   - `options-list-unknown`: `get_chart_options` with a `type` that is not a chart. The expected result is the
     `unknown-chart` tool error (`tool.43`).
+- `fixtures.20` One `options-legend` set for a legend action on a series that has an override of the viz spec
+  (`renderer.69`). It has `spec.json` and `state.json`, with the data of `prometheus-line`. One override of
+  `panel.fieldConfig` gives the series `/api/health` a fixed `color` and a line style. Only the Renderer test uses
+  the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
+  have the color of the legend and the line style of the override. The same must be true after an `update` with
+  the same viz spec (`renderer.35`).
 
 ## Conformance tests
 

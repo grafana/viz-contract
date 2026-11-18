@@ -229,6 +229,11 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
   }
 }
 for (const s of ['options', 'options-invalid', 'options-stale', 'options-list', 'options-list-advanced', 'options-list-unknown']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
+// The set options-legend has one override with a color and one more property (fixtures.20).
+const legendOverride = sets.includes('options-legend') ? readJSON('fixtures/options-legend/spec.json').panel.fieldConfig?.overrides?.[0] : undefined;
+if (!(legendOverride?.matcher?.id === 'byName' && legendOverride.properties?.some((p) => p.id === 'color') && legendOverride.properties.length > 1)) {
+  fail('fixtures', 'options-legend/spec.json needs one byName override with a color and one more property (fixtures.20)');
+}
 for (const c of names) if (!sets.includes(`smoke-${c}`)) fail('fixtures', `no smoke set for ${c}`);
 for (const code of [...SPEC_ERRORS, 'all-queries-failed']) if (!sets.includes(`error-${code}`)) fail('fixtures', `no error set for ${code}`);
 const pickRuleOf = (set) => {
