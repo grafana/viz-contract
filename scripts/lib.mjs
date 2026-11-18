@@ -8,7 +8,7 @@ export const read = (rel) => fs.readFileSync(path.join(CONTRACT, rel), 'utf8');
 export const readJSON = (rel) => JSON.parse(read(rel));
 export const json = (value) => JSON.stringify(value, null, 2) + '\n';
 
-export const SCHEMAS = ['query-datasource-args', 'tool-result', 'viz-spec', 'registry'];
+export const SCHEMAS = ['query-datasource-args', 'field-config', 'chart-options-args', 'chart-options', 'tool-result', 'viz-spec', 'registry'];
 
 // The summary of the frames and the matcher of the condition rule language (schemas/registry.schema.json).
 const FIELD_TYPES = ['time', 'number', 'string', 'boolean', 'trace', 'geo', 'enum', 'other', 'frame', 'nestedFrames'];
@@ -91,6 +91,143 @@ export function sourceRequest(args, now, constants) {
     }),
   };
 }
+
+// The code point order of two texts (tool.39). The < of JavaScript gives the order of the UTF-16 code units, which
+// is another order for a character above U+FFFF.
+export function byCodePoint(a, b) {
+  const x = [...a];
+  const y = [...b];
+  for (let i = 0; i < Math.min(x.length, y.length); i++) {
+    const d = x[i].codePointAt(0) - y[i].codePointAt(0);
+    if (d) return d;
+  }
+  return x.length - y.length;
+}
+
+// The type text of an option (tool.45).
+export function typeText(schema) {
+  if (schema.anyOf) return schema.anyOf.map(typeText).join(' | ');
+  if (schema.const !== undefined) return JSON.stringify(schema.const);
+  if (schema.enum) return schema.enum.map((v) => JSON.stringify(v)).join(' | ');
+  if (Array.isArray(schema.type)) return schema.type.map((type) => typeText({ ...schema, type })).join(' | ');
+  if (schema.type === 'boolean' || schema.type === 'string' || schema.type === 'null') return schema.type;
+  if (schema.type === 'integer' || schema.type === 'number') {
+    const { minimum: min, maximum: max } = schema;
+    if (min !== undefined && max !== undefined) return `${schema.type} ${min}..${max}`;
+    if (min !== undefined) return `${schema.type} >=${min}`;
+    if (max !== undefined) return `${schema.type} <=${max}`;
+    return schema.type;
+  }
+  if (schema.type === 'array' && schema.items) return `array of ${typeText(schema.items)}`;
+  if (schema.type === 'object' && schema.properties) {
+    const names = Object.keys(schema.properties).sort(byCodePoint);
+    return `{${names.map((n) => `${n}${schema.required?.includes(n) ? '' : '?'}: ${typeText(schema.properties[n])}`).join(', ')}}`;
+  }
+  return JSON.stringify(schema);
+}
+
+// The override form of line 5 of the text of get_chart_options (tool.44), and of the problem of tool.40.
+const OVERRIDE_FORM =
+  '{"matcher":{"id":"byName"|"byFrameRefID","options":"<name or refId>"},"properties":[{"id":"<path>","value":<value>}]}';
+
+// The tool error of get_chart_options for a type that is not a chart (tool.43).
+export const unknownChartText = (type, charts) => `unknown-chart: ${type} is not a chart. The charts are: ${charts.join(', ')}.`;
+
+// The text of get_chart_options for one entry of chart-options.json (tool.44).
+export function optionsText(chart, entry, advanced) {
+  const shown = (list) => list.filter((o) => advanced || o.tier !== 'advanced');
+  const line = (o) => `${o.path}: ${typeText(o.schema)}${o.default === undefined ? '' : ` = ${JSON.stringify(o.default)}`} // ${o.description}`;
+  const hidden = advanced ? 0 : [...entry.options, ...entry.fieldConfig].filter((o) => o.tier === 'advanced').length;
+  return [
+    `Options of ${chart}. Set them in options.`,
+    ...shown(entry.options).map(line),
+    `Field options of ${chart}. Set them in fieldConfig.defaults for all fields, or in the properties of an override.`,
+    ...shown(entry.fieldConfig).map(line),
+    `An override is ${OVERRIDE_FORM}.`,
+    ...(hidden ? [`Advanced options not listed: ${hidden}. Set advanced to true to list them.`] : []),
+  ].join('\n');
+}
+
+// The options of a root object (tool.38): found has [path, value, option], and wrong has [path, type]. The type
+// is object for a value that must be an object, and it is not set for a path that is not an option.
+function findOptions(root, list, prefix = '', out = { found: [], wrong: [] }) {
+  for (const [key, value] of Object.entries(root ?? {})) {
+    const p = prefix ? `${prefix}.${key}` : key;
+    const option = list.find((o) => o.path === p);
+    if (option) out.found.push([p, value, option]);
+    else if (!list.some((o) => o.path.startsWith(`${p}.`))) out.wrong.push([p]);
+    else if (value && typeof value === 'object' && !Array.isArray(value)) findOptions(value, list, p, out);
+    else out.wrong.push([p, 'object']);
+  }
+  return out;
+}
+
+// The problems of the options and the fieldConfig of the tool arguments (tool.39). valid(schema, value) is true
+// when the value validates. overrideSchema is the override definition of field-config.schema.json (tool.40).
+export function optionProblems(args, entry, valid, overrideSchema) {
+  const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+  const { defaults, overrides, ...others } = args.fieldConfig ?? {};
+  // also has the paths that another argument sets: the unit argument sets the path unit of the defaults (tool.38).
+  const check = (root, list, prefix, also = []) => {
+    const { found, wrong } = findOptions(root, list);
+    // A path that two keys give, for example legend.placement and legend: { placement }, is set two times (tool.38).
+    const times = new Map();
+    for (const [p] of found) times.set(p, (times.get(p) ?? 0) + 1);
+    for (const p of also) if (times.has(p)) times.set(p, times.get(p) + 1);
+    // One problem for each path (tool.39): two keys can give the same path that is not an option.
+    const wrongOnce = wrong.filter(([p], i) => wrong.findIndex(([q]) => q === p) === i);
+    return [
+      ...wrongOnce.map(([p, type]) => [p, type ? `must be ${type}` : 'is not an option']),
+      ...[...times].filter(([, n]) => n > 1).map(([p]) => [p, 'is set two times']),
+      ...found.filter(([p, value, o]) => times.get(p) === 1 && !valid(o.schema, value)).map(([p, , o]) => [p, `must be ${typeText(o.schema)}`]),
+    ]
+      .sort((a, b) => byCodePoint(a[0], b[0]))
+      .map(([p, text]) => `${prefix}${p} ${text}`);
+  };
+  const problems = check(args.options, entry.options, 'options.');
+  if (defaults !== undefined && !isObject(defaults)) problems.push('fieldConfig.defaults must be object');
+  else problems.push(...check(defaults, entry.fieldConfig, 'fieldConfig.defaults.', args.unit === undefined ? [] : ['unit']));
+  if (overrides !== undefined && !Array.isArray(overrides)) problems.push('fieldConfig.overrides must be array');
+  (Array.isArray(overrides) ? overrides : []).forEach((override, n) => {
+    if (!valid(overrideSchema, override)) return problems.push(`fieldConfig.overrides[${n}] must be ${OVERRIDE_FORM}`);
+    // One problem for each id, in the order of the first property that has the id (tool.40).
+    const ids = override.properties.map((p) => p.id);
+    override.properties.forEach(({ id, value }, i) => {
+      if (ids.indexOf(id) !== i) return;
+      const option = entry.fieldConfig.find((o) => o.path === id);
+      if (!option) problems.push(`fieldConfig.overrides[${n}].${id} is not an option`);
+      else if (ids.lastIndexOf(id) !== i) problems.push(`fieldConfig.overrides[${n}].${id} is set two times`);
+      else if (!valid(option.schema, value)) problems.push(`fieldConfig.overrides[${n}].${id} must be ${typeText(option.schema)}`);
+    });
+  });
+  for (const key of Object.keys(others).sort(byCodePoint)) problems.push(`fieldConfig.${key} is not an option`);
+  return problems;
+}
+
+// The panel of the chart with the options and the fieldConfig of the tool arguments (tool.41). panel is the panel
+// of tool.22 and tool.31.
+export function panelWithOptions(panel, args, entry) {
+  // Writes each option at its path, as nested objects, also when the key of the arguments had dots.
+  const write = (target, root, list) => {
+    for (const [p, value] of findOptions(root, list).found) {
+      const keys = p.split('.');
+      const last = keys.pop();
+      keys.reduce((node, key) => (node[key] ??= {}), target)[last] = structuredClone(value);
+    }
+    return target;
+  };
+  const out = { ...panel, options: write(structuredClone(panel.options), args.options, entry.options) };
+  if (args.fieldConfig) {
+    out.fieldConfig = structuredClone(args.fieldConfig);
+    if (args.fieldConfig.defaults) out.fieldConfig.defaults = write({}, args.fieldConfig.defaults, entry.fieldConfig);
+    if (args.unit) out.fieldConfig.defaults = { ...out.fieldConfig.defaults, unit: args.unit };
+  }
+  return out;
+}
+
+// JSON with the keys of each object in order. Two values that are equal give the same text.
+export const canonical = (value) =>
+  JSON.stringify(value, (_, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : 1))) : v));
 
 // The text of the message that the App sends for a MessageRequest (state.22 to state.25). null when the text is
 // too long with no labels. patterns is the messages list of registry/messages.json.

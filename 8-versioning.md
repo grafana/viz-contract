@@ -33,7 +33,9 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
 | Interface | Promise |
 | --------- | ------- |
 | Tool arguments | Provisional until the first tagged mcp-grafana release that contains the Source. Frozen from that release |
+| Arguments of `get_chart_options` | The promise of the tool arguments |
 | Tool result | Internal |
+| `chart-options.json` | Internal |
 | Viz spec | Internal. Frozen when the Renderer loads from a CDN |
 | Renderer API | Internal. Frozen when the Renderer loads from a CDN |
 | Saved panel JSON | Frozen when save ships |
@@ -46,3 +48,9 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
   the one before it.
 - `version.12` A refresh calls `render_grafana_app` with the tool arguments. Thus a refresh has the promise of the
   tool arguments.
+- `version.13` The options of a chart are data of the Renderer. They are not a shape of the contract. A Renderer
+  version can add, rename or remove an option, and the contract version does not change. The promise of the tool
+  arguments is for the form of `options` and `fieldConfig` only. The model reads the options at run time
+  (`tool.43`), so a prompt does not have to name them. A refresh can have an option that the Renderer version does
+  not have. The App then calls again with no `options` and no `fieldConfig` (`refresh.19`). Thus a change of the
+  options does not break the refresh of `version.12`.

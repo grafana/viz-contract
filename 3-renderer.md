@@ -45,6 +45,9 @@ Shape: `renderer-api.d.ts`.
   Grafana does. It shows the title as text, not as HTML. If the title is wider than `el`, the Renderer cuts it with
   `…` and shows the full title on hover. The title and the chart together fill `el` (`renderer.10`). With no
   `panel.title`, the Renderer shows no title.
+- `renderer.68` The Renderer applies each option of `panel.options` and `panel.fieldConfig` that
+  `chart-options.json` lists (`delivery.16`), of each `tier`. A setting of a panel editor, for example an editor
+  mode, does not turn off an `advanced` option.
 
 ## Add an annotation
 
@@ -148,6 +151,16 @@ action does on its chart. These rules give only what the App and the user see af
   spec with the legend overrides. A legend override wins over an override of the viz spec. Thus the legend
   overrides stay after each `update`, for example after a refresh (`refresh.12`), a new theme (`spec.5`) or a new
   time zone (`spec.6`).
+- `renderer.69` The overrides of the viz spec can come from the model (`tool.41`). The Renderer applies the legend
+  overrides after them. A legend override wins for each property of each field, as a later override does in
+  Grafana. Thus a legend override replaces only the property that it sets. The other properties that an override
+  of the viz spec gives to the field stay. For example, an override of the viz spec gives a series a color and a
+  line style, and the user picks another color in the legend. The series then has the color of the user and the
+  line style of the viz spec. After the user shows a series with the legend, the Renderer draws it, also when an
+  override of the viz spec hides it.
+- `renderer.70` If an option of `panel.options` hides the legend, the Renderer shows no legend, and the user cannot
+  make a legend override. The model chose this, and a Grafana panel with no legend does the same. The legend
+  overrides that the Renderer keeps still apply (`renderer.35`).
 - `renderer.36` A legend override finds an item by the name that the legend shows for it. For example, for a chart
   whose items are fields, the name is the display name that `getFieldDisplayName` of `@grafana/data` gives. If an
   item gets a new name in the new data, the legend overrides take it as a new item. For example, a refresh that

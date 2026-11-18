@@ -9,19 +9,26 @@ specified.
    See https://github.com/grafana/viz-contract/issues/17.
 3. Save to a dashboard. The user saves the chart to a Grafana dashboard. A map from each chart to a core Grafana
    panel lets a Grafana with no ECharts app open the saved panel. The saved panel also needs the legend
-   overrides, and now only the Renderer has them (`renderer.37`).
+   overrides, and now only the Renderer has them (`renderer.37`). The saved panel also has the chart options
+   (`tool.41`). Grafana runs the migrations of a panel from the `pluginVersion` of the saved panel. Thus the saved
+   panel needs as its `pluginVersion` the version of the panel that the Source checked the options against, and
+   that panel must give its migrations to Grafana. `chart-options.json` does not give this version now
+   (`delivery.16`).
 4. Open a dashboard panel. The App draws a panel of an existing dashboard from its panel JSON.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.
 6. Load the Renderer from a CDN. The App loads the Renderer at run time. The viz spec and the Renderer API then
    become frozen. The App then also loads the `icons.json` of that Renderer (`delivery.9`), and fills the icon
    cache from it (`renderer.15`). Thus an older App gets the icons of a newer Renderer. `icons.json` then needs a
-   hash, as the bundle has in `delivery.6`, because its SVG goes into the DOM.
+   hash, as the bundle has in `delivery.6`, because its SVG goes into the DOM. The Source then also needs the
+   manifest and the `chart-options.json` of that Renderer, and it checks them as in `tool.48`.
 7. Annotations. The chart shows the annotations of the query range. Then `data.annotations` can also have a saved
    annotation (`renderer.63`), and the Renderer must not draw it two times.
 8. Edit the chart. The user changes the options of the chart in the App, for example with an options pane.
 9. Transformations. The Renderer runs the Grafana transformations of a panel.
-10. Option docs and model guidance. The model can read the options of each chart and the query rules of each data
-    source when it needs them.
+10. Model guidance for queries. The model can read the query rules of each data source when it needs them.
+11. A regular expression matcher for overrides. An override finds its fields with a pattern, as `byRegexp` of
+    Grafana does. The Source must then make sure that the pattern compiles in the browser, and that it cannot make
+    the browser slow (`tool.40`).
 
 A gcx path can be a future addition after the MCP path.
