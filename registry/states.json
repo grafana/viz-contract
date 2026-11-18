@@ -68,18 +68,35 @@
   "refresh": [
     {
       "code": "refresh-failed",
-      "when": "The App calls setRefreshed(false, error) with an error text, or onRefresh throws",
+      "when": "The App calls setRefreshed(id, false, error) with an error text, or onRefresh throws",
       "message": "Refresh failed: <error>"
     },
     {
       "code": "refresh-failed-no-detail",
-      "when": "The App calls setRefreshed(false) with no error text",
+      "when": "The App calls setRefreshed(id, false) with no error text",
       "message": "Refresh failed."
     },
     {
       "code": "refresh-timeout",
       "when": "refreshTimeoutMs passes with no result",
       "message": "Refresh failed: no result in time."
+    }
+  ],
+  "annotate": [
+    {
+      "code": "annotate-failed",
+      "when": "The App calls setAnnotated(id, false, error) with an error text, or onAnnotate throws",
+      "message": "Annotation not saved: <error>"
+    },
+    {
+      "code": "annotate-failed-no-detail",
+      "when": "The App calls setAnnotated(id, false) with no error text",
+      "message": "Annotation not saved."
+    },
+    {
+      "code": "annotate-timeout",
+      "when": "annotateTimeoutMs passes with no result",
+      "message": "No answer in time. The save can still complete, and the annotation then shows on the chart. A second save can make a second annotation."
     }
   ]
 }

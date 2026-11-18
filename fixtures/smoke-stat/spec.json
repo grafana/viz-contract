@@ -1,0 +1,67 @@
+{
+  "specVersion": 1,
+  "panel": {
+    "type": "grafana-echartsstat-panel",
+    "options": {},
+    "datasource": {
+      "uid": "testdata"
+    },
+    "targets": [
+      {
+        "refId": "A"
+      }
+    ]
+  },
+  "data": {
+    "range": {
+      "from": 1790349877294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "time",
+                  "type": "time"
+                },
+                {
+                  "name": "requests",
+                  "type": "number"
+                },
+                {
+                  "name": "errors",
+                  "type": "number"
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790353357294,
+                  1790353417294,
+                  1790353477294
+                ],
+                [
+                  1180,
+                  1215,
+                  1242
+                ],
+                [
+                  4,
+                  9,
+                  7
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

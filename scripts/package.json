@@ -5,7 +5,8 @@
   "description": "Checks of the Grafana visualization contract",
   "scripts": {
     "check": "node check.mjs",
-    "generate": "node generate.mjs"
+    "generate": "node generate.mjs",
+    "test": "node --test"
   },
   "dependencies": {
     "ajv": "8.20.0",

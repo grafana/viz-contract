@@ -1,15 +1,132 @@
 name: Release
 
+# Each push to main can make a release. The version comes from the version: labels of the pull requests merged
+# since the last tag: version:major, version:minor or version:patch bumps it, version:none does not.
+# The release job creates the GitHub Release v<version> with its tag and its notes, and the publish job publishes
+# the npm package with that version. package.json on main keeps a placeholder version. The go-proxy job makes
+# sure that the Go proxy gives the Go module of the tag.
+# The publish and go-proxy jobs are in this workflow because a tag that GITHUB_TOKEN creates starts no other
+# workflow.
+# npm trusted publishing names this file and the npm-publish environment. Do not rename them.
 on:
   push:
-    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+    branches: [main]
 
 permissions: {}
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the GitHub Release and its tag
+      pull-requests: read # read the labels of the merged pull requests
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+      release: ${{ steps.next.outputs.release }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Find the next version from the version labels
+        id: next
+        # A cancelled waiting run is not lost: the next run counts its pull requests too.
+        # A tag on the pushed commit comes from a re-run, or from a person. It must be the version that the labels
+        # give. The release is done when npm has the version, so until then each run does the checks and publishes.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          release_tags() { git tag "$@" --list 'v[0-9]*.[0-9]*.[0-9]*' | grep -v -- - || true; }
+          last="$(git describe --tags --abbrev=0 --match 'v[0-9]*.[0-9]*.[0-9]*' --exclude '*-*' "$GITHUB_SHA^")"
+          head_tag="$(release_tags --points-at "$GITHUB_SHA")"
+          if [ "$(wc -w <<<"$head_tag")" -gt 1 ]; then
+            echo "More than one release tag names $GITHUB_SHA: $(tr '\n' ' ' <<<"$head_tag")"
+            exit 1
+          fi
+          # A re-run of an old run: a later release tag already contains this commit, so that release covers it.
+          covered="$(release_tags --contains "$GITHUB_SHA" | grep -vxF -- "${head_tag:-none}" || true)"
+          if [ -n "$covered" ]; then
+            echo "A later release covers $GITHUB_SHA: $(tr '\n' ' ' <<<"$covered")No release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "last=$last" >> "$GITHUB_OUTPUT"
+          next="$(node scripts/version.mjs next "$GITHUB_REPOSITORY" "$last" "$GITHUB_SHA")"
+          version="$(jq -r .version <<<"$next")"
+          internal="$(jq -r .internal <<<"$next")"
+          if [ "$version" = null ]; then
+            if [ -n "$head_tag" ]; then
+              echo "$head_tag tags $GITHUB_SHA, but each pull request after $last has version:none"
+              exit 1
+            fi
+            echo "Each pull request after $last has version:none. No release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -n "$head_tag" ] && [ "$head_tag" != "v$version" ]; then
+            echo "$head_tag tags $GITHUB_SHA, but the labels of the pull requests after $last give v$version"
+            exit 1
+          fi
+          # npm view exits 1 with E404 for a version that is not published. Any other error stops the run.
+          err="$RUNNER_TEMP/npm-view-error.txt"
+          if published="$(npm view "@grafana/viz-contract@$version" version 2>"$err")"; then :
+          elif grep -q E404 "$err"; then published=""
+          else cat "$err"; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "internal=$internal" >> "$GITHUB_OUTPUT"
+          if [ -n "$published" ]; then
+            echo "$version is already published. No release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Release v$version after $last (internal: $internal)."
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check the Go module path
+        # Go resolves a tag from v2.0.0 on only if the module path ends in /v<major>. A wrong path makes no tag.
+        # The Version label check does the same check on the pull request. This step is the backstop.
+        if: steps.next.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.next.outputs.version }}
+        run: node scripts/version.mjs gomod "$VERSION"
+      - name: Run the contract checks
+        if: steps.next.outputs.release == 'true'
+        working-directory: scripts
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          node check.mjs
+      - name: Create the GitHub Release and its tag
+        if: steps.next.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.next.outputs.version }}
+          INTERNAL: ${{ steps.next.outputs.internal }}
+          LAST: ${{ steps.next.outputs.last }}
+        run: |
+          if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "The GitHub Release v$VERSION already exists"
+            exit 0
+          fi
+          notes=""
+          if [ "$INTERNAL" = true ]; then
+            notes="Internal: this release changes only interfaces with the internal or the provisional promise."
+          fi
+          # The notes start at the last tag. v1.1.0 has no GitHub Release, so the default start can be wrong.
+          gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "v$VERSION" --generate-notes --notes-start-tag "$LAST" --notes "$notes"
+
   publish:
-    # Only a new tag publishes. A moved (force-pushed) or deleted tag does not.
-    if: github.event.created && !github.event.deleted
+    needs: release
+    if: needs.release.outputs.release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: npm-publish
@@ -20,39 +137,102 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
-      - name: Check that the tagged commit is on main
-        run: |
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "The tagged commit $GITHUB_SHA is not on main"
-            exit 1
-          fi
-      - name: Check that the tag gives the package version
-        env:
-          TAG: ${{ github.ref_name }}
-        run: |
-          version="$(node -p "require('./package.json').version")"
-          if [ "$TAG" != "v$version" ]; then
-            echo "Tag $TAG does not match package.json version $version"
-            exit 1
-          fi
-      - name: Run the contract checks
-        working-directory: scripts
-        run: |
-          npm ci --ignore-scripts --no-audit --no-fund
-          node check.mjs
       - name: Publish
         # Node 24 comes with npm 11.5.1 or later, which trusted publishing needs.
+        # The version comes from the tag. package.json on main keeps a placeholder.
         # A re-run after npm accepted the upload goes green instead of failing.
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
         run: |
-          version="$(node -p "require('./package.json').version")"
-          if npm view "@grafana/viz-contract@$version" version >/dev/null 2>&1; then
-            echo "$version is already published"
+          if npm view "@grafana/viz-contract@$VERSION" version >/dev/null 2>&1; then
+            echo "$VERSION is already published"
             exit 0
           fi
+          npm version "$VERSION" --no-git-tag-version --allow-same-version --ignore-scripts
           npm publish --ignore-scripts
+
+  go-proxy:
+    # Its own job, so that a failure here does not stop the npm publish. After a failure, use "Re-run failed jobs".
+    # "Re-run all jobs" does not run this job again: the release job finds the version on npm and sets
+    # release=false.
+    needs: release
+    if: needs.release.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write # comment on the merged pull request when the check fails
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: go.mod
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+      - name: Fetch the Go module from the Go proxy
+        id: proxy
+        # The first request makes proxy.golang.org fetch the tag, and go checks the sum with sum.golang.org.
+        # GOPROXY has no direct fallback, so the check fails if only GitHub has the tag.
+        # The proxy can need some time for a new tag, so the step tries again.
+        # The proxy never changes a version that it has. If the tag moved to another commit, the proxy still gives
+        # the old commit, so the step compares Origin.Hash with the commit of the tag.
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          GOPROXY: https://proxy.golang.org
+        run: |
+          module="$(awk '$1 == "module" { print $2 }' go.mod)"
+          cd "$RUNNER_TEMP"
+          for i in 1 2 3 4 5 6; do
+            # stdout is the JSON, and its Error field gives the reason of a failed try.
+            if out="$(go mod download -json "$module@v$VERSION")"; then
+              dir="$(jq -r .Dir <<<"$out")"
+              if [ ! -f "$dir/embed.go" ]; then
+                echo "$module@v$VERSION has no embed.go"
+                exit 1
+              fi
+              hash="$(jq -r '.Origin.Hash // empty' <<<"$out")"
+              if [ "$hash" != "$GITHUB_SHA" ]; then
+                echo "The Go proxy gives $module@v$VERSION at ${hash:-an unknown commit}, not $GITHUB_SHA"
+                exit 1
+              fi
+              echo "The Go proxy gives $module@v$VERSION at $GITHUB_SHA"
+              exit 0
+            fi
+            echo "Try $i of 6 failed: $(jq -r '.Error // empty' <<<"$out")"
+            if [ "$i" -lt 6 ]; then sleep 30; fi
+          done
+          exit 1
+      - name: Comment on the merged pull request
+        # The comment tells the author and the reviewers of the pull request that made the release. GITHUB_TOKEN
+        # gives the access, so the step needs no other secret. The step runs only when the proxy step failed, not
+        # when checkout or setup-go failed. A failed re-run does not comment again: the marker finds the comment.
+        if: failure() && steps.proxy.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          marker="<!-- go-proxy v$VERSION -->"
+          body="$marker
+          The Go proxy does not give the Go module of v$VERSION, or gives another commit, so Go code cannot fetch the tagged version. See $RUN_URL. After a fix, use \"Re-run failed jobs\" on that run."
+          prs="$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" --jq '.[] | select(.merged_at) | .number')"
+          if [ -z "$prs" ]; then
+            echo "No merged pull request has $GITHUB_SHA, so no comment"
+            exit 0
+          fi
+          for pr in $prs; do
+            if gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$pr/comments" --jq '.[].body' | grep -qF "$marker"; then
+              echo "#$pr already has the comment for v$VERSION"
+              continue
+            fi
+            gh api "repos/$GITHUB_REPOSITORY/issues/$pr/comments" -f body="$body" --silent
+            echo "Commented on #$pr"
+          done

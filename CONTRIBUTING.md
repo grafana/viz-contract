@@ -29,35 +29,88 @@ This file gives the steps to change the contract.
 
 ## Version and changelog
 
-A change pull request does not change `CHANGELOG.md` or the version in `package.json`. Thus two open pull requests
-do not conflict on the version. A release pull request changes them.
+A pull request does not change `CHANGELOG.md` or the version in `package.json`. `package.json` keeps the placeholder
+version `0.0.0-development`, and the checks fail for any other value. The labels of the pull request give the version.
 
-In each change pull request:
+In each pull request:
 
 1. Find the kind of the change with the rules of `8-versioning.md`: major, minor or patch.
-2. Give the kind in the pull request description, for example `Version: minor, internal`. Write `internal` if the
-   change affects only an interface with the internal or the provisional promise.
+2. Add one label for the kind: `version:major`, `version:minor` or `version:patch`. Add the label `version:none` if
+   the change needs no release, for example a change to CI, to `scripts/` or to the README. Renovate adds
+   `version:none` to its pull requests.
+3. Also add the label `version:internal` if the change affects only an interface with the internal or the
+   provisional promise.
+4. If you add the label `version:major`, change the module path in `go.mod` to
+   `github.com/grafana/viz-contract/v<major>`, for example `/v2` for `v2.0.0`. Change the Go import in `README.md`
+   to the same path. Go resolves a tag from `v2.0.0` on only with that path. The check `Version label` fails until
+   the module path agrees with the next major version.
 
-To make a release:
+The check `Version label` fails until the pull request has valid labels. A pull request with a failed check cannot
+merge.
 
-1. List the pull requests merged since the last tag, for example with `git log --oneline v1.1.0..main`.
-2. Pick the new version from the largest kind in the list. The release is `internal` if each change in it is
-   `internal`.
-3. Open a release pull request. It adds one `CHANGELOG.md` entry for the new version, made from the descriptions of
-   the pull requests, and sets the same version in `package.json`. The checks fail if the two versions are
-   different.
-4. After the merge, tag the merge commit on `main` `v<version>`, for example `v1.2.0`. Do not move or reuse a tag. A
-   new tag starts the release workflow. The workflow runs the checks and publishes the npm package
-   `@grafana/viz-contract`.
+Each merge to `main` makes a release when the labels need one. The release workflow does these steps on the merge
+commit:
 
-## Tell the consumers
+1. It computes the version from the largest `version:` label of the pull requests merged since the last tag. For
+   example, after `v1.2.0` a merged `version:patch` pull request gives `v1.2.1`. If each pull request has
+   `version:none`, the workflow stops and makes no release.
+2. It runs the checks.
+3. It creates the GitHub Release `v<version>` and its tag. The notes come from the titles of the pull requests. The
+   release is `internal` if each pull request in it has the label `version:internal` or `version:none`.
+4. It publishes the npm package `@grafana/viz-contract` with that version.
 
-Consumers use the files of a tagged version. If the change affects a schema, a registry or a fixture, open an
-issue in each repository that implements the contract: `grafana/mcp-grafana` for the Source and the App, and the
-repository of the Renderer. The issue links the pull request of the change.
+Thus the title of a pull request is its line in the release notes. Write it for the consumers of the contract. A
+pull request that deprecates a frozen form names the version that removes it in its title, for example
+`deprecate the field x, removed in 3.0.0`. Rule `version.8` needs that version in the release notes. If the title
+does not name it, edit the notes of the GitHub Release after the release.
+
+Do not tag by hand, and do not move or reuse a tag. If a step fails, re-run the release workflow. A re-run does
+not make a second release.
+
+## The consumers
+
+Consumers use the files of a tagged version. Each repository that implements the contract decides when it
+supports a new version. The GitHub Release of each version tells the consumers what changed. A pull request of
+the contract does not open issues in those repositories.
 
 ## Public text
 
 The contract is public. Link only public sources: the Grafana source code and docs, the MCP and MCP Apps
 specifications, the dataplane contract, and the public mcp-grafana code and docs. Do not link private
 repositories or internal documents. The check command includes a public text check.
+
+## Preparing a contribution
+
+Search existing issues and open PRs for overlapping work. Link related work and dependencies.
+Coordinate with maintainers before substantial changes. Describe the affected contract rules,
+compatibility impact, and validation performed.
+
+AI-assisted contributions are welcome. Read and understand every change, including generated schemas.
+The contributor remains responsible for correctness and for answering review questions.
+Report checks that could not run rather than claiming they passed.
+
+Report vulnerabilities through
+[Grafana's security reporting page](https://grafana.com/legal/report-a-security-issue/), not public issues.
+
+## Signed commits
+
+Every contributed commit must have a signature that GitHub verifies, including commits authored
+with an agent. A `Signed-off-by` trailer (`git commit -s`) is not a cryptographic signature.
+
+Follow the GitHub setup links in [Grafana's signing guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md#submit-a-pull-request)
+with your own identity and register the public signing key with GitHub. Once configured:
+
+```bash
+git config --local commit.gpgsign true
+git commit -m "docs: clarify contribution guidance"
+```
+
+Follow the verification-status link in [Grafana's signing guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md#submit-a-pull-request)
+to check every commit in the PR. Local signing alone does not guarantee GitHub verification.
+If signing fails, fix the key or signing-agent setup rather than disabling signing. Preserve original
+authorship when repairing signatures. Coordinate before rewriting published history. Agents must
+obtain explicit approval before doing so. Do not re-sign another contributor's commits as your own.
+
+For local SSH signature verification with `git log --show-signature`, first configure
+`gpg.ssh.allowedSignersFile` with the trusted signing identity and public key. An error about a
+missing allowed-signers file means local verification is not configured. It does not mean signing failed.

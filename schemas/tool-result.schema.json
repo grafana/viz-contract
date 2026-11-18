@@ -53,12 +53,14 @@
       "$comment": "Generated from registry/panel-types.json. Do not edit.",
       "enum": [
         "grafana-echartscartesian-panel",
+        "grafana-echartsgauge-panel",
         "grafana-echartsgeo-panel",
         "grafana-echartsheatmap-panel",
         "grafana-echartshierarchy-panel",
         "grafana-echartsmultivariate-panel",
         "grafana-echartsparttowhole-panel",
         "grafana-relations-panel",
+        "grafana-echartsstat-panel",
         "grafana-echartsstatetimeline-panel",
         "grafana-echartsstatushistory-panel",
         "grafana-echartsstream-panel"
@@ -66,7 +68,7 @@
     },
     "panel": {
       "type": "object",
-      "description": "The panel ID and the options preset of the chart, and the unit of the tool arguments.",
+      "description": "The panel ID and the options preset of the chart, and the unit and the title of the tool arguments.",
       "required": [
         "type",
         "options"
@@ -74,6 +76,13 @@
       "properties": {
         "type": {
           "$ref": "#/$defs/panelId"
+        },
+        "title": {
+          "type": "string",
+          "pattern": "\\S",
+          "maxLength": 100,
+          "$comment": "Generated from registry/constants.json (maxTitleChars). Do not edit.",
+          "description": "The title of the tool arguments."
         },
         "options": {
           "type": "object"
@@ -87,6 +96,53 @@
                 "unit": {
                   "type": "string",
                   "minLength": 1
+                },
+                "min": {
+                  "type": "number",
+                  "description": "The minimum of the value range, as in a Grafana panel."
+                },
+                "max": {
+                  "type": "number",
+                  "description": "The maximum of the value range, as in a Grafana panel."
+                },
+                "thresholds": {
+                  "type": "object",
+                  "description": "The threshold steps, as in a Grafana panel. The first step has the value null, which is the base.",
+                  "required": [
+                    "mode",
+                    "steps"
+                  ],
+                  "properties": {
+                    "mode": {
+                      "enum": [
+                        "absolute",
+                        "percentage"
+                      ]
+                    },
+                    "steps": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "value",
+                          "color"
+                        ],
+                        "properties": {
+                          "value": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "color": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               }
             },

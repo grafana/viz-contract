@@ -337,6 +337,15 @@
             "$ref": "#/$defs/message",
             "unevaluatedProperties": false
           }
+        },
+        "annotate": {
+          "description": "The messages of an annotation that is not saved, that the Renderer shows",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/message",
+            "unevaluatedProperties": false
+          }
         }
       },
       "additionalProperties": false
@@ -364,6 +373,25 @@
                 ]
               }
             },
+            "unevaluatedProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "messages": {
+      "title": "registry/messages.json",
+      "type": "object",
+      "required": [
+        "messages"
+      ],
+      "properties": {
+        "messages": {
+          "description": "The messages that the App sends to the conversation",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/$defs/message",
             "unevaluatedProperties": false
           }
         }

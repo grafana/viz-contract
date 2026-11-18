@@ -99,6 +99,20 @@
           "streamChartType": "bubble"
         }
       }
+    },
+    {
+      "chart": "gauge",
+      "panel": {
+        "type": "grafana-echartsgauge-panel",
+        "options": {}
+      }
+    },
+    {
+      "chart": "stat",
+      "panel": {
+        "type": "grafana-echartsstat-panel",
+        "options": {}
+      }
     }
   ],
   "data": {

@@ -25,17 +25,36 @@ export interface RenderOptions {
   /** Called when the Renderer shows a new final state or new notices. */
   onState?: (state: RenderState) => void;
   /**
-   * Called when the user clicks Refresh or picks a time range. The Renderer shows Refresh and the time picker
-   * only when the App gives this option.
+   * Called when the user clicks Refresh or picks a time range, and for each zoom, zoom out, Reset and pan of the
+   * chart (renderer.43). The Renderer shows Refresh and the time picker only when the App gives this option.
    */
   onRefresh?: (request: RefreshRequest) => void;
+  /**
+   * Called when the user clicks the Ask in chat link of the tooltip. The Renderer shows the link only when the App
+   * gives this option.
+   */
+  onMessage?: (request: MessageRequest) => void;
+  /**
+   * Called when the user saves a new annotation. The Renderer shows the Add annotation UI only when the App gives
+   * this option, and only on a chart with a time axis. The user opens the form with the Add annotation button of
+   * the pinned tooltip, or with a Ctrl or Cmd click or drag.
+   */
+  onAnnotate?: (request: AnnotateRequest) => void;
 }
 
 export interface RenderHandle {
-  /** Draws a new viz spec in the same element. */
+  /** Draws a new viz spec in the same element. It keeps the legend overrides of the user (renderer.35). */
   update(spec: unknown): void;
-  /** Gives the result of the last refresh. With ok false, error is the text that the Renderer shows. */
-  setRefreshed(ok: boolean, error?: string): void;
+  /**
+   * Gives the result of the refresh with this id. id is the id of the RefreshRequest. With ok false, error is the
+   * text that the Renderer shows.
+   */
+  setRefreshed(id: string, ok: boolean, error?: string): void;
+  /**
+   * Gives the result of the annotation with this id. id is the id of the AnnotateRequest. With ok false, error is
+   * the text that the Renderer shows. With ok true, the Renderer keeps the annotation on the chart until destroy.
+   */
+  setAnnotated(id: string, ok: boolean, error?: string): void;
   /** Removes the chart and its listeners. */
   destroy(): void;
 }
@@ -64,7 +83,58 @@ export interface Notice {
 }
 
 /**
- * The cause of a refresh. For timeRange, from and to are the range that the user picked. A relative range, for
- * example now-6h to now, stays relative. An absolute range is in epoch milliseconds.
+ * A refresh. id is a new value for each call of onRefresh. The App gives it to setRefreshed. For timeRange, from
+ * and to are the range that the user picked, or the new range of a zoom, zoom out, Reset or pan. A relative range,
+ * for example now-6h to now, stays relative. An absolute range is in epoch milliseconds.
  */
-export type RefreshRequest = { cause: 'refresh' } | { cause: 'timeRange'; from: string; to: string };
+export type RefreshRequest = { id: string } & (
+  | { cause: 'refresh' }
+  | { cause: 'timeRange'; from: string; to: string }
+);
+
+/**
+ * An annotation that the user saves. id is a new value for each call of onAnnotate. The App gives it to
+ * setAnnotated. time is in epoch milliseconds. timeEnd is present only for a range, and is not less than time.
+ * text is not empty. tags can be empty. text and each tag have no white space at the start or the end.
+ */
+export interface AnnotateRequest {
+  id: string;
+  time: number;
+  timeEnd?: number;
+  text: string;
+  tags: string[];
+}
+
+/**
+ * A message about a part of the chart, for the conversation. The App makes the text. A later version can add a
+ * target, for example a range.
+ */
+export interface MessageRequest {
+  target: 'point';
+  series: SeriesRef;
+  point: PointRef;
+}
+
+export interface SeriesRef {
+  /** The display name, as the tooltip shows it. */
+  name: string;
+  /** The labels of the field. Can be empty. */
+  labels: Record<string, string>;
+  /** The refId of the frame. Absent when the frame has none. */
+  refId?: string;
+}
+
+export interface PointRef {
+  /** x as the tooltip shows it, for example a time in timeZone. */
+  x: string;
+  /** y as the tooltip shows it, with the unit. */
+  y: string;
+  /** The type of the x field. string is each type that is not a time or a number, for example a category. */
+  xType: 'time' | 'number' | 'string';
+  /** x in ISO 8601 UTC, for example 2026-11-13T10:00:00.000Z. Present only when xType is time. */
+  xIso?: string;
+  /** x as a number, for example epoch milliseconds. Absent when x is not a number. */
+  xRaw?: number;
+  /** y as a number. Absent when y is not a number. */
+  yRaw?: number;
+}

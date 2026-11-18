@@ -1,5 +1,9 @@
 # Changelog
 
+This file lists the versions before 1.2.0. From 1.2.0 on, the
+[GitHub Releases](https://github.com/grafana/viz-contract/releases) list the versions, with notes made from the titles
+of the pull requests.
+
 Each version of the contract has one entry. [8-versioning.md](8-versioning.md) gives the version rules. An entry
 marked `internal` changes only an interface with the internal or the provisional promise.
 
