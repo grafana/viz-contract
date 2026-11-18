@@ -18,6 +18,7 @@ are in `fixtures/`, one directory for each set.
 | `chart-options.json` | A `chart-options.json`, as the Renderer build writes it | Source |
 | `options-args.json` | The arguments of `get_chart_options` | Source |
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
+| `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -69,6 +70,10 @@ are in `fixtures/`, one directory for each set.
     - Two overrides that do not have the override form: one has a matcher that is not allowed, and one has no
       `properties`.
     - A key of `fieldConfig` that is not `defaults` or `overrides`.
+  - `options-stale`: a refresh after a Renderer version removed an option (`refresh.19`). `args.json` is the last
+    tool arguments of the App. Its `options` have one option of the chart, and one path that is not an option. Its
+    `fieldConfig` is correct. `result.json` is the `invalid-options` tool error. `retry-args.json` is `args.json`
+    with no `options` and no `fieldConfig`. The set has no `response.json`, because the Source does not query.
   - `options-list`: `get_chart_options` with no `advanced`. The text has the line of the advanced options that
     are not listed (`tool.44`).
   - `options-list-advanced`: `get_chart_options` with `advanced` set to true.
@@ -87,6 +92,10 @@ are in `fixtures/`, one directory for each set.
   `get_chart_options`: the test gives `options-args.json` to the tool, and the tool result must equal
   `options-result.json`. `chart-options.json` and `options-args.json` validate against their schemas, as the files
   of `fixtures.2` do.
+- `fixtures.19` For a set with `retry-args.json`, the App test shows a chart whose last tool arguments are
+  `args.json`, and the Renderer asks for a refresh with the cause `refresh`. The test answers the first call with
+  `result.json`. The tool arguments of the second call must equal `retry-args.json`. `retry-args.json` validates
+  against the schema of the tool arguments.
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response

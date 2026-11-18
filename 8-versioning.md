@@ -51,4 +51,6 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
 - `version.13` The options of a chart are data of the Renderer. They are not a shape of the contract. A Renderer
   version can add, rename or remove an option, and the contract version does not change. The promise of the tool
   arguments is for the form of `options` and `fieldConfig` only. The model reads the options at run time
-  (`tool.43`), so a prompt does not have to name them.
+  (`tool.43`), so a prompt does not have to name them. A refresh can have an option that the Renderer version does
+  not have. The App then calls again with no `options` and no `fieldConfig` (`refresh.19`). Thus a change of the
+  options does not break the refresh of `version.12`.
