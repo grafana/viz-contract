@@ -26,7 +26,9 @@ specified.
    annotation (`renderer.63`), and the Renderer must not draw it two times.
 8. Edit the chart. The user changes the options of the chart in the App, for example with an options pane.
 9. Transformations. The Renderer runs the Grafana transformations of a panel.
-10. Model guidance for queries. The model can read the query rules of each data source when it needs them.
+10. Model guidance for queries. The model can read the query rules of each data source when it needs them. It can
+    also read the query types of a data source with no failed query. Today it reads them only after a query
+    fails (`tool.32`).
 11. A regular expression matcher for overrides. An override finds its fields with a pattern, as `byRegexp` of
     Grafana does. The Source must then make sure that the pattern compiles in the browser, and that it cannot make
     the browser slow (`tool.40`).

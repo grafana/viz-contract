@@ -1,0 +1,34 @@
+{
+  "datasourceUid": "lgtm-testdata",
+  "queries": [
+    {
+      "refId": "A",
+      "scenarioId": "random_walk"
+    },
+    {
+      "refId": "B",
+      "scenarioId": "csv_content"
+    },
+    {
+      "refId": "C",
+      "alias": "no scenario"
+    },
+    {
+      "refId": "D",
+      "scenarioId": "live",
+      "version": 2
+    },
+    {
+      "refId": "E",
+      "scenarioId": "csv_content",
+      "csvContent": "time,value"
+    },
+    {
+      "refId": "F",
+      "scenarioId": "live",
+      "version": "3"
+    }
+  ],
+  "from": "now-15m",
+  "to": "now"
+}

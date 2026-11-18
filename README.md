@@ -52,6 +52,7 @@ flowchart TB
 | Icon cache | The `react-inlinesvg` cache of the copy of `@grafana/ui` in the App. `Icon` reads an SVG from it, and makes no request for that SVG |
 | Chart option | A panel option or a field option of a chart that the model can set (`tool.36`). `chart-options.json` of the Renderer lists the chart options of each chart (`delivery.16`) |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
+| Query type | The JSON schema that a data source plugin gives for one kind of its queries. Grafana serves it only with the feature toggles `datasources.queryTypes` and `datasource.useNewCRUDAPIs` (`tool.32`) |
 | Chart line | The text line that names the chart of a tool result, and that the model reads in the same turn (`tool.46`). Not a note: `maxAppNotes` does not count it |
 | Legend overrides | The `fieldConfig` overrides that the user makes with the legend: hide, show and color an item. Only the Renderer keeps them (`renderer.37`) |
 | Time axis | An x axis that the panel draws from a field of type `time`. For example, a `timeseries` chart has a time axis. A `barchart` has one only if its categories are a `time` field. A `histogram` has none |
@@ -155,6 +156,7 @@ version.
 | `maxBundleGzipBytes` | not set | bytes | yes | Largest gzip size of the Renderer bundle. Not set until the host size research is done |
 | `maxAppNotes` | 5 | notes | yes | Most notes of the Source that render_grafana_app adds to its text line |
 | `maxAppNoteChars` | 200 | characters | yes | Longest note in the text line of render_grafana_app |
+| `queryTypesTimeoutMs` | 5000 | ms | yes | Longest time of the requests of the Source for the query types of one call, all together |
 | `maxTitleChars` | 100 | characters | yes | Longest title of the tool arguments |
 | `maxMessageChars` | 1000 | characters | yes | Longest text of a message that the App sends to the conversation |
 | `maxMessageLabels` | 10 | labels | yes | Most labels of the series in a message |

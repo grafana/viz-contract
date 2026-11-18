@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, canonical, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, appNoteLines, canonical, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceNotes, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -83,6 +83,7 @@ const overrideSchema = readJSON('schemas/field-config.schema.json').$defs.overri
 let fixtureFailures = failures;
 const SPEC_ERRORS = ['invalid-spec', 'unsupported-spec-version', 'unsupported-panel-type'];
 const constants = readJSON('registry/constants.json');
+const failedMessage = readJSON('registry/notices.json').notices.find((n) => n.code === 'query-failed').message;
 // The shape of MessageRequest in renderer-api.d.ts.
 const isText = (v) => typeof v === 'string';
 const optional = (v, type) => v === undefined || typeof v === type;
@@ -127,6 +128,21 @@ for (const set of sets) {
   if (files['response.json'] && !(Number.isInteger(files['response.json'].status) && files['response.json'].body?.results)) {
     fail('fixtures', `${set}/response.json: it needs status and body.results`);
     continue;
+  }
+  const queryTypes = files['querytypes.json'];
+  if (queryTypes && !(typeof queryTypes.plugin === 'string' && typeof queryTypes.version === 'string' && Number.isInteger(queryTypes.status) && queryTypes.body)) {
+    fail('fixtures', `${set}/querytypes.json: it needs plugin, version, status and body`);
+  } else if (queryTypes && !files['notes.json']) {
+    fail('fixtures', `${set}/querytypes.json: the set has no notes.json`);
+  }
+  if (files['notes.json']) {
+    const { notes, lines } = files['notes.json'];
+    if (!files['args.json'] || !files['response.json']) fail('fixtures', `${set}/notes.json: it needs args.json and response.json`);
+    else if (JSON.stringify(notes) !== JSON.stringify(sourceNotes(files['args.json'], files['response.json'].body.results, queryTypes, failedMessage))) {
+      fail('fixtures', `${set}/notes.json: notes are not the notes of tool.29, tool.33 to tool.35, tool.50, tool.51 and tool.53`);
+    } else if (JSON.stringify(lines) !== JSON.stringify(appNoteLines(notes, constants))) {
+      fail('fixtures', `${set}/notes.json: lines are not the lines of tool.30`);
+    }
   }
   if (files['request.json'] && JSON.stringify(files['request.json']) !== JSON.stringify(sourceRequest(files['args.json'], files['meta.json'].now, constants))) {
     fail('fixtures', `${set}/request.json is not the request of tool.5, tool.6 and tool.12`);

@@ -220,3 +220,79 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   space, the number of the notes that step 3 left out and ` more not shown`, for example `… 2 more not shown`.
   Thus `render_grafana_app` adds at most `maxAppNotes` lines of notes, and the `more not shown` line when it left
   some out.
+
+## Query types
+
+A data source plugin can describe the fields of its queries as query types. Grafana serves the query types of a
+plugin only with the feature toggles `datasources.queryTypes` and `datasource.useNewCRUDAPIs`, and only for a
+plugin that has query types. The Source uses them to help the model correct a failed query. The query still goes
+to `/api/ds/query` (`tool.13`). The model reads the query types only in a turn with a failed query. Thus they add no
+tokens to `tools/list` (`tool.49`).
+
+- `tool.32` The Source reads the query types only when an entry of `data.results` has an `error`. Then it sends
+  these requests to its Grafana, in this order:
+  1. `GET /api/datasources/uid/<datasourceUid>`. `<plugin>` is the `type` of the response. A Source that has the
+     `type` from another request of the same call does not send this request.
+  2. `GET /apis/<group>`. `<version>` is the `preferredVersion.version` of the response.
+  3. `GET /apis/<group>/<version>/querytypes`. The response is a `QueryTypeDefinitionList`. Each item has a
+     `metadata.name`, and a `spec` with a JSON `schema`. The `spec` can also have `discriminators`.
+
+  `<group>` is `<name>.datasource.grafana.app`. If `<plugin>` has no `-`, `<name>` is `<plugin>`, for example
+  `prometheus`. If `<plugin>` ends with `-datasource`, `<name>` is `<plugin>` with no `-datasource` at its end and
+  no `grafana-` at its start, for example `testdata` for `grafana-testdata-datasource`. Each other `<plugin>` has
+  no group, and the Source sends no request 2 and no request 3 for it.
+- `tool.52` The Source sends each request of `tool.32` one time for each call at most, also when two or more
+  queries failed. Thus a call with a failed query has three more requests at most, and a call with no failed query
+  has none. The three requests together take `queryTypesTimeoutMs` at most. The time starts when the Source sends
+  the first of them. When the time ends, the Source stops the requests. The Source does not keep a response of
+  these requests for a later call. Thus a change of a feature toggle or of a plugin applies to the next call.
+- `tool.33` The Source gives no query type note if Grafana does not serve the query types, if a request of
+  `tool.32` fails, if `<plugin>` has no group, or if the time of `tool.52` ends. It does not return a tool error
+  for this. It gives the notes of `tool.29` as before.
+- `tool.34` The Source finds the query type of a query in two steps. First it reads only the items that have one
+  or more `discriminators`, in the order of the response. The query type is the first of these items for which
+  each of its `discriminators` matches the query (`tool.53`). If none of these items matches, the query type is
+  the first item with no `discriminators`. If there is no such item, the query has no query type and gets no
+  note. Thus an item with no `discriminators` is only a fallback, also when it is first in the response.
+- `tool.53` A discriminator has a `field` and a `value`. The `value` is always a string. The discriminator matches
+  a query if the query, as the model gave it, has a field with the name `field` at its top level, and the value
+  of that field matches the `value`:
+  - A string matches if it has the same Unicode code points as the `value`.
+  - A number matches if the `value` is the JSON text of a number that is equal to it. For example, the number `1`
+    matches the `value` `"1"`.
+  - A boolean matches if the `value` is `true` or `false` and names the same boolean.
+  - `null`, an object and an array do not match.
+
+  The Source reads `field` as one name and not as a path. Thus the `field` `a.b` is the top-level field with the
+  name `a.b`, and the Source reads no nested field. A query that does not have the field does not match. Thus a
+  query that leaves out `queryType` gets the item with no `discriminators`, or no note (`tool.34`). The Source
+  does not guess a query type for it.
+- `tool.35` A failed query is a query of the call whose `refId` is the key of an entry of `data.results` that has
+  an `error`. The order of the failed queries is the order in which the model gave the queries of the call.
+  `data.results` is a JSON object, and thus it gives no order. The Source gives one note for each query type of
+  the failed queries, in the order of the first failed query that has each query type. A query type that two
+  failed queries have gets one note.
+- `tool.49` The Source writes the query types only to its notes. It does not write them to the description of
+  `render_grafana_app`, to the schema of the tool arguments or to the structured content. Thus the structured
+  content of a call is the same with query types and with none.
+- `tool.50` The query type note is `Plugin fields of <plugin> query type <name>. Set: <discriminators>. Required:
+  <required>. All: <fields>.` `<discriminators>` lists each of the `discriminators` of the item as `<field>=<value>`,
+  in the order of the response. `<required>` lists `spec.schema.required` in the order of the response. `<fields>`
+  lists the names of `spec.schema.properties` in ascending order of their Unicode code points. A comma and a space
+  are between the parts of each list. If a list is empty, the note does not have the sentence of that list. The
+  schema can leave out a field of the `discriminators`, for example `queryType`. Thus the note has `Set:`, and the
+  model does not lose the field that selects the query type. The sentences are in the order `Set:`, `Required:`,
+  `All:`. Thus the cut of `tool.30` leaves out the end of `<fields>` first. `All:` is best effort: the start of the
+  note, `Set:` and `Required:` can use most of `maxAppNoteChars`, and then the cut leaves out most of `<fields>`
+  or all of it. The Source does not make the note shorter. The schema has only the fields of the
+  plugin. It does not have the fields that each query can have, for example `refId`, `datasource`, `intervalMs`
+  and `maxDataPoints`. Thus the note says `Plugin fields`, and the model keeps those fields in its query.
+- `tool.51` When the Source has a query type note, it gives its notes in this order: (1) the note of `tool.29` for
+  the first failed query, (2) the query type notes in the order of `tool.35`, (3) the notes of `tool.29` for the
+  other failed queries, in the order of `tool.35`. Thus the model always reads one `error`. Step 3 of `tool.30`
+  leaves out notes from the end of this order: first the notes of the other failed queries, then the last query
+  type notes. When the failed queries have `maxAppNotes` or more query types, the model does not read a note for
+  each query type. When they have one less than `maxAppNotes` or more, the model reads no `error` of the other
+  failed queries. This order is intended: one `error` with the fields that correct it helps the model more than a
+  second `error`. The `more not shown` line of `tool.30` tells the model that notes are left out. A query that
+  still fails gives its `error` in the next call.
