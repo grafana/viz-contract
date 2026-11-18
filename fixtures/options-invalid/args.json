@@ -10,8 +10,11 @@
   ],
   "from": "now-15m",
   "to": "now",
+  "unit": "reqps",
   "type": "timeseries",
   "options": {
+    "😀": 1,
+    "Ａ": 1,
     "tooltip": "multi",
     "lineWidth": 40,
     "legend": {
@@ -24,6 +27,7 @@
   },
   "fieldConfig": {
     "defaults": {
+      "unit": "bytes",
       "min": "0",
       "custom": {
         "lineStyle": {

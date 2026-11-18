@@ -37,6 +37,12 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   `sha256`. The mcp-grafana binary has the manifest and the `chart-options.json` of the Renderer that `app.html`
   holds. Thus, with `delivery.6`, the Source can make sure that the file and the bundle come from the same Renderer
   build (`tool.48`).
+- `delivery.22` In the `fieldConfig` list, the path of an entry is the id of a registered field option, as it is.
+  The file does not list the parts of a field option whose value is an object. Such an option is one entry, with
+  a `schema` of the `type` `object`. Grafana finds the option of an override property by its id, and it ignores a
+  property whose id is not the id of a registered option. Thus Grafana applies each override property that the
+  Source accepts (`tool.37`). In the `options` list, an entry can be a part of a registered panel option, because
+  the Source writes each path of `panel.options` as nested objects (`tool.41`).
 
 ## Checks
 
@@ -120,12 +126,14 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   editor reads and the options that the Renderer does not apply (`delivery.17`), the Renderer keeps a list with
   the reason for each. The check fails in these cases:
   - A registered option that the builder shows for the `options` of the row is not in the file, and `delivery.17`
-    does not leave it out. An option whose value is an object is in the file when its path is a path of the file
-    or the start of one.
-  - A path of the file is not the path of a registered option of the panel, and is not inside one.
+    does not leave it out. A panel option whose value is an object is in the file when its path is a path of the
+    `options` list or the start of one.
+  - A path of the `options` list is not the path of a registered panel option of the panel, and is not inside
+    one.
+  - A path of the `fieldConfig` list is not the id of a registered field option of the panel (`delivery.22`).
 
   Thus each new registered option needs a `schema` before it ships, also an option with a custom editor. The check
-  does not know the parts of a value that is an object, so the Renderer lists those parts by hand.
+  does not know the parts of a panel option whose value is an object, so the Renderer lists those parts by hand.
 - `delivery.20` A CI check of the Renderer makes sure that `chart-options.json` validates against its schema, that
   each `default` validates against the `schema` of its option, and that the file follows `delivery.17`. It also
   makes sure that the file has one entry for each row of `chart-types.json` and no other entry (`delivery.16`), and

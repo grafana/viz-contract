@@ -62,9 +62,12 @@ are in `fixtures/`, one directory for each set.
   - `options-invalid`: each problem of `tool.38` to `tool.40`. The set has no `response.json`, because the Source
     does not query. The expected result is the `invalid-options` tool error. The arguments have these parts:
     - In `options`: a path that is not an option, the same path from two keys, a path that is set two times, a
-      value that does not validate, and a value that must be an object.
+      value that does not validate, and a value that must be an object. Two keys are not ASCII: `Ａ` (U+FF21) and
+      `😀` (U+1F600). Their problems are in code point order, which is not the order of their UTF-16 code units
+      (`tool.39`).
     - In `fieldConfig.defaults`: a path that is not an option, a path that is set two times, and a value that does
-      not validate.
+      not validate. The arguments also have a `unit`, and the defaults give `unit`, so that path is set two times
+      (`tool.38`).
     - In the first override: an `id` that is not an option, a value that does not validate, and an `id` that is
       set two times.
     - Two overrides that do not have the override form: one has the matcher `byRegexp`, which is not allowed

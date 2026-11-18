@@ -92,6 +92,18 @@ export function sourceRequest(args, now, constants) {
   };
 }
 
+// The code point order of two texts (tool.39). The < of JavaScript gives the order of the UTF-16 code units, which
+// is another order for a character above U+FFFF.
+export function byCodePoint(a, b) {
+  const x = [...a];
+  const y = [...b];
+  for (let i = 0; i < Math.min(x.length, y.length); i++) {
+    const d = x[i].codePointAt(0) - y[i].codePointAt(0);
+    if (d) return d;
+  }
+  return x.length - y.length;
+}
+
 // The type text of an option (tool.45).
 export function typeText(schema) {
   if (schema.anyOf) return schema.anyOf.map(typeText).join(' | ');
@@ -107,6 +119,10 @@ export function typeText(schema) {
     return schema.type;
   }
   if (schema.type === 'array' && schema.items) return `array of ${typeText(schema.items)}`;
+  if (schema.type === 'object' && schema.properties) {
+    const names = Object.keys(schema.properties).sort(byCodePoint);
+    return `{${names.map((n) => `${n}${schema.required?.includes(n) ? '' : '?'}: ${typeText(schema.properties[n])}`).join(', ')}}`;
+  }
   return JSON.stringify(schema);
 }
 
@@ -147,16 +163,17 @@ function findOptions(root, list, prefix = '', out = { found: [], wrong: [] }) {
 }
 
 // The problems of the options and the fieldConfig of the tool arguments (tool.39). valid(schema, value) is true
-// when the value validates. The paths of the fixtures are ASCII, so the order of < is the code point order.
-// overrideSchema is the override definition of field-config.schema.json (tool.40).
+// when the value validates. overrideSchema is the override definition of field-config.schema.json (tool.40).
 export function optionProblems(args, entry, valid, overrideSchema) {
   const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
   const { defaults, overrides, ...others } = args.fieldConfig ?? {};
-  const check = (root, list, prefix) => {
+  // also has the paths that another argument sets: the unit argument sets the path unit of the defaults (tool.38).
+  const check = (root, list, prefix, also = []) => {
     const { found, wrong } = findOptions(root, list);
     // A path that two keys give, for example legend.placement and legend: { placement }, is set two times (tool.38).
     const times = new Map();
     for (const [p] of found) times.set(p, (times.get(p) ?? 0) + 1);
+    for (const p of also) if (times.has(p)) times.set(p, times.get(p) + 1);
     // One problem for each path (tool.39): two keys can give the same path that is not an option.
     const wrongOnce = wrong.filter(([p], i) => wrong.findIndex(([q]) => q === p) === i);
     return [
@@ -164,12 +181,12 @@ export function optionProblems(args, entry, valid, overrideSchema) {
       ...[...times].filter(([, n]) => n > 1).map(([p]) => [p, 'is set two times']),
       ...found.filter(([p, value, o]) => times.get(p) === 1 && !valid(o.schema, value)).map(([p, , o]) => [p, `must be ${typeText(o.schema)}`]),
     ]
-      .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
+      .sort((a, b) => byCodePoint(a[0], b[0]))
       .map(([p, text]) => `${prefix}${p} ${text}`);
   };
   const problems = check(args.options, entry.options, 'options.');
   if (defaults !== undefined && !isObject(defaults)) problems.push('fieldConfig.defaults must be object');
-  else problems.push(...check(defaults, entry.fieldConfig, 'fieldConfig.defaults.'));
+  else problems.push(...check(defaults, entry.fieldConfig, 'fieldConfig.defaults.', args.unit === undefined ? [] : ['unit']));
   if (overrides !== undefined && !Array.isArray(overrides)) problems.push('fieldConfig.overrides must be array');
   (Array.isArray(overrides) ? overrides : []).forEach((override, n) => {
     if (!valid(overrideSchema, override)) return problems.push(`fieldConfig.overrides[${n}] must be ${OVERRIDE_FORM}`);
@@ -183,7 +200,7 @@ export function optionProblems(args, entry, valid, overrideSchema) {
       else if (!valid(option.schema, value)) problems.push(`fieldConfig.overrides[${n}].${id} must be ${typeText(option.schema)}`);
     });
   });
-  for (const key of Object.keys(others).sort()) problems.push(`fieldConfig.${key} is not an option`);
+  for (const key of Object.keys(others).sort(byCodePoint)) problems.push(`fieldConfig.${key} is not an option`);
   return problems;
 }
 
