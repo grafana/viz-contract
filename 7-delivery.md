@@ -18,13 +18,17 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 
 - `delivery.16` The Renderer build writes `chart-options.json` next to the manifest. Shape:
   `schemas/chart-options.schema.json`. The file has one entry for each row of `registry/chart-types.json`, and no
-  other entry. The `options` list of an entry has each panel option that the panel of the row reads when its options are the
-  `options` of the row. The `fieldConfig` list has each field option that this panel reads. The order of a list is
-  the order in which a user reads the options.
+  other entry. A registered option is an option that a panel gives to the options builder of Grafana, with
+  `setPanelOptions` or `useFieldConfig` of `PanelPlugin`. The `options` list of an entry has each registered panel
+  option that the builder shows when the options of the panel are the `options` of the row. The `fieldConfig` list
+  has each registered field option of this panel. The order of a list is the order in which a user reads the
+  options.
 - `delivery.17` The file leaves out these options:
   - An option whose path is in the `options` of the chart row. The `type` argument sets it.
   - An option that only a panel editor reads.
   - An option that the Renderer does not apply, for example data links (`renderer.12`).
+  - An option that a panel reads but does not register. The check of `delivery.19` cannot find it, and the model
+    cannot set it (`tool.39`). It becomes a chart option when the panel registers it.
 
   No path of a list is the start of another path of the same list.
 - `delivery.18` The `schema` of an option accepts each value that the Renderer applies, and no other value. The
@@ -111,9 +115,17 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - With no `onAnnotate`, or with the `smoke-histogram` fixture and `onAnnotate`, the pinned tooltip has an Add
     annotation button, or a Ctrl or Cmd click opens the form (`renderer.49`).
 - `delivery.15` A CI check of the Renderer runs the test of `fixtures.16` for each set that has `message.json`.
-- `delivery.19` A CI check of the Renderer makes sure that `chart-options.json` is complete. It fails when a panel
-  has an option that is not in the file and that `delivery.17` does not leave out. Thus each new option needs a
-  `schema` before it ships, also an option with a custom editor.
+- `delivery.19` A CI check of the Renderer makes sure that `chart-options.json` is complete. The check reads the
+  registered options of each panel from the options builder (`delivery.16`). For the options that only a panel
+  editor reads and the options that the Renderer does not apply (`delivery.17`), the Renderer keeps a list with
+  the reason for each. The check fails in these cases:
+  - A registered option that the builder shows for the `options` of the row is not in the file, and `delivery.17`
+    does not leave it out. An option whose value is an object is in the file when its path is a path of the file
+    or the start of one.
+  - A path of the file is not the path of a registered option of the panel, and is not inside one.
+
+  Thus each new registered option needs a `schema` before it ships, also an option with a custom editor. The check
+  does not know the parts of a value that is an object, so the Renderer lists those parts by hand.
 - `delivery.20` A CI check of the Renderer makes sure that `chart-options.json` validates against its schema, that
   each `default` validates against the `schema` of its option, and that the file follows `delivery.17`. It also
   makes sure that the file has one entry for each row of `chart-types.json` and no other entry (`delivery.16`), and
