@@ -18,6 +18,7 @@ are in `fixtures/`, one directory for each set.
 | `chart-options.json` | A `chart-options.json`, as the Renderer build writes it | Source |
 | `options-args.json` | The arguments of `get_chart_options` | Source |
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
+| `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -61,19 +62,32 @@ are in `fixtures/`, one directory for each set.
   - `options-invalid`: each problem of `tool.38` to `tool.40`. The set has no `response.json`, because the Source
     does not query. The expected result is the `invalid-options` tool error. The arguments have these parts:
     - In `options`: a path that is not an option, the same path from two keys, a path that is set two times, a
-      value that does not validate, and a value that must be an object.
+      value that does not validate, and a value that must be an object. Two keys are not ASCII: `Ａ` (U+FF21) and
+      `😀` (U+1F600). Their problems are in code point order, which is not the order of their UTF-16 code units
+      (`tool.39`).
     - In `fieldConfig.defaults`: a path that is not an option, a path that is set two times, and a value that does
-      not validate.
+      not validate. The arguments also have a `unit`, and the defaults give `unit`, so that path is set two times
+      (`tool.38`).
     - In the first override: an `id` that is not an option, a value that does not validate, and an `id` that is
       set two times.
-    - Two overrides that do not have the override form: one has a matcher that is not allowed, and one has no
-      `properties`.
+    - Two overrides that do not have the override form: one has the matcher `byRegexp`, which is not allowed
+      (`tool.40`), and one has no `properties`.
     - A key of `fieldConfig` that is not `defaults` or `overrides`.
+  - `options-stale`: a refresh after a Renderer version removed an option (`refresh.19`). `args.json` is the last
+    tool arguments of the App. Its `options` have one option of the chart, and one path that is not an option. Its
+    `fieldConfig` is correct. `result.json` is the `invalid-options` tool error. `retry-args.json` is `args.json`
+    with no `options` and no `fieldConfig`. The set has no `response.json`, because the Source does not query.
   - `options-list`: `get_chart_options` with no `advanced`. The text has the line of the advanced options that
     are not listed (`tool.44`).
   - `options-list-advanced`: `get_chart_options` with `advanced` set to true.
   - `options-list-unknown`: `get_chart_options` with a `type` that is not a chart. The expected result is the
     `unknown-chart` tool error (`tool.43`).
+- `fixtures.20` One `options-legend` set for a legend action on a series that has an override of the viz spec
+  (`renderer.69`). It has `spec.json` and `state.json`, with the data of `prometheus-line`. One override of
+  `panel.fieldConfig` gives the series `/api/health` a fixed `color` and a line style. Only the Renderer test uses
+  the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
+  have the color of the legend and the line style of the override. The same must be true after an `update` with
+  the same viz spec (`renderer.35`).
 
 ## Conformance tests
 
@@ -83,10 +97,18 @@ are in `fixtures/`, one directory for each set.
   `request.json`, the request body must equal it. The tool result must equal `result.json`, but the test does not
   compare `grafanaUrl`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
 - `fixtures.18` For a set of `fixtures.17`, the Source test gives the `chart-options.json` of the set `options` to
-  the Source in place of the file of the Renderer. A set with `options-args.json` is a test of
+  the Source in place of the file of the Renderer. The test does not run the checks of `tool.48` on this file,
+  because it has an entry for one chart only. A set with `options-args.json` is a test of
   `get_chart_options`: the test gives `options-args.json` to the tool, and the tool result must equal
   `options-result.json`. `chart-options.json` and `options-args.json` validate against their schemas, as the files
   of `fixtures.2` do.
+- `fixtures.19` For a set with `retry-args.json`, the App test shows a chart whose last tool arguments are
+  `args.json`, and the Renderer asks for a refresh with the cause `refresh`. The test answers the first call with
+  `result.json`. The tool arguments of the second call must equal `retry-args.json`. `retry-args.json` validates
+  against the schema of the tool arguments. It is the `args.json` of the set `prometheus-line` with the `type` of
+  the chart of that set. Thus the test answers the second call with the `result.json` of the set
+  `prometheus-line`. The viz spec of the `update` must equal the `spec.json` of that set with one more field: a
+  `notices` list that has only the `options-dropped` notice (`refresh.19`).
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response

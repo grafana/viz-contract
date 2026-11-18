@@ -90,7 +90,8 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
 - `tool.37` The Source reads the options of the chart from the `chart-options.json` of the Renderer in its binary.
   An option has a path: the names of the keys from the root object to the value, joined with dots, for example
   `legend.placement`. The root object of a panel option is `options`. The root object of a field option is
-  `fieldConfig.defaults`. In an override, the `id` of a property is the path of a field option. A key can have
+  `fieldConfig.defaults`. In an override, the `id` of a property is the path of a field option, which is the id of a
+  registered field option (`delivery.22`). A key can have
   dots. Its name is then a part of the path as it is. Thus `{"legend.placement": "right"}` and
   `{"legend": {"placement": "right"}}` give the same path.
 - `tool.38` The Source finds the options in `options` and in `fieldConfig.defaults` key by key, from the root
@@ -98,7 +99,9 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   Source does not read the keys inside it. If the path is the start of the path of an option, the value must be an
   object, and the Source reads its keys. Otherwise the path is not an option. If two keys give the path of the
   same option, the path is set two times, and the Source does not check its values. If two keys give the same path
-  that is not an option, or the same path whose value must be an object, the path has one problem.
+  that is not an option, or the same path whose value must be an object, the path has one problem. The `unit`
+  argument sets the path `unit` of `fieldConfig.defaults` (`tool.22`). Thus, if the arguments have a `unit` and a
+  key of `fieldConfig.defaults` also gives the path `unit`, that path is set two times.
 - `tool.39` The Source checks `options` and `fieldConfig` before it queries. Each path must be an option of the
   chart, and each value must validate against the `schema` of its option. If one is not correct, the Source returns
   the `invalid-options` tool error of `states.json`, and does not query. `<problems>` has one problem for each path
@@ -108,7 +111,9 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   the override, from 0. `<type>` is the type text of the option (`tool.45`). For a value that must be an object
   (`tool.38`), `<type>` is `object`. The problems of `options` come first, then the problems of
   `fieldConfig.defaults`, each in the code point order of the paths. The problems of the overrides come next, in
-  the order of the arguments. The other keys of `fieldConfig` come last, in code point order (`tool.40`). For
+  the order of the arguments. The other keys of `fieldConfig` come last, in code point order (`tool.40`). The
+  problem `fieldConfig.defaults must be object` is in the place of the problems of `fieldConfig.defaults`, and the
+  problem `fieldConfig.overrides must be array` is in the place of the problems of the overrides. For
   example: `invalid-options: timeseries does not accept these options:
   options.legend.position is not an option; options.lineWidth must be integer 0..20. get_chart_options lists the
   options of timeseries.`
@@ -124,13 +129,15 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   In an override, two properties with the same `id` are the problem `fieldConfig.overrides[<n>].<id> is set two
   times`, as in `tool.38`. Each `id` of an override has one problem at most, and the problems of an override are
   in the order of its properties. The Source does not use the message of a schema library, so the text is the
-  same in each Source. The matchers are those of Grafana: `byName` takes the name of a field, `byRegexp` takes a
-  regular expression for the names, and `byFrameRefID` takes the `refId` of a query. The Source does not check
-  that a matcher matches a field.
+  same in each Source. The matchers are `byName` and `byFrameRefID` of Grafana: `byName` takes the name of a field,
+  and `byFrameRefID` takes the `refId` of a query. A matcher that takes a regular expression, for example
+  `byRegexp`, is not allowed, because the Renderer would run the pattern in the browser with no time limit. The
+  Source does not check that a matcher matches a field.
 - `tool.41` The `panel.options` of the chart is the `options` of the chart row, and then each option of the
   arguments at its path. The Source writes a path as nested objects, also when the key of the arguments had dots.
   The `panel.fieldConfig` of the chart is the `fieldConfig` of the arguments, with each path of its `defaults`
-  written in the same way. A `unit` of the arguments then replaces its `defaults.unit` (`tool.22`). The panels of
+  written in the same way. A `unit` of the arguments is then its `defaults.unit` (`tool.22`). The `fieldConfig` of the
+  arguments cannot also give that path (`tool.38`). The panels of
   `alternatives` do not get the `options` and the `fieldConfig` of the arguments, because they belong to another
   chart.
 - `tool.42` The Source writes only the options that the arguments have. It does not write the `default` of an
@@ -149,7 +156,7 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
      override.`
   4. One line for each entry of the `fieldConfig` list of the chart, in the order of the file.
   5. `An override is <override>.` `<override>` is the override form:
-     `{"matcher":{"id":"byName"|"byRegexp"|"byFrameRefID","options":"<name, regular expression or refId>"},"properties":[{"id":"<path>","value":<value>}]}`
+     `{"matcher":{"id":"byName"|"byFrameRefID","options":"<name or refId>"},"properties":[{"id":"<path>","value":<value>}]}`
   6. `Advanced options not listed: <n>. Set advanced to true to list them.`
 
   The line of an entry is `<path>: <type>`, then ` = <default>` if the entry has a `default`, then
@@ -168,13 +175,27 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   - With the `type` `integer` or `number`: the `type`. With a `minimum` and a `maximum`, ` <minimum>..<maximum>`
     follows. With only one, ` >=<minimum>` or ` <=<maximum>` follows.
   - With the `type` `array` and `items`: `array of `, and then the type text of `items`.
+  - With the `type` `object` and `properties`: `{`, then each property as `<name>: ` and the type text of its
+    schema, joined with `, `, then `}`. The properties are in the code point order of their names. A property that
+    is not in `required` has `?` after its name. For example: `{fill: "solid" | "dash" | "dot"}`.
   - Otherwise: the `schema` as JSON with no white space.
-- `tool.46` When the Source gives a tool result, its first note is `Chart: <chart>. get_chart_options lists its
-  options.` `<chart>` is `chart`. The notes of `tool.29` follow. Thus the model knows the chart that the Source
-  picked, and `maxAppNotes` does not leave this note out (`tool.30`).
+- `tool.46` When the Source gives a tool result, it also gives a chart line to `render_grafana_app`: `Chart:
+  <chart>. get_chart_options lists its options.` `<chart>` is `chart`. `render_grafana_app` adds the chart line
+  after its text line, and the notes follow (`tool.28`). The chart line is not a note. `tool.30` does not change
+  it, and `maxAppNotes` does not count it. Thus the model always knows the chart that the Source picked, and each
+  of the `maxAppNotes` places is for a note of `tool.29`.
 - `tool.47` No tool description and no schema of tool arguments holds the options of a chart, the form of an
   override or the list of the charts of `get_chart_options`. Thus the tool list of a Host does not grow with the
   options. The model reads the options of one chart, and the form of an override, only when it needs them.
+- `tool.48` When the server starts, the Source checks the `chart-options.json` in its binary:
+  - The file validates against its schema.
+  - The file has one entry for each row of `chart-types.json`, and no other entry.
+  - The hash of the file is `chartOptionsSha256` of the manifest of the Renderer in its binary (`delivery.21`).
+
+  If a check fails, the server writes the cause to its log. `render_grafana_app` then does not list
+  `query_datasource`, and the server does not list `get_chart_options`, as with no `dsquery` (`tool.1`). A CI
+  check of the Source runs these checks with the files of its binary. Thus a file that is not correct fails the
+  build of the Source, before a server starts with it.
 
 ## Errors and the text result
 
@@ -198,4 +219,5 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   longer than `maxAppNoteChars` characters to that length, with `…` as its last character. A character is a
   Unicode code point. If the Source gave more notes after step 2, one more line follows the kept notes: `…`, a
   space, the number of the notes that step 3 left out and ` more not shown`, for example `… 2 more not shown`.
-  Thus `render_grafana_app` adds at most `maxAppNotes` lines, and the `more not shown` line when it left some out.
+  Thus `render_grafana_app` adds at most `maxAppNotes` lines of notes, and the `more not shown` line when it left
+  some out.

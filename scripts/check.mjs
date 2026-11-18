@@ -73,6 +73,7 @@ const fileSchema = {
   'spec.json': 'viz-spec',
   'chart-options.json': 'chart-options',
   'options-args.json': 'chart-options-args',
+  'retry-args.json': 'query-datasource-args',
 };
 // The chart options sets (fixtures.17) use the chart-options.json of the set options.
 const chartOptions = readJSON('fixtures/options/chart-options.json').charts;
@@ -189,6 +190,16 @@ for (const set of sets) {
       }
     }
   }
+  if (files['retry-args.json']) {
+    // The second call of refresh.19 has the last tool arguments with no options and no fieldConfig (fixtures.19).
+    const { options, fieldConfig, ...rest } = args ?? {};
+    if (!/^invalid-options: /.test(result?.content?.[0]?.text ?? '')) fail('fixtures', `${set}/result.json is not the invalid-options tool error (refresh.19)`);
+    if (!args || canonical(files['retry-args.json']) !== canonical(rest)) fail('fixtures', `${set}/retry-args.json is not args.json with no options and no fieldConfig (refresh.19)`);
+    // The test answers the second call with the result of the set prometheus-line (fixtures.19).
+    const base = { ...readJSON('fixtures/prometheus-line/args.json'), type: readJSON('fixtures/prometheus-line/result.json').chart };
+    if (canonical(files['retry-args.json']) !== canonical(base)) fail('fixtures', `${set}/retry-args.json is not the args.json of prometheus-line with the type of its chart (fixtures.19)`);
+    if (!noticeCodes.includes('options-dropped')) fail('fixtures', 'notices.json has no options-dropped notice (refresh.19)');
+  }
   if (files['options-args.json']) {
     const { type, advanced } = files['options-args.json'];
     const known = names.includes(type);
@@ -221,7 +232,12 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
     }
   }
 }
-for (const s of ['options', 'options-invalid', 'options-list', 'options-list-advanced', 'options-list-unknown']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
+for (const s of ['options', 'options-invalid', 'options-stale', 'options-list', 'options-list-advanced', 'options-list-unknown']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
+// The set options-legend has one override with a color and one more property (fixtures.20).
+const legendOverride = sets.includes('options-legend') ? readJSON('fixtures/options-legend/spec.json').panel.fieldConfig?.overrides?.[0] : undefined;
+if (!(legendOverride?.matcher?.id === 'byName' && legendOverride.properties?.some((p) => p.id === 'color') && legendOverride.properties.length > 1)) {
+  fail('fixtures', 'options-legend/spec.json needs one byName override with a color and one more property (fixtures.20)');
+}
 for (const c of names) if (!sets.includes(`smoke-${c}`)) fail('fixtures', `no smoke set for ${c}`);
 for (const code of [...SPEC_ERRORS, 'all-queries-failed']) if (!sets.includes(`error-${code}`)) fail('fixtures', `no error set for ${code}`);
 const pickRuleOf = (set) => {
