@@ -88,7 +88,8 @@ are in `fixtures/`, one directory for each set.
   `request.json`, the request body must equal it. The tool result must equal `result.json`, but the test does not
   compare `grafanaUrl`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
 - `fixtures.18` For a set of `fixtures.17`, the Source test gives the `chart-options.json` of the set `options` to
-  the Source in place of the file of the Renderer. A set with `options-args.json` is a test of
+  the Source in place of the file of the Renderer. The test does not run the checks of `tool.48` on this file,
+  because it has an entry for one chart only. A set with `options-args.json` is a test of
   `get_chart_options`: the test gives `options-args.json` to the tool, and the tool result must equal
   `options-result.json`. `chart-options.json` and `options-args.json` validate against their schemas, as the files
   of `fixtures.2` do.

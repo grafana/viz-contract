@@ -17,8 +17,8 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   the icon. The SVG comes from the build, because the `@grafana/ui` package does not ship each icon.
 
 - `delivery.16` The Renderer build writes `chart-options.json` next to the manifest. Shape:
-  `schemas/chart-options.schema.json`. The file has one entry for each row of `registry/chart-types.json`. The
-  `options` list of an entry has each panel option that the panel of the row reads when its options are the
+  `schemas/chart-options.schema.json`. The file has one entry for each row of `registry/chart-types.json`, and no
+  other entry. The `options` list of an entry has each panel option that the panel of the row reads when its options are the
   `options` of the row. The `fieldConfig` list has each field option that this panel reads. The order of a list is
   the order in which a user reads the options.
 - `delivery.17` The file leaves out these options:
@@ -29,6 +29,10 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   No path of a list is the start of another path of the same list.
 - `delivery.18` The `schema` of an option accepts each value that the Renderer applies, and no other value. The
   `description` says what the option changes in the chart. The Renderer decides the `tier`.
+- `delivery.21` The manifest also gives `chartOptionsSha256`: the hash of `chart-options.json`, in the form of
+  `sha256`. The mcp-grafana binary has the manifest and the `chart-options.json` of the Renderer that `app.html`
+  holds. Thus, with `delivery.6`, the Source can make sure that the file and the bundle come from the same Renderer
+  build (`tool.48`).
 
 ## Checks
 
@@ -111,4 +115,6 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   has an option that is not in the file and that `delivery.17` does not leave out. Thus each new option needs a
   `schema` before it ships, also an option with a custom editor.
 - `delivery.20` A CI check of the Renderer makes sure that `chart-options.json` validates against its schema, that
-  each `default` validates against the `schema` of its option, and that the file follows `delivery.17`.
+  each `default` validates against the `schema` of its option, and that the file follows `delivery.17`. It also
+  makes sure that the file has one entry for each row of `chart-types.json` and no other entry (`delivery.16`), and
+  that `chartOptionsSha256` of the manifest is the hash of the file (`delivery.21`).

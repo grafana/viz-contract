@@ -174,6 +174,15 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
 - `tool.47` No tool description and no schema of tool arguments holds the options of a chart, the form of an
   override or the list of the charts of `get_chart_options`. Thus the tool list of a Host does not grow with the
   options. The model reads the options of one chart, and the form of an override, only when it needs them.
+- `tool.48` When the server starts, the Source checks the `chart-options.json` in its binary:
+  - The file validates against its schema.
+  - The file has one entry for each row of `chart-types.json`, and no other entry.
+  - The hash of the file is `chartOptionsSha256` of the manifest of the Renderer in its binary (`delivery.21`).
+
+  If a check fails, the server writes the cause to its log. `render_grafana_app` then does not list
+  `query_datasource`, and the server does not list `get_chart_options`, as with no `dsquery` (`tool.1`). A CI
+  check of the Source runs these checks with the files of its binary. Thus a file that is not correct fails the
+  build of the Source, before a server starts with it.
 
 ## Errors and the text result
 
