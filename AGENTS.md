@@ -15,6 +15,7 @@ This repository defines the contract. Implementations live in consumer repositor
 
 ## Read only when needed
 
+- Editing contract prose or adding a registry entry: [Make the change](CONTRIBUTING.md#make-the-change).
 - Change to a shape or a compatibility promise: [8-versioning.md](8-versioning.md).
 - Choosing the version label: [Version and changelog](CONTRIBUTING.md#version-and-changelog).
 - Signing error: [Signed commits](CONTRIBUTING.md#signed-commits). Never disable signing.
