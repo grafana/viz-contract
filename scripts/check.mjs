@@ -195,6 +195,10 @@ for (const set of sets) {
     const { options, fieldConfig, ...rest } = args ?? {};
     if (!/^invalid-options: /.test(result?.content?.[0]?.text ?? '')) fail('fixtures', `${set}/result.json is not the invalid-options tool error (refresh.19)`);
     if (!args || canonical(files['retry-args.json']) !== canonical(rest)) fail('fixtures', `${set}/retry-args.json is not args.json with no options and no fieldConfig (refresh.19)`);
+    // The test answers the second call with the result of the set prometheus-line (fixtures.19).
+    const base = { ...readJSON('fixtures/prometheus-line/args.json'), type: readJSON('fixtures/prometheus-line/result.json').chart };
+    if (canonical(files['retry-args.json']) !== canonical(base)) fail('fixtures', `${set}/retry-args.json is not the args.json of prometheus-line with the type of its chart (fixtures.19)`);
+    if (!noticeCodes.includes('options-dropped')) fail('fixtures', 'notices.json has no options-dropped notice (refresh.19)');
   }
   if (files['options-args.json']) {
     const { type, advanced } = files['options-args.json'];

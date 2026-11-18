@@ -102,7 +102,10 @@ are in `fixtures/`, one directory for each set.
 - `fixtures.19` For a set with `retry-args.json`, the App test shows a chart whose last tool arguments are
   `args.json`, and the Renderer asks for a refresh with the cause `refresh`. The test answers the first call with
   `result.json`. The tool arguments of the second call must equal `retry-args.json`. `retry-args.json` validates
-  against the schema of the tool arguments.
+  against the schema of the tool arguments. It is the `args.json` of the set `prometheus-line` with the `type` of
+  the chart of that set. Thus the test answers the second call with the `result.json` of the set
+  `prometheus-line`. The viz spec of the `update` must equal the `spec.json` of that set with one more field: a
+  `notices` list that has only the `options-dropped` notice (`refresh.19`).
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response

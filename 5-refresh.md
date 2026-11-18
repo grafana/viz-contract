@@ -51,7 +51,8 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   the last tool arguments, and calls `render_grafana_app` again with those arguments. A later Renderer version can
   rename or remove an option (`version.13`), and then the options that the App keeps do not validate. Thus the chart
   loses its options, but the refresh does not fail. The App knows the error by its code, as in `refresh.10`.
-  `refresh.10` to `refresh.12` apply to the second call.
+  `refresh.10` to `refresh.12` apply to the second call. If the refresh gives a tool result, the App adds the
+  `options-dropped` notice to the viz spec of this refresh only.
 - `refresh.11` If the call gives another tool error, the App calls `setRefreshed(<id>, false, <message>)`. `<id>`
   is the `id` of the `RefreshRequest` of the call.
 - `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`,
