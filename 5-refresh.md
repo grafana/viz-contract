@@ -47,10 +47,21 @@ Shape: `onRefresh`, `RefreshRequest` and `setRefreshed` in `renderer-api.d.ts`.
   `type`. It draws the chart of the result. If that chart is not the old chart, the App adds the `chart-changed`
   notice to the viz spec of this refresh only. The App knows the error by the code at the start of the text
   (`tool.25`).
+- `refresh.19` If the call gives the `invalid-options` tool error, the App removes `options` and `fieldConfig` from
+  the last tool arguments, and calls `render_grafana_app` again with those arguments. A later Renderer version can
+  rename or remove an option (`version.13`), and then the options that the App keeps do not validate. Thus the chart
+  loses its options, but the refresh does not fail. The App knows the error by its code, as in `refresh.10`.
+  `refresh.10` to `refresh.12` apply to the second call. If the refresh gives a tool result, the App adds the
+  `options-dropped` notice to the viz spec of this refresh only.
 - `refresh.11` If the call gives another tool error, the App calls `setRefreshed(<id>, false, <message>)`. `<id>`
   is the `id` of the `RefreshRequest` of the call.
 - `refresh.12` If the call gives a tool result, the App makes a new viz spec (`spec.1` to `spec.8`, `spec.15`,
   `spec.17`) and calls `update`.
+- `refresh.18` `options` and `fieldConfig` belong to the chart of `type` (`tool.36`). When the user switches to an
+  alternative, the App removes them from the last tool arguments. The second call of `refresh.10` has no `type`,
+  so it also has no `options` and no `fieldConfig`. Thus a chart never gets the options of another chart. If the
+  user then switches back to the chart of the model, that chart does not get its options again, because the App
+  does not keep them.
 - `refresh.14` The App answers the last `RefreshRequest` only. If the call of an older `RefreshRequest` ends, the
   App does not call `update` for it. `update` has no `id`, so the Renderer cannot ignore an old result. A result of
   the last `RefreshRequest` after `refreshTimeoutMs` is not old. The App calls `update` for it (`refresh.15`).

@@ -1,0 +1,88 @@
+{
+  "datasourceUid": "lgtm-prometheus",
+  "queries": [
+    {
+      "refId": "A",
+      "expr": "sum by (handler) (rate(grafana_http_request_duration_seconds_count[5m]))",
+      "legendFormat": "{{handler}}",
+      "format": "time_series"
+    }
+  ],
+  "from": "now-15m",
+  "to": "now",
+  "unit": "reqps",
+  "type": "timeseries",
+  "options": {
+    "😀": 1,
+    "Ａ": 1,
+    "tooltip": "multi",
+    "lineWidth": 40,
+    "legend": {
+      "position": "right",
+      "showLegend": true,
+      "foo": 1
+    },
+    "legend.showLegend": false,
+    "legend.foo": 2
+  },
+  "fieldConfig": {
+    "defaults": {
+      "unit": "bytes",
+      "min": "0",
+      "custom": {
+        "lineStyle": {
+          "fill": "dash"
+        },
+        "lineColor": "red"
+      },
+      "custom.lineStyle": {
+        "fill": "dot"
+      }
+    },
+    "overrides": [
+      {
+        "matcher": {
+          "id": "byName",
+          "options": "/api/health"
+        },
+        "properties": [
+          {
+            "id": "custom.lineColor",
+            "value": "red"
+          },
+          {
+            "id": "decimals",
+            "value": -1
+          },
+          {
+            "id": "min",
+            "value": 1
+          },
+          {
+            "id": "min",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "matcher": {
+          "id": "byRegexp",
+          "options": "/api/.*"
+        },
+        "properties": [
+          {
+            "id": "decimals",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "matcher": {
+          "id": "byFrameRefID",
+          "options": "A"
+        }
+      }
+    ],
+    "mappings": []
+  }
+}

@@ -12,11 +12,15 @@ are in `fixtures/`, one directory for each set.
 | `response.json` | The `/api/ds/query` response: `status` (the HTTP status) and `body` | Source |
 | `meta.json` | The clock of the set: `now` and `capturedAt`, in epoch milliseconds | Source, App |
 | `querytypes.json` | The query types of the data source: `plugin` (the `type` of the data source), `version` (the preferred version of its API group), and the `status` and the `body` of the `/querytypes` response | Source |
-| `notes.json` | `notes`: the expected notes of the Source, in order. `lines`: the expected lines that `render_grafana_app` adds after its text line (`tool.30`) | Source |
+| `notes.json` | `notes`: the expected notes of the Source, in order. `lines`: the expected lines of the notes that `render_grafana_app` adds (`tool.30`). The chart line is not in it (`tool.46`) | Source |
 | `result.json` | The expected tool result, or the expected tool error | Source, App |
 | `spec.json` | The expected viz spec | App, Renderer |
 | `state.json` | The expected state, error and notices of `onState` | Renderer |
 | `message.json` | `cases`: a list. Each case has a `description`, a `request` (a `MessageRequest`), the expected `text` of the message or `null`, and `renderer`. With `renderer` `true`, the Renderer must give the `request` for a point of `spec.json` | App, Renderer |
+| `chart-options.json` | A `chart-options.json`, as the Renderer build writes it | Source |
+| `options-args.json` | The arguments of `get_chart_options` | Source |
+| `options-result.json` | The expected tool result of `get_chart_options` | Source |
+| `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -47,14 +51,14 @@ are in `fixtures/`, one directory for each set.
   - `too-large`: the set has `args.json` and `meta.json` only. The test makes the response at run time: it repeats
     the frames of `prometheus-line` with new label values until the tool result is larger than `maxResultBytes`.
     The expected result is the `too-large` tool error.
-- `fixtures.17` Focus sets for the query types. The query types of `querytypes.json` are made for the test. They
+- `fixtures.21` Focus sets for the query types. The query types of `querytypes.json` are made for the test. They
   are not the query types of a plugin release:
   - `query-types`: one correct query and five failed queries. The entries of `response.json` are not in the
     order of the queries (`tool.35`). The first item of the response has no `discriminators`, and it is only the
     fallback (`tool.34`). One item has two `discriminators`. A number of a query matches one of them, and a string
-    of another query does not (`tool.40`). Two pairs of failed queries have the same query type, so `notes` has
-    three query type notes for five failed queries (`tool.35`, `tool.38`). The note of the fallback item has
-    no `Set:` and no `Required:` (`tool.37`). `lines` has a cut query type note and the `more not shown` line
+    of another query does not (`tool.53`). Two pairs of failed queries have the same query type, so `notes` has
+    three query type notes for five failed queries (`tool.35`, `tool.51`). The note of the fallback item has
+    no `Set:` and no `Required:` (`tool.50`). `lines` has a cut query type note and the `more not shown` line
     (`tool.30`). `plugin` starts with `grafana-` and ends with `-datasource` (`tool.32`).
   - `query-types-not-served`: one correct query and one failed query. The `status` of `querytypes.json` is 404, so
     Grafana does not serve the query types. `notes` has only the note of `tool.29` (`tool.33`).
@@ -63,6 +67,40 @@ are in `fixtures/`, one directory for each set.
 - `fixtures.6` One pick set for each rule of `registry/pick.json`. It has the frames and the expected chart name. A
   test makes sure that each rule has a set.
 - `fixtures.7` One `type-mismatch` set. Its `result.json` is the expected tool error.
+- `fixtures.17` Sets for the chart options. Each one uses the `chart-options.json` of the set `options`. That file
+  is an example with a few options of the time series chart. It is not the file of a Renderer.
+  - `options`: the query of `prometheus-line` with a `type`, `options`, and a `fieldConfig` that has an override.
+    One key of `options` has dots. The panel of the chart in `result.json` has the options as nested objects. The
+    panels of the alternatives do not have them (`tool.41`).
+  - `options-invalid`: each problem of `tool.38` to `tool.40`. The set has no `response.json`, because the Source
+    does not query. The expected result is the `invalid-options` tool error. The arguments have these parts:
+    - In `options`: a path that is not an option, the same path from two keys, a path that is set two times, a
+      value that does not validate, and a value that must be an object. Two keys are not ASCII: `Ａ` (U+FF21) and
+      `😀` (U+1F600). Their problems are in code point order, which is not the order of their UTF-16 code units
+      (`tool.39`).
+    - In `fieldConfig.defaults`: a path that is not an option, a path that is set two times, and a value that does
+      not validate. The arguments also have a `unit`, and the defaults give `unit`, so that path is set two times
+      (`tool.38`).
+    - In the first override: an `id` that is not an option, a value that does not validate, and an `id` that is
+      set two times.
+    - Two overrides that do not have the override form: one has the matcher `byRegexp`, which is not allowed
+      (`tool.40`), and one has no `properties`.
+    - A key of `fieldConfig` that is not `defaults` or `overrides`.
+  - `options-stale`: a refresh after a Renderer version removed an option (`refresh.19`). `args.json` is the last
+    tool arguments of the App. Its `options` have one option of the chart, and one path that is not an option. Its
+    `fieldConfig` is correct. `result.json` is the `invalid-options` tool error. `retry-args.json` is `args.json`
+    with no `options` and no `fieldConfig`. The set has no `response.json`, because the Source does not query.
+  - `options-list`: `get_chart_options` with no `advanced`. The text has the line of the advanced options that
+    are not listed (`tool.44`).
+  - `options-list-advanced`: `get_chart_options` with `advanced` set to true.
+  - `options-list-unknown`: `get_chart_options` with a `type` that is not a chart. The expected result is the
+    `unknown-chart` tool error (`tool.43`).
+- `fixtures.20` One `options-legend` set for a legend action on a series that has an override of the viz spec
+  (`renderer.69`). It has `spec.json` and `state.json`, with the data of `prometheus-line`. One override of
+  `panel.fieldConfig` gives the series `/api/health` a fixed `color` and a line style. Only the Renderer test uses
+  the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
+  have the color of the legend and the line style of the override. The same must be true after an `update` with
+  the same viz spec (`renderer.35`).
 
 ## Conformance tests
 
@@ -71,14 +109,28 @@ are in `fixtures/`, one directory for each set.
   `data.capturedAt` is `capturedAt` of `meta.json`. If the set has
   `request.json`, the request body must equal it. The tool result must equal `result.json`, but the test does not
   compare `grafanaUrl`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
-- `fixtures.18` If the set has `notes.json`, the notes of the Source must equal `notes`. If the test also runs
-  `render_grafana_app`, the lines after its text line must equal `lines`. If the set has `querytypes.json`, a fake
+- `fixtures.22` If the set has `notes.json`, the notes of the Source must equal `notes`. If the test also runs
+  `render_grafana_app`, the lines of its notes must equal `lines`. The chart line of `tool.46` is not a note, and
+  it is not in `lines`. If the set has `querytypes.json`, a fake
   Grafana answers the requests of `tool.32`: request 1 with a data source of the `type` `plugin`, request 2 with
   the preferred version `version`, and request 3 with the `status` and the `body`. With no `querytypes.json`, the
   fake Grafana answers each of these requests with the status 404. If the Source returns one tool error for the
   whole call (`fixtures.8`), the test does not compare the notes. A test also makes sure that the Source sends no
   request of `tool.32` for a set with no failed query, and that it gives no query type note when request 3 does
-  not answer in `queryTypesTimeoutMs` (`tool.39`).
+  not answer in `queryTypesTimeoutMs` (`tool.52`).
+- `fixtures.18` For a set of `fixtures.17`, the Source test gives the `chart-options.json` of the set `options` to
+  the Source in place of the file of the Renderer. The test does not run the checks of `tool.48` on this file,
+  because it has an entry for one chart only. A set with `options-args.json` is a test of
+  `get_chart_options`: the test gives `options-args.json` to the tool, and the tool result must equal
+  `options-result.json`. `chart-options.json` and `options-args.json` validate against their schemas, as the files
+  of `fixtures.2` do.
+- `fixtures.19` For a set with `retry-args.json`, the App test shows a chart whose last tool arguments are
+  `args.json`, and the Renderer asks for a refresh with the cause `refresh`. The test answers the first call with
+  `result.json`. The tool arguments of the second call must equal `retry-args.json`. `retry-args.json` validates
+  against the schema of the tool arguments. It is the `args.json` of the set `prometheus-line` with the `type` of
+  the chart of that set. Thus the test answers the second call with the `result.json` of the set
+  `prometheus-line`. The viz spec of the `update` must equal the `spec.json` of that set with one more field: a
+  `notices` list that has only the `options-dropped` notice (`refresh.19`).
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response

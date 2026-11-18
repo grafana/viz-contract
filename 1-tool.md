@@ -4,7 +4,7 @@ The model calls the `render_grafana_app` tool of mcp-grafana with the `toolName`
 runs the query and gives the tool result to the App.
 
 Shapes: `schemas/query-datasource-args.schema.json` gives the tool arguments. `schemas/tool-result.schema.json`
-gives the tool result.
+gives the tool result. [Chart options](#chart-options) gives the shapes of the chart options.
 
 ## Availability
 
@@ -54,7 +54,8 @@ gives the tool result.
 
 ## The chart
 
-The Source reads `registry/chart-types.json` and `registry/pick.json`. No other part reads them.
+The Source reads `registry/chart-types.json` and `registry/pick.json`. No other part reads them at run time. The
+Renderer build reads `chart-types.json` (`delivery.16`).
 
 - `tool.18` With no `type`, the Source picks the chart. It makes the summary of the frames that
   `registry.schema.json` defines in the condition rule language. It takes the first rule of `pick.json` whose
@@ -73,6 +74,127 @@ The Source reads `registry/chart-types.json` and `registry/pick.json`. No other 
 - `tool.31` If the arguments have a `title`, the `panel.title` of the chart and of each alternative is that title,
   with no change. With no `title`, no panel has a `title`. A `title` of only white space does not validate
   (`tool.4`).
+
+## Chart options
+
+The model can change how a chart looks with `options` and `fieldConfig`. It does not guess an option. It reads the
+options of a chart with the `get_chart_options` tool, and the Source checks each option that it gets.
+
+Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_chart_options`.
+`schemas/field-config.schema.json` gives the form of `fieldConfig`. `schemas/chart-options.schema.json` gives
+`chart-options.json`, the file of the Renderer that lists the options of each chart (`delivery.16`).
+
+- `tool.36` `options` and `fieldConfig` have the form of the `options` and the `fieldConfig` of a Grafana panel
+  JSON. They belong to the chart of `type`. Thus arguments that have one of them and no `type` do not validate
+  (`tool.4`), and the Source never applies them to a chart that it picks.
+- `tool.37` The Source reads the options of the chart from the `chart-options.json` of the Renderer in its binary.
+  An option has a path: the names of the keys from the root object to the value, joined with dots, for example
+  `legend.placement`. The root object of a panel option is `options`. The root object of a field option is
+  `fieldConfig.defaults`. In an override, the `id` of a property is the path of a field option, which is the id of a
+  registered field option (`delivery.22`). A key can have
+  dots. Its name is then a part of the path as it is. Thus `{"legend.placement": "right"}` and
+  `{"legend": {"placement": "right"}}` give the same path.
+- `tool.38` The Source finds the options in `options` and in `fieldConfig.defaults` key by key, from the root
+  object. If the path of a key is the path of an option, the value of the key is the value of that option, and the
+  Source does not read the keys inside it. If the path is the start of the path of an option, the value must be an
+  object, and the Source reads its keys. Otherwise the path is not an option. If two keys give the path of the
+  same option, the path is set two times, and the Source does not check its values. If two keys give the same path
+  that is not an option, or the same path whose value must be an object, the path has one problem. The `unit`
+  argument sets the path `unit` of `fieldConfig.defaults` (`tool.22`). Thus, if the arguments have a `unit` and a
+  key of `fieldConfig.defaults` also gives the path `unit`, that path is set two times.
+- `tool.39` The Source checks `options` and `fieldConfig` before it queries. Each path must be an option of the
+  chart, and each value must validate against the `schema` of its option. If one is not correct, the Source returns
+  the `invalid-options` tool error of `states.json`, and does not query. `<problems>` has one problem for each path
+  that is not correct, joined with `; `. A problem is `<path> is not an option`, `<path> must be <type>` or
+  `<path> is set two times`.
+  `<path>` starts with `options.`, `fieldConfig.defaults.` or `fieldConfig.overrides[<n>].`. `<n>` is the index of
+  the override, from 0. `<type>` is the type text of the option (`tool.45`). For a value that must be an object
+  (`tool.38`), `<type>` is `object`. The problems of `options` come first, then the problems of
+  `fieldConfig.defaults`, each in the code point order of the paths. The problems of the overrides come next, in
+  the order of the arguments. The other keys of `fieldConfig` come last, in code point order (`tool.40`). The
+  problem `fieldConfig.defaults must be object` is in the place of the problems of `fieldConfig.defaults`, and the
+  problem `fieldConfig.overrides must be array` is in the place of the problems of the overrides. For
+  example: `invalid-options: timeseries does not accept these options:
+  options.legend.position is not an option; options.lineWidth must be integer 0..20. get_chart_options lists the
+  options of timeseries.`
+- `tool.40` The schema of the tool arguments gives `fieldConfig` as an object only.
+  `schemas/field-config.schema.json` gives its form, and the Source checks the form in the check of `tool.39`. A
+  part that does not have the form is a problem of `invalid-options`:
+  - `fieldConfig.<key> is not an option`, for a key that is not `defaults` or `overrides`.
+  - `fieldConfig.defaults must be object` and `fieldConfig.overrides must be array`.
+  - `fieldConfig.overrides[<n>] must be <override>`, for an override that does not validate against the
+    `override` definition of the schema. `<override>` is the override form of `tool.44`. The Source does not
+    check the properties of this override.
+
+  In an override, two properties with the same `id` are the problem `fieldConfig.overrides[<n>].<id> is set two
+  times`, as in `tool.38`. Each `id` of an override has one problem at most, and the problems of an override are
+  in the order of its properties. The Source does not use the message of a schema library, so the text is the
+  same in each Source. The matchers are `byName` and `byFrameRefID` of Grafana: `byName` takes the name of a field,
+  and `byFrameRefID` takes the `refId` of a query. A matcher that takes a regular expression, for example
+  `byRegexp`, is not allowed, because the Renderer would run the pattern in the browser with no time limit. The
+  Source does not check that a matcher matches a field.
+- `tool.41` The `panel.options` of the chart is the `options` of the chart row, and then each option of the
+  arguments at its path. The Source writes a path as nested objects, also when the key of the arguments had dots.
+  The `panel.fieldConfig` of the chart is the `fieldConfig` of the arguments, with each path of its `defaults`
+  written in the same way. A `unit` of the arguments is then its `defaults.unit` (`tool.22`). The `fieldConfig` of the
+  arguments cannot also give that path (`tool.38`). The panels of
+  `alternatives` do not get the `options` and the `fieldConfig` of the arguments, because they belong to another
+  chart.
+- `tool.42` The Source writes only the options that the arguments have. It does not write the `default` of an
+  option to the panel. The Renderer applies its own default.
+- `tool.43` `get_chart_options` is a tool of mcp-grafana. The server lists it when `render_grafana_app` lists
+  `query_datasource` (`tool.1`, `tool.2`). It reads `chart-options.json` only. It does not query Grafana. Its
+  result is one text item, with no structured content, and the tool has no App. Thus a call does not draw a view.
+  The schema of its arguments does not list the charts. If `type` is not a chart of `chart-types.json`, the tool
+  returns the `unknown-chart` tool error of `states.json`. `<charts>` lists each chart, in the order of
+  `chart-types.json`.
+- `tool.44` The text of `get_chart_options` has these lines, in this order:
+  1. `Options of <chart>. Set them in options.`
+  2. One line for each entry of the `options` list of the chart, in the order of the file.
+  3. `Field options of <chart>. Set them in fieldConfig.defaults for all fields, or in the properties of an
+     override.`
+  4. One line for each entry of the `fieldConfig` list of the chart, in the order of the file.
+  5. `An override is <override>.` `<override>` is the override form:
+     `{"matcher":{"id":"byName"|"byFrameRefID","options":"<name or refId>"},"properties":[{"id":"<path>","value":<value>}]}`
+  6. `Advanced options not listed: <n>. Set advanced to true to list them.`
+
+  The line of an entry is `<path>: <type>`, then ` = <default>` if the entry has a `default`, then
+  ` // <description>`. `<default>` is JSON with no white space. For example: `legend.placement: "bottom" | "right"
+  = "bottom" // Side of the chart that shows the legend`. If `advanced` is not true, steps 2 and 4 leave out the
+  entries with the `tier` `advanced`, and `<n>` is the number of these entries. The text has line 6 only when `<n>`
+  is more than 0.
+- `tool.45` The type text of an option comes from its `schema`. The first of these that applies gives it:
+  - With `anyOf`: the type text of each schema of the list, joined with ` | `, for example
+    `boolean | number >=0`.
+  - With `const`: the value as JSON.
+  - With `enum`: each value as JSON, joined with ` | `.
+  - With a list of types as the `type`: for each type of the list, the type text of the schema with only that
+    type, joined with ` | `, for example `number | null`.
+  - With the `type` `boolean`, `string` or `null`: the `type`.
+  - With the `type` `integer` or `number`: the `type`. With a `minimum` and a `maximum`, ` <minimum>..<maximum>`
+    follows. With only one, ` >=<minimum>` or ` <=<maximum>` follows.
+  - With the `type` `array` and `items`: `array of `, and then the type text of `items`.
+  - With the `type` `object` and `properties`: `{`, then each property as `<name>: ` and the type text of its
+    schema, joined with `, `, then `}`. The properties are in the code point order of their names. A property that
+    is not in `required` has `?` after its name. For example: `{fill: "solid" | "dash" | "dot"}`.
+  - Otherwise: the `schema` as JSON with no white space.
+- `tool.46` When the Source gives a tool result, it also gives a chart line to `render_grafana_app`: `Chart:
+  <chart>. get_chart_options lists its options.` `<chart>` is `chart`. `render_grafana_app` adds the chart line
+  after its text line, and the notes follow (`tool.28`). The chart line is not a note. `tool.30` does not change
+  it, and `maxAppNotes` does not count it. Thus the model always knows the chart that the Source picked, and each
+  of the `maxAppNotes` places is for a note of `tool.29`.
+- `tool.47` No tool description and no schema of tool arguments holds the options of a chart, the form of an
+  override or the list of the charts of `get_chart_options`. Thus the tool list of a Host does not grow with the
+  options. The model reads the options of one chart, and the form of an override, only when it needs them.
+- `tool.48` When the server starts, the Source checks the `chart-options.json` in its binary:
+  - The file validates against its schema.
+  - The file has one entry for each row of `chart-types.json`, and no other entry.
+  - The hash of the file is `chartOptionsSha256` of the manifest of the Renderer in its binary (`delivery.21`).
+
+  If a check fails, the server writes the cause to its log. `render_grafana_app` then does not list
+  `query_datasource`, and the server does not list `get_chart_options`, as with no `dsquery` (`tool.1`). A CI
+  check of the Source runs these checks with the files of its binary. Thus a file that is not correct fails the
+  build of the Source, before a server starts with it.
 
 ## Errors and the text result
 
@@ -96,7 +218,8 @@ The Source reads `registry/chart-types.json` and `registry/pick.json`. No other 
   longer than `maxAppNoteChars` characters to that length, with `…` as its last character. A character is a
   Unicode code point. If the Source gave more notes after step 2, one more line follows the kept notes: `…`, a
   space, the number of the notes that step 3 left out and ` more not shown`, for example `… 2 more not shown`.
-  Thus `render_grafana_app` adds at most `maxAppNotes` lines, and the `more not shown` line when it left some out.
+  Thus `render_grafana_app` adds at most `maxAppNotes` lines of notes, and the `more not shown` line when it left
+  some out.
 
 ## Query types
 
@@ -104,7 +227,7 @@ A data source plugin can describe the fields of its queries as query types. Graf
 plugin only with the feature toggles `datasources.queryTypes` and `datasource.useNewCRUDAPIs`, and only for a
 plugin that has query types. The Source uses them to help the model correct a failed query. The query still goes
 to `/api/ds/query` (`tool.13`). The model reads the query types only in a turn with a failed query. Thus they add no
-tokens to `tools/list` (`tool.36`).
+tokens to `tools/list` (`tool.49`).
 
 - `tool.32` The Source reads the query types only when an entry of `data.results` has an `error`. Then it sends
   these requests to its Grafana, in this order:
@@ -118,20 +241,20 @@ tokens to `tools/list` (`tool.36`).
   `prometheus`. If `<plugin>` ends with `-datasource`, `<name>` is `<plugin>` with no `-datasource` at its end and
   no `grafana-` at its start, for example `testdata` for `grafana-testdata-datasource`. Each other `<plugin>` has
   no group, and the Source sends no request 2 and no request 3 for it.
-- `tool.39` The Source sends each request of `tool.32` one time for each call at most, also when two or more
+- `tool.52` The Source sends each request of `tool.32` one time for each call at most, also when two or more
   queries failed. Thus a call with a failed query has three more requests at most, and a call with no failed query
   has none. The three requests together take `queryTypesTimeoutMs` at most. The time starts when the Source sends
   the first of them. When the time ends, the Source stops the requests. The Source does not keep a response of
   these requests for a later call. Thus a change of a feature toggle or of a plugin applies to the next call.
 - `tool.33` The Source gives no query type note if Grafana does not serve the query types, if a request of
-  `tool.32` fails, if `<plugin>` has no group, or if the time of `tool.39` ends. It does not return a tool error
+  `tool.32` fails, if `<plugin>` has no group, or if the time of `tool.52` ends. It does not return a tool error
   for this. It gives the notes of `tool.29` as before.
 - `tool.34` The Source finds the query type of a query in two steps. First it reads only the items that have one
   or more `discriminators`, in the order of the response. The query type is the first of these items for which
-  each of its `discriminators` matches the query (`tool.40`). If none of these items matches, the query type is
+  each of its `discriminators` matches the query (`tool.53`). If none of these items matches, the query type is
   the first item with no `discriminators`. If there is no such item, the query has no query type and gets no
   note. Thus an item with no `discriminators` is only a fallback, also when it is first in the response.
-- `tool.40` A discriminator has a `field` and a `value`. The `value` is always a string. The discriminator matches
+- `tool.53` A discriminator has a `field` and a `value`. The `value` is always a string. The discriminator matches
   a query if the query, as the model gave it, has a field with the name `field` at its top level, and the value
   of that field matches the `value`:
   - A string matches if it has the same Unicode code points as the `value`.
@@ -149,10 +272,10 @@ tokens to `tools/list` (`tool.36`).
   `data.results` is a JSON object, and thus it gives no order. The Source gives one note for each query type of
   the failed queries, in the order of the first failed query that has each query type. A query type that two
   failed queries have gets one note.
-- `tool.36` The Source writes the query types only to its notes. It does not write them to the description of
+- `tool.49` The Source writes the query types only to its notes. It does not write them to the description of
   `render_grafana_app`, to the schema of the tool arguments or to the structured content. Thus the structured
   content of a call is the same with query types and with none.
-- `tool.37` The query type note is `Plugin fields of <plugin> query type <name>. Set: <discriminators>. Required:
+- `tool.50` The query type note is `Plugin fields of <plugin> query type <name>. Set: <discriminators>. Required:
   <required>. All: <fields>.` `<discriminators>` lists each of the `discriminators` of the item as `<field>=<value>`,
   in the order of the response. `<required>` lists `spec.schema.required` in the order of the response. `<fields>`
   lists the names of `spec.schema.properties` in ascending order of their Unicode code points. A comma and a space
@@ -164,7 +287,7 @@ tokens to `tools/list` (`tool.36`).
   or all of it. The Source does not make the note shorter. The schema has only the fields of the
   plugin. It does not have the fields that each query can have, for example `refId`, `datasource`, `intervalMs`
   and `maxDataPoints`. Thus the note says `Plugin fields`, and the model keeps those fields in its query.
-- `tool.38` When the Source has a query type note, it gives its notes in this order: (1) the note of `tool.29` for
+- `tool.51` When the Source has a query type note, it gives its notes in this order: (1) the note of `tool.29` for
   the first failed query, (2) the query type notes in the order of `tool.35`, (3) the notes of `tool.29` for the
   other failed queries, in the order of `tool.35`. Thus the model always reads one `error`. Step 3 of `tool.30`
   leaves out notes from the end of this order: first the notes of the other failed queries, then the last query
@@ -173,4 +296,3 @@ tokens to `tools/list` (`tool.36`).
   failed queries. This order is intended: one `error` with the fields that correct it helps the model more than a
   second `error`. The `more not shown` line of `tool.30` tells the model that notes are left out. A query that
   still fails gives its `error` in the next call.
-

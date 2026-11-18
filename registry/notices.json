@@ -25,6 +25,12 @@
       "message": "The <old> chart does not fit the new data. The chart is now a <new>."
     },
     {
+      "code": "options-dropped",
+      "raisedBy": "app",
+      "when": "A refresh got the invalid-options error, and the App drew the chart with no options and no fieldConfig",
+      "message": "The options of this chart are not valid now. The chart shows with its default options."
+    },
+    {
       "code": "geo-map-tiles",
       "raisedBy": "renderer",
       "when": "A map layer of the geo panel needs map tiles from the network",

@@ -33,6 +33,7 @@ flowchart TB
 | Interface | From | To | Files |
 | --------- | ---- | -- | ----- |
 | Tool arguments | Model | Source | [1-tool.md](1-tool.md), `schemas/query-datasource-args.schema.json` |
+| Chart options | Renderer build, Model | Source | [1-tool.md](1-tool.md), [7-delivery.md](7-delivery.md), `schemas/chart-options.schema.json`, `schemas/chart-options-args.schema.json`, `schemas/field-config.schema.json` |
 | Tool result | Source | App | [1-tool.md](1-tool.md), `schemas/tool-result.schema.json` |
 | Viz spec | App | Renderer | [2-viz-spec.md](2-viz-spec.md), `schemas/viz-spec.schema.json` |
 | Renderer API | App | Renderer | [3-renderer.md](3-renderer.md), `renderer-api.d.ts` |
@@ -49,8 +50,10 @@ flowchart TB
 | Renderer | The browser bundle that draws a viz spec |
 | Viz spec | The JSON object that the App gives to the Renderer |
 | Icon cache | The `react-inlinesvg` cache of the copy of `@grafana/ui` in the App. `Icon` reads an SVG from it, and makes no request for that SVG |
+| Chart option | A panel option or a field option of a chart that the model can set (`tool.36`). `chart-options.json` of the Renderer lists the chart options of each chart (`delivery.16`) |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
 | Query type | The JSON schema that a data source plugin gives for one kind of its queries. Grafana serves it only with the feature toggles `datasources.queryTypes` and `datasource.useNewCRUDAPIs` (`tool.32`) |
+| Chart line | The text line that names the chart of a tool result, and that the model reads in the same turn (`tool.46`). Not a note: `maxAppNotes` does not count it |
 | Legend overrides | The `fieldConfig` overrides that the user makes with the legend: hide, show and color an item. Only the Renderer keeps them (`renderer.37`) |
 | Time axis | An x axis that the panel draws from a field of type `time`. For example, a `timeseries` chart has a time axis. A `barchart` has one only if its categories are a `time` field. A `histogram` has none |
 | Saved annotations | The annotations that the user adds from the chart and that the App saves. Only the Renderer keeps them (`renderer.63`) |
@@ -65,7 +68,7 @@ The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 
    | Part | Files |
    | ---- | ----- |
-   | Source | 1, 6, 8, the schemas of the tool arguments and the tool result, and `registry/` |
+   | Source | 1, 6, 8, the schemas of the tool arguments, the tool result and the chart options, and `registry/` |
    | App | 1 to 8, and the registries of states, notices and constants |
    | Renderer | 2 to 8, `renderer-api.d.ts`, and the registries of panel types, states, notices and constants |
 
