@@ -1,0 +1,12 @@
+{
+  "plugin": "grafana-testdata-datasource",
+  "version": "v0alpha1",
+  "status": 404,
+  "body": {
+    "kind": "Status",
+    "apiVersion": "v1",
+    "status": "Failure",
+    "reason": "NotFound",
+    "code": 404
+  }
+}

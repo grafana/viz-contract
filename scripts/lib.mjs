@@ -92,6 +92,83 @@ export function sourceRequest(args, now, constants) {
   };
 }
 
+// The API group of the query types of a plugin (tool.32). null when the plugin has no group.
+export function queryTypeGroup(plugin) {
+  if (!plugin) return null;
+  if (!plugin.includes('-')) return `${plugin}.datasource.grafana.app`;
+  if (!plugin.endsWith('-datasource')) return null;
+  const name = plugin.slice(0, -'-datasource'.length).replace(/^grafana-/, '');
+  return `${name}.datasource.grafana.app`;
+}
+
+// A discriminator matches a query (tool.40).
+const JSON_NUMBER = /^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?$/;
+const discriminatorMatches = (query, { field, value }) => {
+  if (!Object.hasOwn(query, field)) return false;
+  const v = query[field];
+  if (typeof v === 'string') return v === value;
+  if (typeof v === 'number') return JSON_NUMBER.test(value) && Number(value) === v;
+  if (typeof v === 'boolean') return value === String(v);
+  return false;
+};
+
+// The query type of a query (tool.34). undefined when the query has none.
+export function queryTypeOf(query, items) {
+  const discriminators = (item) => item.spec?.discriminators ?? [];
+  return (
+    items.find((item) => discriminators(item).length && discriminators(item).every((d) => discriminatorMatches(query, d))) ??
+    items.find((item) => !discriminators(item).length)
+  );
+}
+
+const byCodePoint = (a, b) => {
+  const [x, y] = [[...a], [...b]];
+  for (let i = 0; i < Math.min(x.length, y.length); i++) {
+    if (x[i] !== y[i]) return x[i].codePointAt(0) - y[i].codePointAt(0);
+  }
+  return x.length - y.length;
+};
+
+// The query type note of an item (tool.37).
+export function queryTypeNote(plugin, item) {
+  const sentence = (label, parts) => (parts.length ? ` ${label}: ${parts.join(', ')}.` : '');
+  const schema = item.spec?.schema ?? {};
+  return (
+    `Plugin fields of ${plugin} query type ${item.metadata.name}.` +
+    sentence('Set', (item.spec?.discriminators ?? []).map((d) => `${d.field}=${d.value}`)) +
+    sentence('Required', schema.required ?? []) +
+    sentence('All', Object.keys(schema.properties ?? {}).sort(byCodePoint))
+  );
+}
+
+// The notes of the Source (tool.29, tool.33, tool.35 and tool.38). queryTypes is the querytypes.json of the set, or
+// undefined. failedMessage is the message of query-failed in registry/notices.json.
+export function sourceNotes(args, results, queryTypes, failedMessage) {
+  const failed = args.queries.filter((q) => results[q.refId]?.error !== undefined);
+  const errorNote = (q) => failedMessage.replace('<refId>', q.refId).replace('<error>', results[q.refId].error);
+  const served = queryTypes?.status === 200 && Array.isArray(queryTypes.body?.items) && queryTypeGroup(queryTypes.plugin);
+  const items = [];
+  if (served) {
+    for (const q of failed) {
+      const item = queryTypeOf(q, queryTypes.body.items);
+      if (item && !items.includes(item)) items.push(item);
+    }
+  }
+  if (!items.length) return failed.map(errorNote);
+  return [errorNote(failed[0]), ...items.map((item) => queryTypeNote(queryTypes.plugin, item)), ...failed.slice(1).map(errorNote)];
+}
+
+// The lines that render_grafana_app adds after its text line (tool.30).
+export function appNoteLines(notes, constants) {
+  const max = constants.maxAppNoteChars.value;
+  const given = notes.map((n) => n.replace(/\s+/g, ' ')).filter((n) => n !== '');
+  const kept = given.slice(0, constants.maxAppNotes.value).map((n) => {
+    const points = [...n];
+    return points.length > max ? points.slice(0, max - 1).join('') + '…' : n;
+  });
+  return given.length > kept.length ? [...kept, `… ${given.length - kept.length} more not shown`] : kept;
+}
+
 // The text of the message that the App sends for a MessageRequest (state.22 to state.25). null when the text is
 // too long with no labels. patterns is the messages list of registry/messages.json.
 // Step 1 of state.23: Cc, Cf (but not the joiners U+200C and U+200D), Zl, Zp, the variation selectors and the

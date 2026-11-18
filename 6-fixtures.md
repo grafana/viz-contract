@@ -11,6 +11,8 @@ are in `fixtures/`, one directory for each set.
 | `request.json` | The expected `/api/ds/query` request body of the Source | Source |
 | `response.json` | The `/api/ds/query` response: `status` (the HTTP status) and `body` | Source |
 | `meta.json` | The clock of the set: `now` and `capturedAt`, in epoch milliseconds | Source, App |
+| `querytypes.json` | The query types of the data source: `plugin` (the `type` of the data source), `version` (the preferred version of its API group), and the `status` and the `body` of the `/querytypes` response | Source |
+| `notes.json` | `notes`: the expected notes of the Source, in order. `lines`: the expected lines that `render_grafana_app` adds after its text line (`tool.30`) | Source |
 | `result.json` | The expected tool result, or the expected tool error | Source, App |
 | `spec.json` | The expected viz spec | App, Renderer |
 | `state.json` | The expected state, error and notices of `onState` | Renderer |
@@ -45,6 +47,17 @@ are in `fixtures/`, one directory for each set.
   - `too-large`: the set has `args.json` and `meta.json` only. The test makes the response at run time: it repeats
     the frames of `prometheus-line` with new label values until the tool result is larger than `maxResultBytes`.
     The expected result is the `too-large` tool error.
+- `fixtures.17` Focus sets for the query types. The query types of `querytypes.json` are made for the test. They
+  are not the query types of a plugin release:
+  - `query-types`: one correct query and five failed queries. The entries of `response.json` are not in the
+    order of the queries (`tool.35`). The first item of the response has no `discriminators`, and it is only the
+    fallback (`tool.34`). One item has two `discriminators`. A number of a query matches one of them, and a string
+    of another query does not (`tool.40`). Two pairs of failed queries have the same query type, so `notes` has
+    three query type notes for five failed queries (`tool.35`, `tool.38`). The note of the fallback item has
+    no `Set:` and no `Required:` (`tool.37`). `lines` has a cut query type note and the `more not shown` line
+    (`tool.30`). `plugin` starts with `grafana-` and ends with `-datasource` (`tool.32`).
+  - `query-types-not-served`: one correct query and one failed query. The `status` of `querytypes.json` is 404, so
+    Grafana does not serve the query types. `notes` has only the note of `tool.29` (`tool.33`).
 - `fixtures.5` One smoke set for each row of `registry/chart-types.json`. It has `spec.json` and `state.json` with
   the state `ready`. A test makes sure that each row has a set.
 - `fixtures.6` One pick set for each rule of `registry/pick.json`. It has the frames and the expected chart name. A
@@ -58,6 +71,14 @@ are in `fixtures/`, one directory for each set.
   `data.capturedAt` is `capturedAt` of `meta.json`. If the set has
   `request.json`, the request body must equal it. The tool result must equal `result.json`, but the test does not
   compare `grafanaUrl`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
+- `fixtures.18` If the set has `notes.json`, the notes of the Source must equal `notes`. If the test also runs
+  `render_grafana_app`, the lines after its text line must equal `lines`. If the set has `querytypes.json`, a fake
+  Grafana answers the requests of `tool.32`: request 1 with a data source of the `type` `plugin`, request 2 with
+  the preferred version `version`, and request 3 with the `status` and the `body`. With no `querytypes.json`, the
+  fake Grafana answers each of these requests with the status 404. If the Source returns one tool error for the
+  whole call (`fixtures.8`), the test does not compare the notes. A test also makes sure that the Source sends no
+  request of `tool.32` for a set with no failed query, and that it gives no query type note when request 3 does
+  not answer in `queryTypesTimeoutMs` (`tool.39`).
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response

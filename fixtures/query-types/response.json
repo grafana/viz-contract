@@ -1,0 +1,47 @@
+{
+  "status": 400,
+  "body": {
+    "results": {
+      "E": {
+        "status": 400,
+        "error": "csv_content: the first row has 2 columns, row 2 has 1"
+      },
+      "D": {
+        "status": 400,
+        "error": "live: the channel is required"
+      },
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                { "name": "time", "type": "time", "typeInfo": { "frame": "time.Time" } },
+                { "name": "A-series", "type": "number", "typeInfo": { "frame": "float64" } }
+              ]
+            },
+            "data": {
+              "values": [
+                [1790352577294, 1790353027294, 1790353477294],
+                [10, 10.4, 10.1]
+              ]
+            }
+          }
+        ]
+      },
+      "F": {
+        "status": 400,
+        "error": "live: the version 3 is not known"
+      },
+      "C": {
+        "status": 400,
+        "error": "the scenarioId is required"
+      },
+      "B": {
+        "status": 400,
+        "error": "csv_content: the csvContent is required"
+      }
+    }
+  }
+}

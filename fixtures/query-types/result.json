@@ -1,0 +1,169 @@
+{
+  "chart": "timeseries",
+  "panel": {
+    "type": "grafana-echartscartesian-panel",
+    "options": {
+      "seriesType": "line"
+    }
+  },
+  "alternatives": [
+    {
+      "chart": "barchart",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "options": {
+          "seriesType": "bar"
+        }
+      }
+    },
+    {
+      "chart": "histogram",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "options": {
+          "histogram": true
+        }
+      }
+    },
+    {
+      "chart": "piechart",
+      "panel": {
+        "type": "grafana-echartsparttowhole-panel",
+        "options": {
+          "seriesType": "pie"
+        }
+      }
+    },
+    {
+      "chart": "funnel",
+      "panel": {
+        "type": "grafana-echartsparttowhole-panel",
+        "options": {
+          "seriesType": "funnel"
+        }
+      }
+    },
+    {
+      "chart": "heatmap",
+      "panel": {
+        "type": "grafana-echartsheatmap-panel",
+        "options": {}
+      }
+    },
+    {
+      "chart": "state-timeline",
+      "panel": {
+        "type": "grafana-echartsstatetimeline-panel",
+        "options": {}
+      }
+    },
+    {
+      "chart": "status-history",
+      "panel": {
+        "type": "grafana-echartsstatushistory-panel",
+        "options": {}
+      }
+    },
+    {
+      "chart": "streamgraph",
+      "panel": {
+        "type": "grafana-echartsstream-panel",
+        "options": {
+          "streamChartType": "river"
+        }
+      }
+    },
+    {
+      "chart": "bubble",
+      "panel": {
+        "type": "grafana-echartsstream-panel",
+        "options": {
+          "streamChartType": "bubble"
+        }
+      }
+    },
+    {
+      "chart": "gauge",
+      "panel": {
+        "type": "grafana-echartsgauge-panel",
+        "options": {}
+      }
+    },
+    {
+      "chart": "stat",
+      "panel": {
+        "type": "grafana-echartsstat-panel",
+        "options": {}
+      }
+    }
+  ],
+  "data": {
+    "range": {
+      "from": 1790352577294,
+      "to": 1790353477294
+    },
+    "capturedAt": 1790353477806,
+    "results": {
+      "E": {
+        "status": 400,
+        "error": "csv_content: the first row has 2 columns, row 2 has 1"
+      },
+      "D": {
+        "status": 400,
+        "error": "live: the channel is required"
+      },
+      "A": {
+        "status": 200,
+        "frames": [
+          {
+            "schema": {
+              "refId": "A",
+              "fields": [
+                {
+                  "name": "time",
+                  "type": "time",
+                  "typeInfo": {
+                    "frame": "time.Time"
+                  }
+                },
+                {
+                  "name": "A-series",
+                  "type": "number",
+                  "typeInfo": {
+                    "frame": "float64"
+                  }
+                }
+              ]
+            },
+            "data": {
+              "values": [
+                [
+                  1790352577294,
+                  1790353027294,
+                  1790353477294
+                ],
+                [
+                  10,
+                  10.4,
+                  10.1
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "F": {
+        "status": 400,
+        "error": "live: the version 3 is not known"
+      },
+      "C": {
+        "status": 400,
+        "error": "the scenarioId is required"
+      },
+      "B": {
+        "status": 400,
+        "error": "csv_content: the csvContent is required"
+      }
+    }
+  }
+}

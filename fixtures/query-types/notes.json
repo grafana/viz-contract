@@ -1,0 +1,20 @@
+{
+  "notes": [
+    "Query B failed: csv_content: the csvContent is required",
+    "Plugin fields of grafana-testdata-datasource query type csv-content. Set: scenarioId=csv_content. Required: csvContent. All: Zone, alias, csvContent, csvFileName, csvWave, dropPercent, errorType, labels, max, min, noise, seriesCount, spread, startValue.",
+    "Plugin fields of grafana-testdata-datasource query type default. All: alias, scenarioId.",
+    "Plugin fields of grafana-testdata-datasource query type live-v2. Set: scenarioId=live, version=2. Required: channel. All: alias, channel.",
+    "Query C failed: the scenarioId is required",
+    "Query D failed: live: the channel is required",
+    "Query E failed: csv_content: the first row has 2 columns, row 2 has 1",
+    "Query F failed: live: the version 3 is not known"
+  ],
+  "lines": [
+    "Query B failed: csv_content: the csvContent is required",
+    "Plugin fields of grafana-testdata-datasource query type csv-content. Set: scenarioId=csv_content. Required: csvContent. All: Zone, alias, csvContent, csvFileName, csvWave, dropPercent, errorType, lab…",
+    "Plugin fields of grafana-testdata-datasource query type default. All: alias, scenarioId.",
+    "Plugin fields of grafana-testdata-datasource query type live-v2. Set: scenarioId=live, version=2. Required: channel. All: alias, channel.",
+    "Query C failed: the scenarioId is required",
+    "… 3 more not shown"
+  ]
+}

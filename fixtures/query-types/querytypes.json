@@ -1,0 +1,67 @@
+{
+  "plugin": "grafana-testdata-datasource",
+  "version": "v0alpha1",
+  "status": 200,
+  "body": {
+    "kind": "QueryTypeDefinitionList",
+    "apiVersion": "testdata.datasource.grafana.app/v0alpha1",
+    "metadata": {},
+    "items": [
+      {
+        "metadata": { "name": "default" },
+        "spec": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "scenarioId": { "type": "string" },
+              "alias": { "type": "string" }
+            }
+          }
+        }
+      },
+      {
+        "metadata": { "name": "live-v2" },
+        "spec": {
+          "discriminators": [
+            { "field": "scenarioId", "value": "live" },
+            { "field": "version", "value": "2" }
+          ],
+          "schema": {
+            "type": "object",
+            "required": ["channel"],
+            "properties": {
+              "channel": { "type": "string" },
+              "alias": { "type": "string" }
+            }
+          }
+        }
+      },
+      {
+        "metadata": { "name": "csv-content" },
+        "spec": {
+          "discriminators": [{ "field": "scenarioId", "value": "csv_content" }],
+          "schema": {
+            "type": "object",
+            "required": ["csvContent"],
+            "properties": {
+              "labels": { "type": "string" },
+              "csvContent": { "type": "string" },
+              "alias": { "type": "string" },
+              "dropPercent": { "type": "number" },
+              "csvFileName": { "type": "string" },
+              "csvWave": { "type": "array" },
+              "errorType": { "type": "string" },
+              "seriesCount": { "type": "integer" },
+              "startValue": { "type": "number" },
+              "spread": { "type": "number" },
+              "noise": { "type": "number" },
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "Zone": { "type": "string" }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

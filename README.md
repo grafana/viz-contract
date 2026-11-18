@@ -153,6 +153,7 @@ version.
 | `maxBundleGzipBytes` | not set | bytes | yes | Largest gzip size of the Renderer bundle. Not set until the host size research is done |
 | `maxAppNotes` | 5 | notes | yes | Most notes of the Source that render_grafana_app adds to its text line |
 | `maxAppNoteChars` | 200 | characters | yes | Longest note in the text line of render_grafana_app |
+| `queryTypesTimeoutMs` | 5000 | ms | yes | Longest time of the requests of the Source for the query types of one call, all together |
 | `maxTitleChars` | 100 | characters | yes | Longest title of the tool arguments |
 | `maxMessageChars` | 1000 | characters | yes | Longest text of a message that the App sends to the conversation |
 | `maxMessageLabels` | 10 | labels | yes | Most labels of the series in a message |

@@ -21,7 +21,8 @@ specified.
    annotation (`renderer.63`), and the Renderer must not draw it two times.
 8. Edit the chart. The user changes the options of the chart in the App, for example with an options pane.
 9. Transformations. The Renderer runs the Grafana transformations of a panel.
-10. Option docs and model guidance. The model can read the options of each chart, and the query types of a data
-    source before its first query, when it needs them.
+10. Option docs and model guidance. The model can read the options of each chart when it needs them. It can
+    also read the query types of a data source with no failed query. Today it reads them only after a query
+    fails (`tool.32`).
 
 A gcx path can be a future addition after the MCP path.

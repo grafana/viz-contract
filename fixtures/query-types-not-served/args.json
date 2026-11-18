@@ -1,0 +1,15 @@
+{
+  "datasourceUid": "lgtm-testdata",
+  "queries": [
+    {
+      "refId": "A",
+      "scenarioId": "random_walk"
+    },
+    {
+      "refId": "B",
+      "scenarioId": "csv_content"
+    }
+  ],
+  "from": "now-15m",
+  "to": "now"
+}
