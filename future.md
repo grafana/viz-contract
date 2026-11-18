@@ -9,7 +9,11 @@ specified.
    See https://github.com/grafana/viz-contract/issues/17.
 3. Save to a dashboard. The user saves the chart to a Grafana dashboard. A map from each chart to a core Grafana
    panel lets a Grafana with no ECharts app open the saved panel. The saved panel also needs the legend
-   overrides, and now only the Renderer has them (`renderer.37`).
+   overrides, and now only the Renderer has them (`renderer.37`). The saved panel also has the chart options
+   (`tool.41`). Grafana runs the migrations of a panel from the `pluginVersion` of the saved panel. Thus the saved
+   panel needs as its `pluginVersion` the version of the panel that the Source checked the options against, and
+   that panel must give its migrations to Grafana. `chart-options.json` does not give this version now
+   (`delivery.16`).
 4. Open a dashboard panel. The App draws a panel of an existing dashboard from its panel JSON.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.
