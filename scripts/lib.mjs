@@ -112,7 +112,7 @@ export function typeText(schema) {
 
 // The override form of line 5 of the text of get_chart_options (tool.44), and of the problem of tool.40.
 const OVERRIDE_FORM =
-  '{"matcher":{"id":"byName"|"byRegexp"|"byFrameRefID","options":"<name, regular expression or refId>"},"properties":[{"id":"<path>","value":<value>}]}';
+  '{"matcher":{"id":"byName"|"byFrameRefID","options":"<name or refId>"},"properties":[{"id":"<path>","value":<value>}]}';
 
 // The tool error of get_chart_options for a type that is not a chart (tool.43).
 export const unknownChartText = (type, charts) => `unknown-chart: ${type} is not a chart. The charts are: ${charts.join(', ')}.`;

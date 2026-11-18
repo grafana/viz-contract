@@ -62,8 +62,8 @@
       },
       {
         "matcher": {
-          "id": "byType",
-          "options": "number"
+          "id": "byRegexp",
+          "options": "/api/.*"
         },
         "properties": [
           {

@@ -67,8 +67,8 @@ are in `fixtures/`, one directory for each set.
       not validate.
     - In the first override: an `id` that is not an option, a value that does not validate, and an `id` that is
       set two times.
-    - Two overrides that do not have the override form: one has a matcher that is not allowed, and one has no
-      `properties`.
+    - Two overrides that do not have the override form: one has the matcher `byRegexp`, which is not allowed
+      (`tool.40`), and one has no `properties`.
     - A key of `fieldConfig` that is not `defaults` or `overrides`.
   - `options-stale`: a refresh after a Renderer version removed an option (`refresh.19`). `args.json` is the last
     tool arguments of the App. Its `options` have one option of the chart, and one path that is not an option. Its

@@ -124,9 +124,10 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   In an override, two properties with the same `id` are the problem `fieldConfig.overrides[<n>].<id> is set two
   times`, as in `tool.38`. Each `id` of an override has one problem at most, and the problems of an override are
   in the order of its properties. The Source does not use the message of a schema library, so the text is the
-  same in each Source. The matchers are those of Grafana: `byName` takes the name of a field, `byRegexp` takes a
-  regular expression for the names, and `byFrameRefID` takes the `refId` of a query. The Source does not check
-  that a matcher matches a field.
+  same in each Source. The matchers are `byName` and `byFrameRefID` of Grafana: `byName` takes the name of a field,
+  and `byFrameRefID` takes the `refId` of a query. A matcher that takes a regular expression, for example
+  `byRegexp`, is not allowed, because the Renderer would run the pattern in the browser with no time limit. The
+  Source does not check that a matcher matches a field.
 - `tool.41` The `panel.options` of the chart is the `options` of the chart row, and then each option of the
   arguments at its path. The Source writes a path as nested objects, also when the key of the arguments had dots.
   The `panel.fieldConfig` of the chart is the `fieldConfig` of the arguments, with each path of its `defaults`
@@ -148,7 +149,7 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
      override.`
   4. One line for each entry of the `fieldConfig` list of the chart, in the order of the file.
   5. `An override is <override>.` `<override>` is the override form:
-     `{"matcher":{"id":"byName"|"byRegexp"|"byFrameRefID","options":"<name, regular expression or refId>"},"properties":[{"id":"<path>","value":<value>}]}`
+     `{"matcher":{"id":"byName"|"byFrameRefID","options":"<name or refId>"},"properties":[{"id":"<path>","value":<value>}]}`
   6. `Advanced options not listed: <n>. Set advanced to true to list them.`
 
   The line of an entry is `<path>: <type>`, then ` = <default>` if the entry has a `default`, then
