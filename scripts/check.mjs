@@ -323,10 +323,10 @@ const dupIds = [...ruleDefs].filter(([, at]) => at.length > 1);
 for (const [id, at] of dupIds) fail('rule-ids', `${id} is defined more than one time: ${at.join(', ')}`);
 if (!dupIds.length) pass('rule-ids', `${ruleDefs.size} rule IDs, each defined one time`);
 
-// tool.49 gives the description of type that generate.mjs writes to the schema of the tool arguments.
-const typeRule = `\`tool.49\` The description of \`type\` in the schema of the tool arguments is \`${TYPE_DESCRIPTION}\``;
-if (read('1-tool.md').replace(/\s+/g, ' ').includes(typeRule)) pass('type-description', 'tool.49 gives the description of type');
-else fail('type-description', `1-tool.md does not give the description of type (tool.49): ${TYPE_DESCRIPTION}`);
+// tool.50 gives the description of type that generate.mjs writes to the schema of the tool arguments.
+const typeRule = `\`tool.50\` The description of \`type\` in the schema of the tool arguments is \`${TYPE_DESCRIPTION}\``;
+if (read('1-tool.md').replace(/\s+/g, ' ').includes(typeRule)) pass('type-description', 'tool.50 gives the description of type');
+else fail('type-description', `1-tool.md does not give the description of type (tool.50): ${TYPE_DESCRIPTION}`);
 
 // 6. package.json keeps the placeholder version. The release workflow sets the version from the tag.
 const PLACEHOLDER = '0.0.0-development';

@@ -130,7 +130,7 @@ export function typeText(schema) {
 const OVERRIDE_FORM =
   '{"matcher":{"id":"byName"|"byFrameRefID","options":"<name or refId>"},"properties":[{"id":"<path>","value":<value>}]}';
 
-// The description of type in the schema of the tool arguments (tool.49).
+// The description of type in the schema of the tool arguments (tool.50).
 export const TYPE_DESCRIPTION =
   'Optional chart to draw. With no type, the chart comes from the data. get_chart_options gives the data that a chart needs.';
 

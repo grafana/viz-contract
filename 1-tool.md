@@ -28,7 +28,7 @@ gives the tool result. [Chart options](#chart-options) gives the shapes of the c
 - `tool.8` `unit` is a Grafana unit ID, for example `bytes`. It applies to all queries of the call. Thus two queries
   in different units show the same unit. The Source does not check the unit. The Renderer checks it
   (`state.9`).
-- `tool.49` The description of `type` in the schema of the tool arguments is `Optional chart to draw. With no
+- `tool.50` The description of `type` in the schema of the tool arguments is `Optional chart to draw. With no
   type, the chart comes from the data. get_chart_options gives the data that a chart needs.` It does not list the
   data that each chart needs. The text of `get_chart_options` gives the data that one chart needs (`tool.44`), and
   the `type-mismatch` tool error gives it too (`tool.20`). Thus the tool list of a Host does not grow with the
