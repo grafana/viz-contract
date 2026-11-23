@@ -220,7 +220,8 @@ for (const set of sets) {
 }
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
-  for (const [name, list] of Object.entries(entry)) {
+  for (const name of ['options', 'fieldConfig']) {
+    const list = entry[name];
     const paths = list.map((o) => o.path);
     for (const o of list) {
       if (o.default !== undefined && !validValue(o.schema, o.default)) fail('fixtures', `chart-options.json: the default of ${chart} ${o.path} does not validate (delivery.20)`);

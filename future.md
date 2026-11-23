@@ -12,8 +12,7 @@ specified.
    overrides, and now only the Renderer has them (`renderer.37`). The saved panel also has the chart options
    (`tool.41`). Grafana runs the migrations of a panel from the `pluginVersion` of the saved panel. Thus the saved
    panel needs as its `pluginVersion` the version of the panel that the Source checked the options against, and
-   that panel must give its migrations to Grafana. `chart-options.json` does not give this version now
-   (`delivery.16`).
+   that panel must give its migrations to Grafana. `chart-options.json` gives this version (`delivery.23`).
 4. Open a dashboard panel. The App draws a panel of an existing dashboard from its panel JSON.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.

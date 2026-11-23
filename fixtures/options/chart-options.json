@@ -1,6 +1,7 @@
 {
   "charts": {
     "timeseries": {
+      "pluginVersion": "1.2.0",
       "options": [
         {
           "path": "stacking",

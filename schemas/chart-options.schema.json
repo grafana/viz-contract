@@ -23,10 +23,16 @@
     "chart": {
       "type": "object",
       "required": [
+        "pluginVersion",
         "options",
         "fieldConfig"
       ],
       "properties": {
+        "pluginVersion": {
+          "type": "string",
+          "pattern": "^\\S+$",
+          "description": "The version of the panel of the chart, in the form of the pluginVersion of a Grafana panel JSON, for example 1.2.0."
+        },
         "options": {
           "type": "array",
           "description": "The panel options. A path starts at the options object of the panel.",
