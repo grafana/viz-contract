@@ -54,3 +54,8 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
   (`tool.43`), so a prompt does not have to name them. A refresh can have an option that the Renderer version does
   not have. The App then calls again with no `options` and no `fieldConfig` (`refresh.19`). Thus a change of the
   options does not break the refresh of `version.12`.
+- `version.14` `coreVersion` is a version of Semantic Versioning 2.0.0. A new value makes a new minor version
+  (`version.2`). The same pull request makes sure that each preset and each `fits` of
+  `registry/core-panels.json` is correct for Grafana of the new value (`save.1`, `save.8`). A higher value makes
+  `save.9` refuse a Grafana that could save before. Thus the title of the pull request names the new value, and
+  the release notes have it.

@@ -166,7 +166,7 @@ version.
 | `messageTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a message |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
-| `coreVersion` | 12.3.0 | version | no | The version of Grafana whose core panels the core panel map is written for. It is the pluginVersion of a core panel |
+| `coreVersion` | 12.3.0 | version | yes | The version of Grafana whose core panels the core panel map is written for. It is the pluginVersion of a core panel |
 <!-- constants:end -->
 
 ## Not in this contract

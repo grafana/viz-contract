@@ -4,9 +4,9 @@ A save writes the chart to a Grafana dashboard. The rules of a save are not spec
 file gives the part that a save needs first: the core panel of a chart.
 
 The panel of a chart is a Grafana panel plugin (`tool.22`). A Grafana can draw it only when that plugin is
-installed. Each Grafana can draw a core Grafana panel. The core panel of a chart is the core Grafana panel that
-is nearest to the chart. A save needs the core panel when the Grafana of the save cannot draw the panel of the
-chart.
+installed. A core Grafana panel needs no plugin. The core panel of a chart is the core Grafana panel that is
+nearest to the chart. A save needs the core panel when the Grafana of the save cannot draw the panel of the
+chart. A Grafana of `coreVersion` or of a newer version can read the core panel (`save.9`).
 
 ## The core panel
 
@@ -14,6 +14,7 @@ The map from a chart to its core panel has two parts. `registry/core-panels.json
 chart. The `chart-options.json` of the Renderer gives the place of each chart option in that core panel
 (`delivery.25`). Thus the names of the options stay data of the Renderer (`version.13`). The Source makes the
 core panel, because it reads both files (`tool.37`). Both parts are written for Grafana of `coreVersion`.
+`coreVersion` is a version of Semantic Versioning 2.0.0 (`version.14`).
 
 - `save.1` `registry/core-panels.json` has one row for each row of `registry/chart-types.json`, in the same
   order. The `panel` of a row is the type of the core panel of the chart, or `none`. A row with a core panel also
@@ -26,7 +27,8 @@ core panel, because it reads both files (`tool.37`). Both parts are written for 
   fit the chart (`tool.20`) and one condition of `fits` matches. With no `fits`, the frames that fit the chart
   fit the core panel. For example, a `barchart` draws number fields with no other field, and the core `barchart`
   panel needs a string or time field. A core panel shows a message or no data for frames that do not fit it. The
-  core panel of `save.2` to `save.5` does not depend on the frames.
+  `fits` of a row come from the code of the core panel in Grafana of `coreVersion`. The core panel of `save.2` to
+  `save.5` does not depend on the frames.
 - `save.2` The core panel is made from the panel of the chart (`tool.22`, `tool.41`) and the row of the chart:
   - `type` is the `panel` of the row.
   - `pluginVersion` is `coreVersion`. Grafana then runs the migrations of the core panel from that version.
@@ -72,4 +74,7 @@ core panel, because it reads both files (`tool.37`). Both parts are written for 
   from `coreVersion`. An older Grafana does not know that form, and it ignores an option that it does not know.
   When a save needs the core panel and the version of the Grafana of the save is older than `coreVersion`, the
   save is refused: it writes no panel. It tells the user and the model the version of the Grafana and
-  `coreVersion`. The order of two versions is the precedence of Semantic Versioning 2.0.0.
+  `coreVersion`. The order of two versions is the precedence of Semantic Versioning 2.0.0. If the Source cannot
+  read the version of the Grafana of the save, or that version is not a version of Semantic Versioning 2.0.0,
+  the save is also refused. It then tells the user and the model that the version is not known, and
+  `coreVersion`.

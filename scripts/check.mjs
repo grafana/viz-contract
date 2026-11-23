@@ -250,6 +250,20 @@ for (const [kind, re] of [['options', /^options\./], ['fieldConfig.defaults', /^
   if (!allDropped.some((d) => re.test(d))) fail('fixtures', `no core-panel case with a dropped option of ${kind} (fixtures.21)`);
 }
 if (!coreCases.some((c) => c.core && (c.panel.fieldConfig?.overrides?.length ?? 0) > c.core.fieldConfig.overrides.length)) fail('fixtures', 'no core-panel case with an override that has no carried property (fixtures.21)');
+// The cases of core-fits.json (fixtures.21): frames that fit the chart fit the core panel or not (save.8).
+const fitsCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-fits.json').cases : [];
+fitsCases.forEach((c, i) => {
+  const name = `core-fits case ${i + 1} (${c.chart})`;
+  const row = charts.find((x) => x.name === c.chart);
+  const core = coreOf(c.chart);
+  if (!row || !core || core.panel === 'none') return fail('fixtures', `${name}: the chart has no core panel`);
+  const s = summary(c.results);
+  if (!fits(s, row)) fail('fixtures', `${name}: the frames do not fit the chart`);
+  if (c.fits !== (!core.fits || fits(s, core))) fail('fixtures', `${name}: fits is not the result of save.8`);
+});
+for (const r of coreRows.filter((x) => x.fits)) {
+  for (const want of [true, false]) if (!fitsCases.some((c) => c.chart === r.chart && c.fits === want)) fail('fixtures', `no core-fits case for ${r.chart} with fits ${want} (fixtures.21)`);
+}
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
   for (const [name, list] of Object.entries(entry)) {

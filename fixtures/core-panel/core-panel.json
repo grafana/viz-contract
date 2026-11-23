@@ -189,9 +189,9 @@
       "dropped": []
     },
     {
-      "description": "timeseries with a path that is not an option of the chart: the path is dropped, and the path of the chart row is not",
+      "description": "timeseries with three paths that are not options of the chart: the paths are dropped in code point order, which is not the order of their UTF-16 code units, and the path of the chart row is not dropped",
       "chart": "timeseries",
-      "panel": { "type": "grafana-echartscartesian-panel", "options": { "seriesType": "line", "oldOption": 1 } },
+      "panel": { "type": "grafana-echartscartesian-panel", "options": { "seriesType": "line", "😀": 1, "Ａ": 1, "oldOption": 1 } },
       "core": {
         "type": "timeseries",
         "pluginVersion": "12.3.0",
@@ -201,7 +201,7 @@
           "overrides": []
         }
       },
-      "dropped": ["options.oldOption"]
+      "dropped": ["options.oldOption", "options.Ａ", "options.😀"]
     }
   ]
 }

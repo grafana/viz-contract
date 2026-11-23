@@ -26,6 +26,10 @@ This file gives the steps to change the contract.
    the schemas, the bundled schemas and the constants table of `README.md`.
 9. Run the checks: run `npm ci --ignore-scripts` in `scripts` once, then run
    `node scripts/check.mjs`. Fix each failure. CI runs the same checks on each pull request.
+10. If you changed a row of `registry/core-panels.json` or `coreVersion`, draw each changed core panel in Grafana
+    of `coreVersion`: one time with frames that fit it, and one time with frames that fit the chart and not the
+    core panel. Say in the pull request what you drew. No check of this repository reads Grafana, so the checks
+    do not find a wrong panel type, a wrong preset or a wrong `fits`.
 
 ## Version and changelog
 

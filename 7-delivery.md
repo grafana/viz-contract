@@ -180,6 +180,7 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - The core panel has no option at the place of a `core`.
   - The option at the place of a `core` does not accept a value that the `schema` of the entry accepts.
   - A path of the `options` of a row of `core-panels.json` is not an option of the core panel of that row.
+  - The `panel` of a row of `core-panels.json` is not a core panel of Grafana of `coreVersion`.
 
   The check cannot prove that a value has the same meaning in the core panel, or that the core panel draws as the
   Renderer does with no value. A review of the file makes sure of these.

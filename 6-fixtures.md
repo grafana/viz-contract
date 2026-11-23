@@ -20,6 +20,7 @@ are in `fixtures/`, one directory for each set.
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
 | `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
 | `core-panel.json` | `cases`: a list. Each case has a `description`, a `chart`, the `panel` of that chart, the expected `core` (the core panel, or `null` for a chart with no core panel) and the expected `dropped` list | Source |
+| `core-fits.json` | `cases`: a list. Each case has a `description`, a `chart`, `results` (the frames, as `data.results` of a viz spec), and `fits`: `true` when the frames fit the core panel of the chart | Source |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -90,9 +91,9 @@ are in `fixtures/`, one directory for each set.
   the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
   have the color of the legend and the line style of the override. The same must be true after an `update` with
   the same viz spec (`renderer.35`).
-- `fixtures.21` One `core-panel` set. It has `core-panel.json` only. For each case, the Source test makes the
-  core panel of `panel` for the chart `chart`, with the `chart-options.json` of the set `options`
-  (`fixtures.17`) and `coreVersion`. The core panel must equal `core`, and the list of the dropped options must
+- `fixtures.21` One `core-panel` set. It has `core-panel.json` and `core-fits.json` only. For each case of
+  `core-panel.json`, the Source test makes the core panel of `panel` for the chart `chart`, with the
+  `chart-options.json` of the set `options` (`fixtures.17`) and `coreVersion`. The core panel must equal `core`, and the list of the dropped options must
   equal `dropped` (`save.2` to `save.5`). With a `core` of `null`, the chart has no core panel (`save.7`). The
   cases cover these parts:
   - Each chart that has a core panel, with a panel that has no chart option. For a chart with an entry in
@@ -101,10 +102,13 @@ are in `fixtures/`, one directory for each set.
   - Carried options of each `root`, and a carried option that replaces a value of the preset.
   - A dropped option of `options`, of `fieldConfig.defaults` and of an override. One override has no carried
     property, and the override after it has a dropped property, so `<n>` counts both (`save.5`).
-  - A path that is not an option of the chart, next to a path of the chart row.
+  - Three paths that are not options of the chart, next to a path of the chart row. Two of them are not ASCII,
+    so their code point order is not the order of their UTF-16 code units (`save.5`).
 
-  A case does not test `fits` of `save.8`, because the core panel does not depend on the frames. A check makes
-  sure that the data of the smoke set of each chart fits its core panel.
+  For each case of `core-fits.json`, the frames of `results` fit the chart `chart`. The test makes sure that
+  they fit the core panel only when `fits` is `true` (`save.8`). Each row of `core-panels.json` that has `fits`
+  has one case of each kind. A check also makes sure that the data of the smoke set of each chart fits its core
+  panel.
 
 ## Conformance tests
 
