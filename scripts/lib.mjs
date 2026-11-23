@@ -226,34 +226,40 @@ export function panelWithOptions(panel, args, entry) {
 }
 
 // The core panel of a chart and its dropped options (save.2 to save.5). panel is the panel of the chart, row is
-// the row of chart-types.json, core is the row of core-panels.json, and file is chart-options.json. With no core
-// panel, there is no result (save.7).
-export function corePanel(panel, row, core, file) {
+// the row of chart-types.json, core is the row of core-panels.json, file is chart-options.json, and coreVersion
+// is the constant. With no core panel, there is no result (save.7).
+export function corePanel(panel, row, core, file, coreVersion) {
   if (core.panel === 'none') return undefined;
   const entry = file.charts[row.name] ?? { options: [], fieldConfig: [] };
   const { type, pluginVersion, options, fieldConfig, ...rest } = panel;
-  const out = { ...rest, type: core.panel, pluginVersion: file.coreVersion, options: structuredClone(core.options), fieldConfig: { defaults: {}, overrides: [] } };
+  const out = { ...rest, type: core.panel, pluginVersion: coreVersion, options: structuredClone(core.options), fieldConfig: { defaults: {}, overrides: [] } };
   const dropped = [];
   // The paths of the options preset of the chart row. The core row takes their place (save.3).
   const leaves = (node, prefix = '') =>
     Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leaves(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
   const preset = leaves(row.options);
   const inPreset = (p) => preset.some((l) => l === p || l.startsWith(`${p}.`) || p.startsWith(`${l}.`));
+  const write = (o, value) => {
+    const keys = o.core.path.split('.');
+    const last = keys.pop();
+    // delivery.26 does not allow a path through a value that is not an object. Such a value is replaced here, so
+    // that the check reports the file and does not stop.
+    const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+    keys.reduce((node, key) => (isObject(node[key]) ? node[key] : (node[key] = {})), o.core.root === 'options' ? out.options : out.fieldConfig.defaults)[last] = structuredClone(value);
+  };
+  // First the default of each entry with core whose option the panel does not have, then the options of the
+  // panel (save.3). Thus the core panel draws an option that the panel does not have as the Renderer draws it.
+  const set = [];
   const carry = (root, list, prefix, skip = () => false) => {
     const { found, wrong } = findOptions(root, list);
     const lost = wrong.map(([p]) => p).filter((p) => !skip(p));
-    for (const [p, value, o] of found) {
-      if (!o.core) lost.push(p);
-      else {
-        const keys = o.core.path.split('.');
-        const last = keys.pop();
-        keys.reduce((node, key) => (node[key] ??= {}), o.core.root === 'options' ? out.options : out.fieldConfig.defaults)[last] = structuredClone(value);
-      }
-    }
+    for (const o of list) if (o.core && o.default !== undefined && !found.some(([p]) => p === o.path)) write(o, o.default);
+    for (const [p, value, o] of found) (o.core ? set.push([o, value]) : lost.push(p));
     dropped.push(...[...new Set(lost)].sort(byCodePoint).map((p) => `${prefix}${p}`));
   };
   carry(options, entry.options, 'options.', inPreset);
   carry(fieldConfig?.defaults, entry.fieldConfig, 'fieldConfig.defaults.');
+  for (const [o, value] of set) write(o, value);
   (fieldConfig?.overrides ?? []).forEach((override, n) => {
     const properties = [];
     for (const { id, value } of override.properties) {

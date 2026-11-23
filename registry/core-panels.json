@@ -1,9 +1,9 @@
 {
   "charts": [
     { "chart": "timeseries", "panel": "timeseries", "options": {} },
-    { "chart": "barchart", "panel": "barchart", "options": {} },
+    { "chart": "barchart", "panel": "barchart", "options": {}, "fits": [{ "hasFieldType.string": true }, { "hasFieldType.time": true }] },
     { "chart": "histogram", "panel": "histogram", "options": {} },
-    { "chart": "candlestick", "panel": "candlestick", "options": {} },
+    { "chart": "candlestick", "panel": "candlestick", "options": {}, "fits": [{ "hasFieldType.time": true }] },
     { "chart": "boxplot", "panel": "none" },
     { "chart": "piechart", "panel": "piechart", "options": { "reduceOptions": { "values": true } } },
     { "chart": "funnel", "panel": "none" },
@@ -11,7 +11,7 @@
     { "chart": "geomap", "panel": "geomap", "options": {} },
     { "chart": "state-timeline", "panel": "state-timeline", "options": {} },
     { "chart": "status-history", "panel": "status-history", "options": {} },
-    { "chart": "nodeGraph", "panel": "nodeGraph", "options": {} },
+    { "chart": "nodeGraph", "panel": "nodeGraph", "options": {}, "fits": [{ "hasPreferredVisualisationType.nodeGraph": true }, { "hasFieldName.id": true }] },
     { "chart": "sankey", "panel": "none" },
     { "chart": "chord", "panel": "none" },
     { "chart": "treemap", "panel": "none" },

@@ -4,15 +4,10 @@
   "description": "The options of each chart that the model can set, the version of each panel, and the place of each option in the core panel of the chart. The Renderer build writes this file.",
   "type": "object",
   "required": [
-    "coreVersion",
     "panels",
     "charts"
   ],
   "properties": {
-    "coreVersion": {
-      "$ref": "#/$defs/version",
-      "description": "The version of Grafana whose core panels the core of each option names. It is the pluginVersion of a core panel, for example 12.3.0."
-    },
     "panels": {
       "type": "object",
       "description": "The key is a panel ID of registry/panel-types.json.",
@@ -112,7 +107,7 @@
         },
         "core": {
           "type": "object",
-          "description": "The place of the option in the core panel of the chart. With no core, the option does not carry over to the core panel.",
+          "description": "The place of the option in the core panel of the chart, in Grafana of the constant coreVersion. With no core, the option does not carry over to the core panel.",
           "required": [
             "root",
             "path"

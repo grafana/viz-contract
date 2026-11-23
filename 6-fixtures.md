@@ -19,7 +19,7 @@ are in `fixtures/`, one directory for each set.
 | `options-args.json` | The arguments of `get_chart_options` | Source |
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
 | `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
-| `core-panel.json` | `panel`: the expected core panel of the panel of the set. `dropped`: the expected list of the dropped options | Source |
+| `core-panel.json` | `cases`: a list. Each case has a `description`, a `chart`, the `panel` of that chart, the expected `core` (the core panel, or `null` for a chart with no core panel) and the expected `dropped` list | Source |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -56,11 +56,11 @@ are in `fixtures/`, one directory for each set.
   test makes sure that each rule has a set.
 - `fixtures.7` One `type-mismatch` set. Its `result.json` is the expected tool error.
 - `fixtures.17` Sets for the chart options. Each one uses the `chart-options.json` of the set `options`. That file
-  is an example with a few options of the time series chart. It is not the file of a Renderer.
+  is an example with a few options of the time series chart and one option of the pie chart. It is not the file
+  of a Renderer.
   - `options`: the query of `prometheus-line` with a `type`, `options`, and a `fieldConfig` that has an override.
     One key of `options` has dots. The panel of the chart in `result.json` has the options as nested objects. The
-    panels of the alternatives do not have them (`tool.41`). One option of `options` has no `core`, and two
-    options have a `core` with the `root` `fieldConfig` (`fixtures.21`).
+    panels of the alternatives do not have them (`tool.41`).
   - `options-invalid`: each problem of `tool.38` to `tool.40`. The set has no `response.json`, because the Source
     does not query. The expected result is the `invalid-options` tool error. The arguments have these parts:
     - In `options`: a path that is not an option, the same path from two keys, a path that is set two times, a
@@ -90,13 +90,21 @@ are in `fixtures/`, one directory for each set.
   the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
   have the color of the legend and the line style of the override. The same must be true after an `update` with
   the same viz spec (`renderer.35`).
-- `fixtures.21` Sets for the core panel. The smoke set of each chart that has a core panel has `core-panel.json`
-  (`save.1`), and the set `options` has one. The smoke set of a chart with no core panel has none. The Source
-  test makes the core panel of the `panel` of `spec.json`, or of the `panel` of `result.json` in a set with no `spec.json`.
-  It uses the `chart-options.json` of the set `options` (`fixtures.17`). The core panel must equal `panel`, and
-  the list of the dropped options must equal `dropped` (`save.2` to `save.5`). A smoke set has no chart option,
-  so its core panel has only the preset of the row. The set `options` has a carried option of each `root`, a
-  carried property of an override, and a dropped option.
+- `fixtures.21` One `core-panel` set. It has `core-panel.json` only. For each case, the Source test makes the
+  core panel of `panel` for the chart `chart`, with the `chart-options.json` of the set `options`
+  (`fixtures.17`) and `coreVersion`. The core panel must equal `core`, and the list of the dropped options must
+  equal `dropped` (`save.2` to `save.5`). With a `core` of `null`, the chart has no core panel (`save.7`). The
+  cases cover these parts:
+  - Each chart that has a core panel, with a panel that has no chart option. For a chart with an entry in
+    `chart-options.json`, the core panel has the `default` of each entry with `core` (`save.3`).
+  - One chart with no core panel.
+  - Carried options of each `root`, and a carried option that replaces a value of the preset.
+  - A dropped option of `options`, of `fieldConfig.defaults` and of an override. One override has no carried
+    property, and the override after it has a dropped property, so `<n>` counts both (`save.5`).
+  - A path that is not an option of the chart, next to a path of the chart row.
+
+  A case does not test `fits` of `save.8`, because the core panel does not depend on the frames. A check makes
+  sure that the data of the smoke set of each chart fits its core panel.
 
 ## Conformance tests
 
@@ -107,7 +115,7 @@ are in `fixtures/`, one directory for each set.
   compare `grafanaUrl`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
 - `fixtures.18` For a set of `fixtures.17`, the Source test gives the `chart-options.json` of the set `options` to
   the Source in place of the file of the Renderer. The test does not run the checks of `tool.48` on this file,
-  because it has an entry for one chart only. A set with `options-args.json` is a test of
+  because it has an entry for two charts only. A set with `options-args.json` is a test of
   `get_chart_options`: the test gives `options-args.json` to the tool, and the tool result must equal
   `options-result.json`. `chart-options.json` and `options-args.json` validate against their schemas, as the files
   of `fixtures.2` do.

@@ -1,9 +1,22 @@
 {
-  "coreVersion": "12.3.0",
   "panels": {
-    "grafana-echartscartesian-panel": { "pluginVersion": "0.4.1" }
+    "grafana-echartscartesian-panel": { "pluginVersion": "0.4.1" },
+    "grafana-echartsparttowhole-panel": { "pluginVersion": "0.4.1" }
   },
   "charts": {
+    "piechart": {
+      "options": [
+        {
+          "path": "reduceOptions.values",
+          "description": "Draw one part for each row. If false, draw one part for each number field",
+          "tier": "default",
+          "default": true,
+          "schema": { "type": "boolean" },
+          "core": { "root": "options", "path": "reduceOptions.values" }
+        }
+      ],
+      "fieldConfig": []
+    },
     "timeseries": {
       "options": [
         {

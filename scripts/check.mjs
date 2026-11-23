@@ -220,19 +220,36 @@ for (const set of sets) {
     else if (spec.panel.type !== row.panel || JSON.stringify(spec.panel.options) !== JSON.stringify(row.options)) {
       fail('fixtures', `${set}: panel type or options are not those of the chart row`);
     } else if (!fits(summary(spec.data.results), row)) fail('fixtures', `${set}: the data does not fit the chart`);
+    // The data of the smoke set of a chart with a core panel also fits the core panel (save.8).
+    else if (coreOf(row.name)?.fits && !fits(summary(spec.data.results), coreOf(row.name))) fail('fixtures', `${set}: the data does not fit the core panel (save.8)`);
   }
-  // core-panel.json is the core panel of the panel of the set, and its dropped options (fixtures.21).
-  const chart = set.startsWith('smoke-') ? set.slice('smoke-'.length) : (result?.chart ?? args?.type);
-  const hasCore = coreOf(chart) && coreOf(chart).panel !== 'none';
-  if (files['core-panel.json']) {
-    const from = files['spec.json']?.panel ?? result?.panel;
-    const row = charts.find((c) => c.name === chart);
-    if (!hasCore || !row || !from) fail('fixtures', `${set}/core-panel.json: the set has no panel of a chart that has a core panel (save.7)`);
-    else if (canonical(files['core-panel.json']) !== canonical(corePanel(from, row, coreOf(chart), chartOptionsFile))) {
-      fail('fixtures', `${set}/core-panel.json is not the core panel of save.2 to save.5:\n${JSON.stringify(corePanel(from, row, coreOf(chart), chartOptionsFile))}`);
-    }
-  } else if ((set.startsWith('smoke-') || set === 'options') && hasCore) fail('fixtures', `${set}: no core-panel.json (fixtures.21)`);
 }
+// The cases of the set core-panel (fixtures.21): the core panel and the dropped options of save.2 to save.5.
+const coreCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-panel.json').cases : [];
+const leafPaths = (node, prefix = '') =>
+  Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leafPaths(v, `${prefix}${k}.`) : [[`${prefix}${k}`, v]]));
+const at = (node, p) => p.split('.').reduce((n, k) => n?.[k], node);
+coreCases.forEach((c, i) => {
+  const name = `core-panel case ${i + 1} (${c.chart})`;
+  const row = charts.find((x) => x.name === c.chart);
+  if (!row || !coreOf(c.chart)) return fail('fixtures', `${name}: no chart row`);
+  // The panel of a case is a panel of the chart: the type and the options preset of the chart row (tool.22).
+  if (c.panel?.type !== row.panel || leafPaths(row.options).some(([p, v]) => canonical(at(c.panel.options, p)) !== canonical(v))) {
+    fail('fixtures', `${name}: panel does not have the type and the options of the chart row`);
+  }
+  const want = corePanel(c.panel, row, coreOf(c.chart), chartOptionsFile, constants.coreVersion.value);
+  if (canonical({ core: c.core, dropped: c.dropped }) !== canonical({ core: want?.panel ?? null, dropped: want?.dropped ?? [] })) {
+    fail('fixtures', `${name}: core and dropped are not the result of save.2 to save.5:\n${JSON.stringify(want ?? null)}`);
+  }
+});
+for (const r of coreRows) if (r.panel !== 'none' && !coreCases.some((c) => c.chart === r.chart)) fail('fixtures', `no core-panel case for ${r.chart} (fixtures.21)`);
+if (!coreCases.some((c) => c.core === null)) fail('fixtures', 'no core-panel case for a chart with no core panel (fixtures.21)');
+// The cases cover each kind of dropped option (save.5), and an override that the core panel does not have.
+const allDropped = coreCases.flatMap((c) => c.dropped ?? []);
+for (const [kind, re] of [['options', /^options\./], ['fieldConfig.defaults', /^fieldConfig\.defaults\./], ['an override property', /^fieldConfig\.overrides\[\d+\]\./]]) {
+  if (!allDropped.some((d) => re.test(d))) fail('fixtures', `no core-panel case with a dropped option of ${kind} (fixtures.21)`);
+}
+if (!coreCases.some((c) => c.core && (c.panel.fieldConfig?.overrides?.length ?? 0) > c.core.fieldConfig.overrides.length)) fail('fixtures', 'no core-panel case with an override that has no carried property (fixtures.21)');
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
   for (const [name, list] of Object.entries(entry)) {
@@ -256,6 +273,12 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
     const same = cores.filter((x) => x.core.root === o.core.root);
     if (same.filter((x) => x.core.path === o.core.path).length > 1) fail('fixtures', `chart-options.json: ${chart} has the core ${o.core.root} ${o.core.path} two times (delivery.26)`);
     if (same.some((x) => x.core.path.startsWith(`${o.core.path}.`))) fail('fixtures', `chart-options.json: the core ${o.core.root} ${o.core.path} of ${chart} is the start of another core path (delivery.26)`);
+    // A path cannot go through a value of the preset of the core row that is not an object.
+    const keys = o.core.path.split('.');
+    const through = keys.slice(0, -1).map((_, n) => at(coreOf(chart)?.options ?? {}, keys.slice(0, n + 1).join('.')));
+    if (o.core.root === 'options' && through.some((v) => v !== undefined && (v === null || typeof v !== 'object' || Array.isArray(v)))) {
+      fail('fixtures', `chart-options.json: the core options ${o.core.path} of ${chart} goes through a preset value that is not an object (delivery.26)`);
+    }
   }
 }
 // panels has exactly the panels of the charts of the file (delivery.23).

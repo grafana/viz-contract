@@ -102,7 +102,13 @@
                     "not": { "const": "none" },
                     "description": "The type of the core Grafana panel that draws the data of the chart"
                   },
-                  "options": { "type": "object", "description": "The options preset that the core panel gets" }
+                  "options": { "type": "object", "description": "The options preset that the core panel gets" },
+                  "fits": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "The frames that fit the chart fit the core panel when one condition of the list matches. With no fits, they always fit the core panel",
+                    "items": { "$ref": "#/$defs/condition" }
+                  }
                 },
                 "additionalProperties": false
               },

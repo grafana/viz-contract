@@ -11,9 +11,6 @@
       },
       "tooltip": {
         "mode": "multi"
-      },
-      "animation": {
-        "enabled": false
       }
     },
     "fieldConfig": {

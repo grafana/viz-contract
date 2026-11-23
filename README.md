@@ -73,7 +73,7 @@ The Renderer draws the panels of the package `@plugins/grafana-echarts`.
    | ---- | ----- |
    | Source | 1, 6, 8, 9, the schemas of the tool arguments, the tool result and the chart options, and `registry/` |
    | App | 1 to 8, and the registries of states, notices and constants |
-   | Renderer | 2 to 8, `renderer-api.d.ts`, and the registries of panel types, states, notices and constants |
+   | Renderer | 2 to 9, `renderer-api.d.ts`, and the registries of panel types, core panels, states, notices and constants |
 
 3. The schemas give the shapes. The prose gives the behavior only, and does not repeat a schema.
    `schemas/bundled/` holds each schema as one file with no reference to another file. Consumers use the bundled
@@ -166,6 +166,7 @@ version.
 | `messageTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a message |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
+| `coreVersion` | 12.3.0 | version | no | The version of Grafana whose core panels the core panel map is written for. It is the pluginVersion of a core panel |
 <!-- constants:end -->
 
 ## Not in this contract

@@ -54,18 +54,26 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   of a `plugin.json` that is not built gives the panel a version that it cannot read. The Source checks `panels`
   when the server starts (`tool.49`).
 - `delivery.25` `chart-options.json` also gives the place of each option in the core panel of its chart
-  (`save.1`). `coreVersion` is the version of Grafana whose core panels the file names. It is a version of
-  Semantic Versioning 2.0.0. An entry of a list can have `core`: a `root` and a `path`. With the `root`
-  `options`, the path starts at the `options` object of the core panel. With the `root` `fieldConfig`, it starts
-  at `fieldConfig.defaults`. An entry has `core` only when both of these are true in Grafana of `coreVersion`:
-  the core panel has an option at that place, and each value that the `schema` of the entry accepts has the same
-  meaning for that option. An entry with no `core` is a dropped option of the core panel (`save.5`).
+  (`save.1`). An entry of a list can have `core`: a `root` and a `path`. With the `root` `options`, the path
+  starts at the `options` object of the core panel. With the `root` `fieldConfig`, it starts at
+  `fieldConfig.defaults`. The Renderer build writes each `core` for Grafana of `coreVersion`. The file does not
+  give a version of its own, so the presets of `registry/core-panels.json` and the `core` of the entries have one
+  version. An entry has `core` only when each of these is true in Grafana of `coreVersion`:
+  - The core panel has an option at that place.
+  - Each value that the `schema` of the entry accepts has the same meaning for that option.
+  - If the entry has no `default`, the core panel with no value at that place draws as the Renderer draws with
+    no value. If the entry has a `default`, the core panel gets it (`save.3`).
+
+  An entry with no `core` is a dropped option of the core panel (`save.5`).
 - `delivery.26` The `core` of the entries follows these limits:
   - An entry of a chart with no core panel has no `core`.
   - In the `fieldConfig` list, the `root` is `fieldConfig`, and the `path` is the id of a registered field option
     of the core panel. It becomes the `id` of an override property (`save.4`).
   - No two entries of a chart have the same `root` and `path`.
   - No `path` is the start of another `path` with the same `root` in the same chart.
+  - With the `root` `options`, no `path` goes through a value of the preset of the core row that is not an
+    object. For example, with `reduceOptions.values` in the preset, the path `reduceOptions.values.limit` is not
+    correct.
 
 ## Checks
 
@@ -164,5 +172,14 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.24` A CI check of the Renderer makes sure that `panels` follows `delivery.23`. The check reads
   `info.version` from the built `plugin.json` of each panel. It fails when `panels` does not have exactly the
   panels of the charts of the file, or when a `pluginVersion` is not the version of the panel.
-- `delivery.27` A CI check of the Renderer makes sure that the `core` of the entries follows `delivery.26`. It
-  reads the core panel of each chart from `registry/core-panels.json`.
+- `delivery.27` A CI check of the Renderer makes sure that the `core` of the entries follows `delivery.25` and
+  `delivery.26`. It reads the core panel of each chart from `registry/core-panels.json`, and the options of each
+  core panel from Grafana of `coreVersion`, for example from the types of the `@grafana/schema` package of that
+  version. It fails in these cases:
+  - A `core` does not follow a limit of `delivery.26`.
+  - The core panel has no option at the place of a `core`.
+  - The option at the place of a `core` does not accept a value that the `schema` of the entry accepts.
+  - A path of the `options` of a row of `core-panels.json` is not an option of the core panel of that row.
+
+  The check cannot prove that a value has the same meaning in the core panel, or that the core panel draws as the
+  Renderer does with no value. A review of the file makes sure of these.
