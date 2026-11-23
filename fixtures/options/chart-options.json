@@ -1,4 +1,7 @@
 {
+  "panels": {
+    "grafana-echartscartesian-panel": { "pluginVersion": "0.4.1" }
+  },
   "charts": {
     "timeseries": {
       "options": [

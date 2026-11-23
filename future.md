@@ -12,8 +12,7 @@ specified.
    overrides, and now only the Renderer has them (`renderer.37`). The saved panel also has the chart options
    (`tool.41`). Grafana runs the migrations of a panel from the `pluginVersion` of the saved panel. Thus the saved
    panel needs as its `pluginVersion` the version of the panel that the Source checked the options against, and
-   that panel must give its migrations to Grafana. `chart-options.json` does not give this version now
-   (`delivery.16`).
+   that panel must give its migrations to Grafana. `chart-options.json` gives this version (`delivery.23`).
 4. Open a dashboard panel. The App draws a panel of an existing dashboard from its panel JSON.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.
@@ -21,7 +20,7 @@ specified.
    become frozen. The App then also loads the `icons.json` of that Renderer (`delivery.9`), and fills the icon
    cache from it (`renderer.15`). Thus an older App gets the icons of a newer Renderer. `icons.json` then needs a
    hash, as the bundle has in `delivery.6`, because its SVG goes into the DOM. The Source then also needs the
-   manifest and the `chart-options.json` of that Renderer, and it checks them as in `tool.48`.
+   manifest and the `chart-options.json` of that Renderer, and it checks them as in `tool.48` and `tool.49`.
 7. Annotations. The chart shows the annotations of the query range. Then `data.annotations` can also have a saved
    annotation (`renderer.63`), and the Renderer must not draw it two times.
 8. Edit the chart. The user changes the options of the chart in the App, for example with an options pane.

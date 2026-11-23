@@ -76,7 +76,7 @@ const fileSchema = {
   'retry-args.json': 'query-datasource-args',
 };
 // The chart options sets (fixtures.17) use the chart-options.json of the set options.
-const chartOptions = readJSON('fixtures/options/chart-options.json').charts;
+const { charts: chartOptions, panels: chartPanels } = readJSON('fixtures/options/chart-options.json');
 const valueAjv = newAjv();
 const validValue = (schema, value) => valueAjv.compile(schema)(value);
 const overrideSchema = readJSON('schemas/field-config.schema.json').$defs.override;
@@ -231,6 +231,12 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
       }
     }
   }
+}
+// panels has exactly the panels of the charts of the file (delivery.23).
+const optionPanels = [...new Set(Object.keys(chartOptions).map((chart) => charts.find((c) => c.name === chart)?.panel))].sort();
+const versionPanels = Object.keys(chartPanels ?? {}).sort();
+if (JSON.stringify(versionPanels) !== JSON.stringify(optionPanels)) {
+  fail('fixtures', `chart-options.json: panels must have exactly the panels of its charts (delivery.23): ${optionPanels.join(', ')}`);
 }
 for (const s of ['options', 'options-invalid', 'options-stale', 'options-list', 'options-list-advanced', 'options-list-unknown']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
 // The set options-legend has one override with a color and one more property (fixtures.20).
