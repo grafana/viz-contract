@@ -39,8 +39,8 @@
       "properties": {
         "pluginVersion": {
           "type": "string",
-          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$",
-          "description": "The version of the panel: info.version of its built plugin.json. A semantic version, for example 0.4.1."
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$",
+          "description": "The version of the panel: info.version of its built plugin.json. A version of Semantic Versioning 2.0.0, for example 0.4.1."
         }
       },
       "additionalProperties": false

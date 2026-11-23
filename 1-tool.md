@@ -195,6 +195,10 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   `query_datasource`, and the server does not list `get_chart_options`, as with no `dsquery` (`tool.1`). A CI
   check of the Source runs these checks with the files of its binary. Thus a file that is not correct fails the
   build of the Source, before a server starts with it.
+- `tool.49` When the server starts, the Source also checks the `panels` of that file: `panels` has one entry for
+  the panel of each chart of the file, and no other entry (`delivery.23`). If the check fails, the server does as
+  in `tool.48`. A CI check of the Source runs this check with the files of its binary. Thus a file with no
+  version for a panel fails the build of the Source.
 
 ## Errors and the text result
 

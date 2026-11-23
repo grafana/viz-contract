@@ -47,10 +47,12 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   panel of a chart is the `panel` of its row in `chart-types.json`. `panels` has one entry for the panel of each
   chart of the file, and no other entry. The `pluginVersion` of an entry is the version of the panel:
   `info.version` of the built `plugin.json` of the panel plugin whose registered options the Renderer build read
-  (`delivery.16`). It is a semantic version. Grafana reads the same value as the version of an installed panel
-  plugin. It runs the migrations of a saved panel when the `pluginVersion` of the saved panel is not that value.
-  Thus a version from another source, or the placeholder of a `plugin.json` that is not built, can make Grafana
-  skip a migration with no error.
+  (`delivery.16`). It is a version of Semantic Versioning 2.0.0. Grafana reads the same value as the version of an
+  installed panel plugin. When the `pluginVersion` of a saved panel is not that value, Grafana calls the
+  migrations of the panel, and the panel reads the `pluginVersion` of the saved panel to find the migrations to
+  run. Thus, with no error, a version from another source can make Grafana skip a migration, and the placeholder
+  of a `plugin.json` that is not built gives the panel a version that it cannot read. The Source checks `panels`
+  when the server starts (`tool.49`).
 
 ## Checks
 
