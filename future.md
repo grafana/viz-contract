@@ -8,7 +8,8 @@ specified.
    conversation with `ui/message` of MCP Apps. A message about a point is specified (`renderer.30`, `state.20`).
    See https://github.com/grafana/viz-contract/issues/17.
 3. Save to a dashboard. The user saves the chart to a Grafana dashboard. The core panel of a chart lets a
-   Grafana with no ECharts app open the saved panel (`save.1` to `save.7`). The saved panel also needs the legend
+   Grafana that cannot draw the panel of the chart open the saved panel (`save.1` to `save.7`). The saved panel
+   also needs the legend
    overrides, and now only the Renderer has them (`renderer.37`). The saved panel also has the chart options
    (`tool.41`). Grafana runs the migrations of a panel from the `pluginVersion` of the saved panel. Thus the saved
    panel needs as its `pluginVersion` the version of the panel that the Source checked the options against, and

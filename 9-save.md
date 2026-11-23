@@ -3,8 +3,9 @@
 A save writes the chart to a Grafana dashboard. The rules of a save are not specified yet (`future.md`). This
 file gives the part that a save needs first: the core panel of a chart.
 
-A Grafana with no ECharts app cannot draw the panel of a chart (`tool.22`). It can draw a core Grafana panel. The
-core panel of a chart is a core Grafana panel that draws the same data.
+The panel of a chart is a Grafana panel plugin (`tool.22`). A Grafana can draw it only when that plugin is
+installed. Each Grafana can draw a core Grafana panel. The core panel of a chart is a core Grafana panel that
+draws the same data. A save needs the core panel when the Grafana of the save cannot draw the panel of the chart.
 
 ## The core panel
 
@@ -46,6 +47,7 @@ core panel, because it reads both files (`tool.37`).
 - `save.6` A save that writes the core panel saves it without the dropped options. It tells the user and the
   model each dropped option of the list.
 - `save.7` A chart whose row has `none` has no core panel. When a save needs the core panel of such a chart, the
-  save is refused: it writes no panel. It tells the user and the model that the chart has no core panel, and it
-  names each chart that has one, in the order of `chart-types.json`. Thus no dashboard gets a panel that its
-  Grafana cannot draw.
+  save is refused: it writes no panel. It tells the user and the model the panel of the chart that the Grafana
+  of the save cannot draw, and that the chart has no core panel. It names each chart that has one, in the order
+  of `chart-types.json`. Thus the user can install the panel or pick another chart, and no dashboard gets a panel
+  that its Grafana cannot draw.
