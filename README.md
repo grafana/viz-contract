@@ -39,7 +39,7 @@ flowchart TB
 | Renderer API | App | Renderer | [3-renderer.md](3-renderer.md), `renderer-api.d.ts` |
 | States, notices and model context | Renderer, App | App, Model | [4-states-and-notices.md](4-states-and-notices.md) |
 | Refresh | Renderer, App | App, Source | [5-refresh.md](5-refresh.md) |
-| Core panel | Renderer build | The part that saves the chart | [9-save.md](9-save.md), [7-delivery.md](7-delivery.md), `registry/core-panels.json`, `schemas/chart-options.schema.json` |
+| Core panel | Renderer build | Source | [9-save.md](9-save.md), [7-delivery.md](7-delivery.md), `registry/core-panels.json`, `schemas/chart-options.schema.json` |
 
 ## Terms
 
@@ -66,12 +66,12 @@ The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 ## How to read
 
 1. Files 1 to 5 give the interfaces in build order. Files 6 to 8 apply to all of them. File 9 gives the core
-   panel of a chart, for the part that saves the chart.
+   panel of a chart, for a save to a dashboard.
 2. Read the files of your part only:
 
    | Part | Files |
    | ---- | ----- |
-   | Source | 1, 6, 8, the schemas of the tool arguments, the tool result and the chart options, and `registry/` |
+   | Source | 1, 6, 8, 9, the schemas of the tool arguments, the tool result and the chart options, and `registry/` |
    | App | 1 to 8, and the registries of states, notices and constants |
    | Renderer | 2 to 8, `renderer-api.d.ts`, and the registries of panel types, states, notices and constants |
 

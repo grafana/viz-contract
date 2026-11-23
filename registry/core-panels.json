@@ -7,7 +7,7 @@
     { "chart": "boxplot", "panel": "none" },
     { "chart": "piechart", "panel": "piechart", "options": { "reduceOptions": { "values": true } } },
     { "chart": "funnel", "panel": "none" },
-    { "chart": "heatmap", "panel": "heatmap", "options": {} },
+    { "chart": "heatmap", "panel": "heatmap", "options": { "calculate": false } },
     { "chart": "geomap", "panel": "geomap", "options": {} },
     { "chart": "state-timeline", "panel": "state-timeline", "options": {} },
     { "chart": "status-history", "panel": "status-history", "options": {} },

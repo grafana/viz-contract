@@ -10,11 +10,15 @@ core panel of a chart is a core Grafana panel that draws the same data.
 
 The map from a chart to its core panel has two parts. `registry/core-panels.json` gives the core panel of each
 chart. The `chart-options.json` of the Renderer gives the place of each chart option in that core panel
-(`delivery.25`). Thus the names of the options stay data of the Renderer (`version.13`).
+(`delivery.25`). Thus the names of the options stay data of the Renderer (`version.13`). The Source makes the
+core panel, because it reads both files (`tool.37`).
 
 - `save.1` `registry/core-panels.json` has one row for each row of `registry/chart-types.json`, in the same
   order. The `panel` of a row is the type of the core panel of the chart, or `none`. A row with a core panel also
-  has `options`: the options preset that the core panel gets.
+  has `options`: the options preset that the core panel gets. The preset has each option that the core panel
+  needs to draw the data of the chart as the chart draws it. For example, the core `piechart` panel draws one
+  part for each row only with `reduceOptions.values`. The core `heatmap` panel reads a panel with no options as
+  a panel of an old version, and then it calculates the buckets from the values. Thus its preset has `calculate`.
 - `save.2` The core panel is made from the panel of the chart (`tool.22`, `tool.41`) and the row of the chart:
   - `type` is the `panel` of the row.
   - `pluginVersion` is `coreVersion` of `chart-options.json` (`delivery.25`). Grafana then runs the migrations
@@ -43,4 +47,5 @@ chart. The `chart-options.json` of the Renderer gives the place of each chart op
   model each dropped option of the list.
 - `save.7` A chart whose row has `none` has no core panel. When a save needs the core panel of such a chart, the
   save is refused: it writes no panel. It tells the user and the model that the chart has no core panel, and it
-  names each chart of `alternatives` that has one. Thus no dashboard gets a panel that its Grafana cannot draw.
+  names each chart that has one, in the order of `chart-types.json`. Thus no dashboard gets a panel that its
+  Grafana cannot draw.

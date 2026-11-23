@@ -19,7 +19,7 @@ are in `fixtures/`, one directory for each set.
 | `options-args.json` | The arguments of `get_chart_options` | Source |
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
 | `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
-| `core-panel.json` | `panel`: the expected core panel of the panel of the set. `dropped`: the expected list of the dropped options | The part that makes the core panel |
+| `core-panel.json` | `panel`: the expected core panel of the panel of the set. `dropped`: the expected list of the dropped options | Source |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -91,8 +91,8 @@ are in `fixtures/`, one directory for each set.
   have the color of the legend and the line style of the override. The same must be true after an `update` with
   the same viz spec (`renderer.35`).
 - `fixtures.21` Sets for the core panel. The smoke set of each chart that has a core panel has `core-panel.json`
-  (`save.1`), and the set `options` has one. The smoke set of a chart with no core panel has none. The test makes
-  the core panel of the `panel` of `spec.json`, or of the `panel` of `result.json` in a set with no `spec.json`.
+  (`save.1`), and the set `options` has one. The smoke set of a chart with no core panel has none. The Source
+  test makes the core panel of the `panel` of `spec.json`, or of the `panel` of `result.json` in a set with no `spec.json`.
   It uses the `chart-options.json` of the set `options` (`fixtures.17`). The core panel must equal `panel`, and
   the list of the dropped options must equal `dropped` (`save.2` to `save.5`). A smoke set has no chart option,
   so its core panel has only the preset of the row. The set `options` has a carried option of each `root`, a

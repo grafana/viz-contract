@@ -2,7 +2,7 @@
   "panel": {
     "type": "heatmap",
     "pluginVersion": "12.3.0",
-    "options": {},
+    "options": { "calculate": false },
     "fieldConfig": { "defaults": {}, "overrides": [] },
     "datasource": { "uid": "testdata" },
     "targets": [{ "refId": "A" }]
