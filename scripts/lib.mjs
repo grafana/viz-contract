@@ -225,6 +225,47 @@ export function panelWithOptions(panel, args, entry) {
   return out;
 }
 
+// The core panel of a chart and its dropped options (save.2 to save.5). panel is the panel of the chart, row is
+// the row of chart-types.json, core is the row of core-panels.json, and file is chart-options.json. With no core
+// panel, there is no result (save.7).
+export function corePanel(panel, row, core, file) {
+  if (core.panel === 'none') return undefined;
+  const entry = file.charts[row.name] ?? { options: [], fieldConfig: [] };
+  const { type, pluginVersion, options, fieldConfig, ...rest } = panel;
+  const out = { ...rest, type: core.panel, pluginVersion: file.coreVersion, options: structuredClone(core.options), fieldConfig: { defaults: {}, overrides: [] } };
+  const dropped = [];
+  // The paths of the options preset of the chart row. The core row takes their place (save.3).
+  const leaves = (node, prefix = '') =>
+    Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leaves(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
+  const preset = leaves(row.options);
+  const inPreset = (p) => preset.some((l) => l === p || l.startsWith(`${p}.`) || p.startsWith(`${l}.`));
+  const carry = (root, list, prefix, skip = () => false) => {
+    const { found, wrong } = findOptions(root, list);
+    const lost = wrong.map(([p]) => p).filter((p) => !skip(p));
+    for (const [p, value, o] of found) {
+      if (!o.core) lost.push(p);
+      else {
+        const keys = o.core.path.split('.');
+        const last = keys.pop();
+        keys.reduce((node, key) => (node[key] ??= {}), o.core.root === 'options' ? out.options : out.fieldConfig.defaults)[last] = structuredClone(value);
+      }
+    }
+    dropped.push(...[...new Set(lost)].sort(byCodePoint).map((p) => `${prefix}${p}`));
+  };
+  carry(options, entry.options, 'options.', inPreset);
+  carry(fieldConfig?.defaults, entry.fieldConfig, 'fieldConfig.defaults.');
+  (fieldConfig?.overrides ?? []).forEach((override, n) => {
+    const properties = [];
+    for (const { id, value } of override.properties) {
+      const o = entry.fieldConfig.find((x) => x.path === id);
+      if (o?.core) properties.push({ id: o.core.path, value: structuredClone(value) });
+      else dropped.push(`fieldConfig.overrides[${n}].${id}`);
+    }
+    if (properties.length) out.fieldConfig.overrides.push({ ...structuredClone(override), properties });
+  });
+  return { panel: out, dropped };
+}
+
 // JSON with the keys of each object in order. Two values that are equal give the same text.
 export const canonical = (value) =>
   JSON.stringify(value, (_, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : 1))) : v));

@@ -39,6 +39,7 @@ flowchart TB
 | Renderer API | App | Renderer | [3-renderer.md](3-renderer.md), `renderer-api.d.ts` |
 | States, notices and model context | Renderer, App | App, Model | [4-states-and-notices.md](4-states-and-notices.md) |
 | Refresh | Renderer, App | App, Source | [5-refresh.md](5-refresh.md) |
+| Core panel | Renderer build | The part that saves the chart | [9-save.md](9-save.md), [7-delivery.md](7-delivery.md), `registry/core-panels.json`, `schemas/chart-options.schema.json` |
 
 ## Terms
 
@@ -51,6 +52,8 @@ flowchart TB
 | Viz spec | The JSON object that the App gives to the Renderer |
 | Icon cache | The `react-inlinesvg` cache of the copy of `@grafana/ui` in the App. `Icon` reads an SVG from it, and makes no request for that SVG |
 | Chart option | A panel option or a field option of a chart that the model can set (`tool.36`). `chart-options.json` of the Renderer lists the chart options of each chart (`delivery.16`) |
+| Core panel | The core Grafana panel that draws the data of a chart in a Grafana with no ECharts app (`save.1`). A chart can have none |
+| Dropped option | A chart option that the core panel does not have (`save.5`) |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
 | Chart line | The text line that names the chart of a tool result, and that the model reads in the same turn (`tool.46`). Not a note: `maxAppNotes` does not count it |
 | Legend overrides | The `fieldConfig` overrides that the user makes with the legend: hide, show and color an item. Only the Renderer keeps them (`renderer.37`) |
@@ -62,7 +65,8 @@ The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 
 ## How to read
 
-1. Files 1 to 5 give the interfaces in build order. Files 6 to 8 apply to all of them.
+1. Files 1 to 5 give the interfaces in build order. Files 6 to 8 apply to all of them. File 9 gives the core
+   panel of a chart, for the part that saves the chart.
 2. Read the files of your part only:
 
    | Part | Files |

@@ -1,4 +1,5 @@
 {
+  "coreVersion": "12.3.0",
   "panels": {
     "grafana-echartscartesian-panel": { "pluginVersion": "0.4.1" }
   },
@@ -10,35 +11,40 @@
           "description": "Stack the series on each other",
           "tier": "default",
           "default": "none",
-          "schema": { "enum": ["none", "normal", "percent"] }
+          "schema": { "enum": ["none", "normal", "percent"] },
+          "core": { "root": "fieldConfig", "path": "custom.stacking.mode" }
         },
         {
           "path": "lineWidth",
           "description": "Width of the lines, in pixels",
           "tier": "default",
           "default": 1,
-          "schema": { "type": "integer", "minimum": 0, "maximum": 20 }
+          "schema": { "type": "integer", "minimum": 0, "maximum": 20 },
+          "core": { "root": "fieldConfig", "path": "custom.lineWidth" }
         },
         {
           "path": "legend.showLegend",
           "description": "Show the legend",
           "tier": "default",
           "default": true,
-          "schema": { "type": "boolean" }
+          "schema": { "type": "boolean" },
+          "core": { "root": "options", "path": "legend.showLegend" }
         },
         {
           "path": "legend.placement",
           "description": "Side of the chart that shows the legend",
           "tier": "default",
           "default": "bottom",
-          "schema": { "enum": ["bottom", "right"] }
+          "schema": { "enum": ["bottom", "right"] },
+          "core": { "root": "options", "path": "legend.placement" }
         },
         {
           "path": "tooltip.mode",
           "description": "Series that the tooltip shows: the series under the pointer, all series, or no tooltip",
           "tier": "default",
           "default": "single",
-          "schema": { "enum": ["single", "multi", "none"] }
+          "schema": { "enum": ["single", "multi", "none"] },
+          "core": { "root": "options", "path": "tooltip.mode" }
         },
         {
           "path": "animation.enabled",
@@ -52,31 +58,36 @@
           "path": "unit",
           "description": "Grafana unit ID of the values, for example bytes",
           "tier": "default",
-          "schema": { "type": "string" }
+          "schema": { "type": "string" },
+          "core": { "root": "fieldConfig", "path": "unit" }
         },
         {
           "path": "min",
           "description": "Lowest value of the value axis",
           "tier": "default",
-          "schema": { "type": "number" }
+          "schema": { "type": "number" },
+          "core": { "root": "fieldConfig", "path": "min" }
         },
         {
           "path": "max",
           "description": "Highest value of the value axis",
           "tier": "default",
-          "schema": { "type": "number" }
+          "schema": { "type": "number" },
+          "core": { "root": "fieldConfig", "path": "max" }
         },
         {
           "path": "decimals",
           "description": "Number of decimals of the values",
           "tier": "default",
-          "schema": { "type": "integer", "minimum": 0 }
+          "schema": { "type": "integer", "minimum": 0 },
+          "core": { "root": "fieldConfig", "path": "decimals" }
         },
         {
           "path": "displayName",
           "description": "Name of the series in the legend and the tooltip",
           "tier": "default",
-          "schema": { "type": "string" }
+          "schema": { "type": "string" },
+          "core": { "root": "fieldConfig", "path": "displayName" }
         },
         {
           "path": "custom.lineStyle",
@@ -87,14 +98,16 @@
             "properties": { "fill": { "enum": ["solid", "dash", "dot"] } },
             "required": ["fill"],
             "additionalProperties": false
-          }
+          },
+          "core": { "root": "fieldConfig", "path": "custom.lineStyle" }
         },
         {
           "path": "custom.spanNulls",
           "description": "Connect the points across missing values: always, never, or up to a gap in milliseconds",
           "tier": "advanced",
           "default": false,
-          "schema": { "anyOf": [{ "type": "boolean" }, { "type": "number", "minimum": 0 }] }
+          "schema": { "anyOf": [{ "type": "boolean" }, { "type": "number", "minimum": 0 }] },
+          "core": { "root": "fieldConfig", "path": "custom.spanNulls" }
         },
         {
           "path": "custom.axisSoftMin",

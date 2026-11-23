@@ -19,6 +19,7 @@ are in `fixtures/`, one directory for each set.
 | `options-args.json` | The arguments of `get_chart_options` | Source |
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
 | `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
+| `core-panel.json` | `panel`: the expected core panel of the panel of the set. `dropped`: the expected list of the dropped options | The part that makes the core panel |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -58,7 +59,8 @@ are in `fixtures/`, one directory for each set.
   is an example with a few options of the time series chart. It is not the file of a Renderer.
   - `options`: the query of `prometheus-line` with a `type`, `options`, and a `fieldConfig` that has an override.
     One key of `options` has dots. The panel of the chart in `result.json` has the options as nested objects. The
-    panels of the alternatives do not have them (`tool.41`).
+    panels of the alternatives do not have them (`tool.41`). One option of `options` has no `core`, and two
+    options have a `core` with the `root` `fieldConfig` (`fixtures.21`).
   - `options-invalid`: each problem of `tool.38` to `tool.40`. The set has no `response.json`, because the Source
     does not query. The expected result is the `invalid-options` tool error. The arguments have these parts:
     - In `options`: a path that is not an option, the same path from two keys, a path that is set two times, a
@@ -88,6 +90,13 @@ are in `fixtures/`, one directory for each set.
   the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
   have the color of the legend and the line style of the override. The same must be true after an `update` with
   the same viz spec (`renderer.35`).
+- `fixtures.21` Sets for the core panel. The smoke set of each chart that has a core panel has `core-panel.json`
+  (`save.1`), and the set `options` has one. The smoke set of a chart with no core panel has none. The test makes
+  the core panel of the `panel` of `spec.json`, or of the `panel` of `result.json` in a set with no `spec.json`.
+  It uses the `chart-options.json` of the set `options` (`fixtures.17`). The core panel must equal `panel`, and
+  the list of the dropped options must equal `dropped` (`save.2` to `save.5`). A smoke set has no chart option,
+  so its core panel has only the preset of the row. The set `options` has a carried option of each `root`, a
+  carried property of an override, and a dropped option.
 
 ## Conformance tests
 

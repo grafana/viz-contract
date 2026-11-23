@@ -151,6 +151,70 @@
       },
       "additionalProperties": false
     },
+    "corePanels": {
+      "title": "registry/core-panels.json",
+      "type": "object",
+      "required": [
+        "charts"
+      ],
+      "properties": {
+        "charts": {
+          "type": "array",
+          "minItems": 1,
+          "description": "One row for each row of registry/chart-types.json, in the same order",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "chart",
+                  "panel",
+                  "options"
+                ],
+                "properties": {
+                  "chart": {
+                    "type": "string",
+                    "description": "A name of registry/chart-types.json"
+                  },
+                  "panel": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+                    "not": {
+                      "const": "none"
+                    },
+                    "description": "The type of the core Grafana panel that draws the data of the chart"
+                  },
+                  "options": {
+                    "type": "object",
+                    "description": "The options preset that the core panel gets"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "chart",
+                  "panel"
+                ],
+                "properties": {
+                  "chart": {
+                    "type": "string",
+                    "description": "A name of registry/chart-types.json"
+                  },
+                  "panel": {
+                    "const": "none",
+                    "description": "No core Grafana panel draws the data of the chart"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "chartTypes": {
       "title": "registry/chart-types.json",
       "type": "object",

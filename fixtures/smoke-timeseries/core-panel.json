@@ -1,0 +1,11 @@
+{
+  "panel": {
+    "type": "timeseries",
+    "pluginVersion": "12.3.0",
+    "options": {},
+    "fieldConfig": { "defaults": {}, "overrides": [] },
+    "datasource": { "uid": "testdata" },
+    "targets": [{ "refId": "A" }]
+  },
+  "dropped": []
+}

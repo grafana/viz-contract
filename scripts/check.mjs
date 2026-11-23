@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, canonical, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, canonical, corePanel, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -40,7 +40,7 @@ if (old.length) fail('generated', `not current: ${old.join(', ')}. Run node scri
 else pass('generated', 'schemas, bundled schemas and the constants table are current');
 
 // 3. The registries are valid, and they agree with each other.
-const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', pick: 'pick', states: 'states', notices: 'notices', messages: 'messages' };
+const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', 'core-panels': 'corePanels', pick: 'pick', states: 'states', notices: 'notices', messages: 'messages' };
 for (const [file, def] of Object.entries(defs)) {
   const v = ajv.getSchema(`registry.schema.json#/$defs/${def}`);
   if (v(readJSON(`registry/${file}.json`))) pass('registry', `${file}.json is valid`);
@@ -49,6 +49,8 @@ for (const [file, def] of Object.entries(defs)) {
 const panels = readJSON('registry/panel-types.json').panels.map((p) => p.id);
 const charts = readJSON('registry/chart-types.json').charts;
 const names = charts.map((c) => c.name);
+const coreRows = readJSON('registry/core-panels.json').charts;
+const coreOf = (chart) => coreRows.find((c) => c.chart === chart);
 const rules = readJSON('registry/pick.json').rules;
 const states = readJSON('registry/states.json');
 const noticeCodes = readJSON('registry/notices.json').notices.map((n) => n.code);
@@ -59,6 +61,7 @@ const rel = [
   [new Set(names).size === names.length, 'chart names are unique'],
   [charts.every((c) => panels.includes(c.panel)), 'each chart names a panel of panel-types.json'],
   [panels.every((p) => charts.some((c) => c.panel === p)), 'each panel has a chart'],
+  [JSON.stringify(coreRows.map((c) => c.chart)) === JSON.stringify(names), 'core-panels.json has one row for each chart, in the order of chart-types.json (save.1)'],
   [rules.every((r) => names.includes(r.chart)), 'each pick rule names a chart'],
   [Object.keys(rules.at(-1).when).length === 0, 'the last pick rule has an empty when'],
 ];
@@ -76,7 +79,8 @@ const fileSchema = {
   'retry-args.json': 'query-datasource-args',
 };
 // The chart options sets (fixtures.17) use the chart-options.json of the set options.
-const { charts: chartOptions, panels: chartPanels } = readJSON('fixtures/options/chart-options.json');
+const chartOptionsFile = readJSON('fixtures/options/chart-options.json');
+const { charts: chartOptions, panels: chartPanels } = chartOptionsFile;
 const valueAjv = newAjv();
 const validValue = (schema, value) => valueAjv.compile(schema)(value);
 const overrideSchema = readJSON('schemas/field-config.schema.json').$defs.override;
@@ -217,6 +221,17 @@ for (const set of sets) {
       fail('fixtures', `${set}: panel type or options are not those of the chart row`);
     } else if (!fits(summary(spec.data.results), row)) fail('fixtures', `${set}: the data does not fit the chart`);
   }
+  // core-panel.json is the core panel of the panel of the set, and its dropped options (fixtures.21).
+  const chart = set.startsWith('smoke-') ? set.slice('smoke-'.length) : (result?.chart ?? args?.type);
+  const hasCore = coreOf(chart) && coreOf(chart).panel !== 'none';
+  if (files['core-panel.json']) {
+    const from = files['spec.json']?.panel ?? result?.panel;
+    const row = charts.find((c) => c.name === chart);
+    if (!hasCore || !row || !from) fail('fixtures', `${set}/core-panel.json: the set has no panel of a chart that has a core panel (save.7)`);
+    else if (canonical(files['core-panel.json']) !== canonical(corePanel(from, row, coreOf(chart), chartOptionsFile))) {
+      fail('fixtures', `${set}/core-panel.json is not the core panel of save.2 to save.5:\n${JSON.stringify(corePanel(from, row, coreOf(chart), chartOptionsFile))}`);
+    }
+  } else if ((set.startsWith('smoke-') || set === 'options') && hasCore) fail('fixtures', `${set}: no core-panel.json (fixtures.21)`);
 }
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
@@ -230,6 +245,17 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
         fail('fixtures', `chart-options.json: ${chart} ${o.path} is in the options of the chart row (delivery.17)`);
       }
     }
+  }
+}
+// The core of the entries follows delivery.26.
+for (const [chart, entry] of Object.entries(chartOptions)) {
+  const cores = [...entry.options, ...entry.fieldConfig].filter((o) => o.core);
+  if (coreOf(chart)?.panel === 'none' && cores.length) fail('fixtures', `chart-options.json: ${chart} has no core panel, so no entry can have core (delivery.26)`);
+  for (const o of entry.fieldConfig) if (o.core && o.core.root !== 'fieldConfig') fail('fixtures', `chart-options.json: the core of the field option ${chart} ${o.path} must have the root fieldConfig (delivery.26)`);
+  for (const o of cores) {
+    const same = cores.filter((x) => x.core.root === o.core.root);
+    if (same.filter((x) => x.core.path === o.core.path).length > 1) fail('fixtures', `chart-options.json: ${chart} has the core ${o.core.root} ${o.core.path} two times (delivery.26)`);
+    if (same.some((x) => x.core.path.startsWith(`${o.core.path}.`))) fail('fixtures', `chart-options.json: the core ${o.core.root} ${o.core.path} of ${chart} is the start of another core path (delivery.26)`);
   }
 }
 // panels has exactly the panels of the charts of the file (delivery.23).

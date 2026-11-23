@@ -18,7 +18,10 @@
     "legend": {
       "placement": "right"
     },
-    "tooltip.mode": "multi"
+    "tooltip.mode": "multi",
+    "animation": {
+      "enabled": false
+    }
   },
   "fieldConfig": {
     "defaults": {
