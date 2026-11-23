@@ -43,11 +43,14 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   property whose id is not the id of a registered option. Thus Grafana applies each override property that the
   Source accepts (`tool.37`). In the `options` list, an entry can be a part of a registered panel option, because
   the Source writes each path of `panel.options` as nested objects (`tool.41`).
-- `delivery.23` Each entry of `chart-options.json` gives `pluginVersion`: the version of the panel of the chart
-  row. It is the version of the panel whose registered options the Renderer build read (`delivery.16`), in the
-  form of the `pluginVersion` of a Grafana panel JSON. Grafana runs the migrations of a saved panel from its
-  `pluginVersion`. Thus the Source knows the version of the panel that it checked the options against
-  (`tool.37`).
+- `delivery.23` `chart-options.json` also gives `panels`. A key is a panel ID of `registry/panel-types.json`. The
+  panel of a chart is the `panel` of its row in `chart-types.json`. `panels` has one entry for the panel of each
+  chart of the file, and no other entry. The `pluginVersion` of an entry is the version of the panel:
+  `info.version` of the built `plugin.json` of the panel plugin whose registered options the Renderer build read
+  (`delivery.16`). It is a semantic version. Grafana reads the same value as the version of an installed panel
+  plugin. It runs the migrations of a saved panel when the `pluginVersion` of the saved panel is not that value.
+  Thus a version from another source, or the placeholder of a `plugin.json` that is not built, can make Grafana
+  skip a migration with no error.
 
 ## Checks
 
@@ -142,6 +145,7 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.20` A CI check of the Renderer makes sure that `chart-options.json` validates against its schema, that
   each `default` validates against the `schema` of its option, and that the file follows `delivery.17`. It also
   makes sure that the file has one entry for each row of `chart-types.json` and no other entry (`delivery.16`), and
-  that `chartOptionsSha256` of the manifest is the hash of the file (`delivery.21`). The check fails when an entry
-  has no `pluginVersion`, or when its `pluginVersion` is not the version of the panel in the Renderer
-  (`delivery.23`).
+  that `chartOptionsSha256` of the manifest is the hash of the file (`delivery.21`).
+- `delivery.24` A CI check of the Renderer makes sure that `panels` follows `delivery.23`. The check reads
+  `info.version` from the built `plugin.json` of each panel. It fails when `panels` does not have exactly the
+  panels of the charts of the file, or when a `pluginVersion` is not the version of the panel.

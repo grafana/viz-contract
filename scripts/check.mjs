@@ -220,8 +220,7 @@ for (const set of sets) {
 }
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
-  for (const name of ['options', 'fieldConfig']) {
-    const list = entry[name];
+  for (const [name, list] of Object.entries(entry)) {
     const paths = list.map((o) => o.path);
     for (const o of list) {
       if (o.default !== undefined && !validValue(o.schema, o.default)) fail('fixtures', `chart-options.json: the default of ${chart} ${o.path} does not validate (delivery.20)`);
@@ -232,6 +231,12 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
       }
     }
   }
+}
+// panels has exactly the panels of the charts of the file (delivery.23).
+const optionPanels = [...new Set(Object.keys(chartOptions).map((chart) => charts.find((c) => c.name === chart)?.panel))].sort();
+const versionPanels = Object.keys(readJSON('fixtures/options/chart-options.json').panels ?? {}).sort();
+if (JSON.stringify(versionPanels) !== JSON.stringify(optionPanels)) {
+  fail('fixtures', `chart-options.json: panels must have exactly the panels of its charts (delivery.23): ${optionPanels.join(', ')}`);
 }
 for (const s of ['options', 'options-invalid', 'options-stale', 'options-list', 'options-list-advanced', 'options-list-unknown']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
 // The set options-legend has one override with a color and one more property (fixtures.20).

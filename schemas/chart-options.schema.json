@@ -1,12 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "chart-options.json",
-  "description": "The options of each chart that the model can set. The Renderer build writes this file.",
+  "description": "The options of each chart that the model can set, and the version of each panel. The Renderer build writes this file.",
   "type": "object",
   "required": [
+    "panels",
     "charts"
   ],
   "properties": {
+    "panels": {
+      "type": "object",
+      "description": "The key is a panel ID of registry/panel-types.json.",
+      "propertyNames": {
+        "$ref": "tool-result.schema.json#/$defs/panelId"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/panel"
+      }
+    },
     "charts": {
       "type": "object",
       "description": "The key is a chart name of registry/chart-types.json.",
@@ -20,19 +31,27 @@
   },
   "additionalProperties": false,
   "$defs": {
-    "chart": {
+    "panel": {
       "type": "object",
       "required": [
-        "pluginVersion",
-        "options",
-        "fieldConfig"
+        "pluginVersion"
       ],
       "properties": {
         "pluginVersion": {
           "type": "string",
-          "pattern": "^\\S+$",
-          "description": "The version of the panel of the chart, in the form of the pluginVersion of a Grafana panel JSON, for example 1.2.0."
-        },
+          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?(\\+[0-9A-Za-z.-]+)?$",
+          "description": "The version of the panel: info.version of its built plugin.json. A semantic version, for example 0.4.1."
+        }
+      },
+      "additionalProperties": false
+    },
+    "chart": {
+      "type": "object",
+      "required": [
+        "options",
+        "fieldConfig"
+      ],
+      "properties": {
         "options": {
           "type": "array",
           "description": "The panel options. A path starts at the options object of the panel.",
