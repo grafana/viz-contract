@@ -130,6 +130,10 @@ export function typeText(schema) {
 const OVERRIDE_FORM =
   '{"matcher":{"id":"byName"|"byFrameRefID","options":"<name or refId>"},"properties":[{"id":"<path>","value":<value>}]}';
 
+// The description of type in the schema of the tool arguments (tool.49).
+export const TYPE_DESCRIPTION =
+  'Optional chart to draw. With no type, the chart comes from the data. get_chart_options gives the data that a chart needs.';
+
 // The tool error of get_chart_options for a type that is not a chart (tool.43).
 export const unknownChartText = (type, charts) => `unknown-chart: ${type} is not a chart. The charts are: ${charts.join(', ')}.`;
 

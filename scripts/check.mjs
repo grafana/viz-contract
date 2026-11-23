@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, canonical, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -322,6 +322,11 @@ for (const f of proseFiles.filter((p) => p.endsWith('.md'))) {
 const dupIds = [...ruleDefs].filter(([, at]) => at.length > 1);
 for (const [id, at] of dupIds) fail('rule-ids', `${id} is defined more than one time: ${at.join(', ')}`);
 if (!dupIds.length) pass('rule-ids', `${ruleDefs.size} rule IDs, each defined one time`);
+
+// tool.49 gives the description of type that generate.mjs writes to the schema of the tool arguments.
+const typeRule = `\`tool.49\` The description of \`type\` in the schema of the tool arguments is \`${TYPE_DESCRIPTION}\``;
+if (read('1-tool.md').replace(/\s+/g, ' ').includes(typeRule)) pass('type-description', 'tool.49 gives the description of type');
+else fail('type-description', `1-tool.md does not give the description of type (tool.49): ${TYPE_DESCRIPTION}`);
 
 // 6. package.json keeps the placeholder version. The release workflow sets the version from the tag.
 const PLACEHOLDER = '0.0.0-development';

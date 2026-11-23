@@ -8,7 +8,7 @@
 //        node generate.mjs --check  writes nothing and lists each file that is not current
 import fs from 'node:fs';
 import path from 'node:path';
-import { CONTRACT, SCHEMAS, json, read, readJSON } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, json, read, readJSON } from './lib.mjs';
 
 const GENERATED = 'Generated from registry/%s. Do not edit.';
 
@@ -27,8 +27,7 @@ export function generate() {
   args.properties.title.$comment = GENERATED.replace('%s', 'constants.json (maxTitleChars)');
   args.properties.type.$comment = GENERATED.replace('%s', 'chart-types.json');
   args.properties.type.enum = charts.map((c) => c.name);
-  args.properties.type.description =
-    'Optional chart to draw. With no type, the chart comes from the data. get_chart_options gives the data that a chart needs.';
+  args.properties.type.description = TYPE_DESCRIPTION;
   out.set('schemas/query-datasource-args.schema.json', args);
 
   const result = readJSON('schemas/tool-result.schema.json');
