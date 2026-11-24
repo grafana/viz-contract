@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "description": "A relative from and a relative to stay relative",
+      "args": { "from": "now-6h", "to": "now" },
+      "dashboard": { "from": "now-6h", "to": "now" },
+      "url": { "from": "now-6h", "to": "now" }
+    },
+    {
+      "description": "No from and no to give defaultFrom and defaultTo",
+      "args": {},
+      "dashboard": { "from": "now-1h", "to": "now" },
+      "url": { "from": "now-1h", "to": "now" }
+    },
+    {
+      "description": "Epoch milliseconds as integers",
+      "args": { "from": 1790352577294, "to": 1790353477294 },
+      "dashboard": { "from": "2026-09-25T16:09:37.294Z", "to": "2026-09-25T16:24:37.294Z" },
+      "url": { "from": "1790352577294", "to": "1790353477294" }
+    },
+    {
+      "description": "Epoch milliseconds as strings",
+      "args": { "from": "1790352577294", "to": "1790353477294" },
+      "dashboard": { "from": "2026-09-25T16:09:37.294Z", "to": "2026-09-25T16:24:37.294Z" },
+      "url": { "from": "1790352577294", "to": "1790353477294" }
+    },
+    {
+      "description": "An absolute from and a relative to are each written on their own",
+      "args": { "from": "1790352577294", "to": "now" },
+      "dashboard": { "from": "2026-09-25T16:09:37.294Z", "to": "now" },
+      "url": { "from": "1790352577294", "to": "now" }
+    },
+    {
+      "description": "A duration does not start with now, so it resolves to an absolute time at the time of the save",
+      "args": { "from": "6h", "to": "now" },
+      "dashboard": { "from": "2026-09-25T10:24:37.294Z", "to": "now" },
+      "url": { "from": "1790331877294", "to": "now" }
+    },
+    {
+      "description": "A relative value with a slash is percent-encoded in the URL only",
+      "args": { "from": "now/d", "to": "now/d" },
+      "dashboard": { "from": "now/d", "to": "now/d" },
+      "url": { "from": "now%2Fd", "to": "now%2Fd" }
+    },
+    {
+      "description": "A relative value with a plus is percent-encoded in the URL only",
+      "args": { "from": "now-15m", "to": "now+15m" },
+      "dashboard": { "from": "now-15m", "to": "now+15m" },
+      "url": { "from": "now-15m", "to": "now%2B15m" }
+    }
+  ]
+}

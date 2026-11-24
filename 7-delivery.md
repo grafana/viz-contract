@@ -53,6 +53,34 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   run. Thus, with no error, a version from another source can make Grafana skip a migration, and the placeholder
   of a `plugin.json` that is not built gives the panel a version that it cannot read. The Source checks `panels`
   when the server starts (`tool.49`).
+- `delivery.25` `chart-options.json` also gives the place of each option in the core panel of its chart
+  (`save.1`). An entry of a list can have `core`: a `root` and a `path`. With the `root` `options`, the path
+  starts at the `options` object of the core panel. With the `root` `fieldConfig`, it starts at
+  `fieldConfig.defaults`. The Renderer build writes each `core` for Grafana of `coreVersion`. The file does not
+  give a version of its own, so the presets of `registry/core-panels.json` and the `core` of the entries have one
+  version. An entry has `core` only when each of these is true in Grafana of `coreVersion`:
+  - The core panel has an option at that place.
+  - Each value that the `schema` of the entry accepts has the same meaning for that option.
+  - If the entry has no `default`, the core panel with no value at that place draws as the Renderer draws with
+    no value. If the entry has a `default`, the core panel gets it (`save.3`).
+
+  An entry with no `core` is a dropped option of the core panel (`save.5`). The one exception is an entry of the
+  `fieldConfig` list whose `path` is in the `fieldOptions` of the core row. It needs no `core`, because the core
+  panel gets it at the same path (`save.10`). The second and the third condition also apply to that entry. Thus
+  its `schema` accepts only values that the core panel accepts for that standard field option. If the core panel
+  with no value draws in another way than the Renderer draws with no value, the entry has a `default`.
+- `delivery.26` The `core` of the entries follows these limits:
+  - An entry of a chart with no core panel has no `core`.
+  - In the `fieldConfig` list, the `root` is `fieldConfig`, and the `path` is the id of a registered field option
+    of the core panel. It becomes the `id` of an override property (`save.4`).
+  - A `core` with the `root` `fieldConfig` has a `path` of the `fieldOptions` of the core row only in the entry
+    of the `fieldConfig` list that has the same `path`. Thus no other entry writes to the place of a standard
+    field option that the core panel gets with no entry (`save.10`).
+  - No two entries of a chart have the same `root` and `path`.
+  - No `path` is the start of another `path` with the same `root` in the same chart.
+  - With the `root` `options`, no `path` goes through a value of the preset of the core row that is not an
+    object. For example, with `reduceOptions.values` in the preset, the path `reduceOptions.values.limit` is not
+    correct.
 
 ## Checks
 
@@ -151,12 +179,27 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.24` A CI check of the Renderer makes sure that `panels` follows `delivery.23`. The check reads
   `info.version` from the built `plugin.json` of each panel. It fails when `panels` does not have exactly the
   panels of the charts of the file, or when a `pluginVersion` is not the version of the panel.
-- `delivery.25` A CI check of the App runs the tests of `fixtures.23` and `fixtures.24` for each set that has
+- `delivery.27` A CI check of the Renderer makes sure that the `core` of the entries follows `delivery.25` and
+  `delivery.26`. It reads the core panel of each chart from `registry/core-panels.json`, and the options of each
+  core panel from Grafana of `coreVersion`, for example from the types of the `@grafana/schema` package of that
+  version. The check reads an entry that needs no `core` (`delivery.25`) as an entry with the `core` of
+  `save.10`. It fails in these cases:
+  - A `core` does not follow a limit of `delivery.26`.
+  - The core panel has no option at the place of a `core`.
+  - The option at the place of a `core` does not accept a value that the `schema` of the entry accepts.
+  - A path of the `options` of a row of `core-panels.json` is not an option of the core panel of that row.
+  - The `fieldOptions` of a row of `core-panels.json` are not the standard field options that the core panel of
+    that row registers, without the three options that `save.10` leaves out.
+  - The `panel` of a row of `core-panels.json` is not a core panel of Grafana of `coreVersion`.
+
+  The check cannot prove that a value has the same meaning in the core panel, or that the core panel draws as the
+  Renderer does with no value. A review of the file makes sure of these.
+- `delivery.28` A CI check of the App runs the tests of `fixtures.33` and `fixtures.34` for each set that has
   `save-args.json`. It also checks these cases with a Host that the test makes:
   - The Host answers the call of `save_chart` with a JSON-RPC error, and the test makes a `chart` at run time
-    whose text of `save.30` is longer than `maxMessageChars`. The App must show no control that sends the save to
-    the chat (`save.31`).
+    whose text of `save.54` is longer than `maxMessageChars`. The App must show no control that sends the save to
+    the chat (`save.55`).
   - The `hostCapabilities` of the Host have `message` with no `text`, and the Host answers the call with a
-    JSON-RPC error. The App must show no such control (`save.29`).
+    JSON-RPC error. The App must show no such control (`save.53`).
   - After the App sends the message, the Host answers as in each case of `state.27`. The App must do as
     `delivery.13` gives for that case.

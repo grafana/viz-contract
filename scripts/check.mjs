@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, fits, invalidOptionsText, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveErrorText, saveMessageText, saveText, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, invalidOptionsText, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveErrorText, saveMessageText, saveText, saveTimeRange, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -40,7 +40,7 @@ if (old.length) fail('generated', `not current: ${old.join(', ')}. Run node scri
 else pass('generated', 'schemas, bundled schemas and the constants table are current');
 
 // 3. The registries are valid, and they agree with each other.
-const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', pick: 'pick', states: 'states', notices: 'notices', messages: 'messages' };
+const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', 'core-panels': 'corePanels', pick: 'pick', states: 'states', notices: 'notices', messages: 'messages' };
 for (const [file, def] of Object.entries(defs)) {
   const v = ajv.getSchema(`registry.schema.json#/$defs/${def}`);
   if (v(readJSON(`registry/${file}.json`))) pass('registry', `${file}.json is valid`);
@@ -49,6 +49,8 @@ for (const [file, def] of Object.entries(defs)) {
 const panels = readJSON('registry/panel-types.json').panels.map((p) => p.id);
 const charts = readJSON('registry/chart-types.json').charts;
 const names = charts.map((c) => c.name);
+const coreRows = readJSON('registry/core-panels.json').charts;
+const coreOf = (chart) => coreRows.find((c) => c.chart === chart);
 const rules = readJSON('registry/pick.json').rules;
 const states = readJSON('registry/states.json');
 const noticeCodes = readJSON('registry/notices.json').notices.map((n) => n.code);
@@ -56,10 +58,11 @@ const messagePatterns = readJSON('registry/messages.json').messages;
 const X_TYPES = ['time', 'number', 'string'];
 const rel = [
   [X_TYPES.every((t) => messagePatterns.some((m) => m.code === `point-${t}`)), 'each xType of the Renderer API has a message pattern'],
-  [messagePatterns.some((m) => m.code === 'save-chart' && m.message.endsWith('<arguments>')), 'the save-chart message pattern ends with the arguments (save.30)'],
+  [messagePatterns.some((m) => m.code === 'save-chart' && m.message.endsWith('<arguments>')), 'the save-chart message pattern ends with the arguments (save.54)'],
   [new Set(names).size === names.length, 'chart names are unique'],
   [charts.every((c) => panels.includes(c.panel)), 'each chart names a panel of panel-types.json'],
   [panels.every((p) => charts.some((c) => c.panel === p)), 'each panel has a chart'],
+  [JSON.stringify(coreRows.map((c) => c.chart)) === JSON.stringify(names), 'core-panels.json has one row for each chart, in the order of chart-types.json (save.1)'],
   [rules.every((r) => names.includes(r.chart)), 'each pick rule names a chart'],
   [Object.keys(rules.at(-1).when).length === 0, 'the last pick rule has an empty when'],
 ];
@@ -78,13 +81,14 @@ const fileSchema = {
   'save-args.json': 'save-chart-args',
   'save-retry-args.json': 'save-chart-args',
 };
-// The answers of the fake Grafana in grafana.json (fixtures.22), and the save sets that the loop finds.
+// The answers of the fake Grafana in grafana.json (fixtures.32), and the save sets that the loop finds.
 const SAVE_ANSWERS = { read: ['ok', 'forbidden', 'not-found'], write: ['ok', 'conflict', 'forbidden', 'not-found'] };
 const saveErrorSets = new Map();
-// The App test of a save draws the chart of the set prometheus-line (fixtures.23).
+// The App test of a save draws the chart of the set prometheus-line (fixtures.33).
 const saveBase = { args: readJSON('fixtures/prometheus-line/args.json'), chart: readJSON('fixtures/prometheus-line/result.json').chart };
 // The chart options sets (fixtures.17) use the chart-options.json of the set options.
-const { charts: chartOptions, panels: chartPanels } = readJSON('fixtures/options/chart-options.json');
+const chartOptionsFile = readJSON('fixtures/options/chart-options.json');
+const { charts: chartOptions, panels: chartPanels } = chartOptionsFile;
 const valueAjv = newAjv();
 const validValue = (schema, value) => valueAjv.compile(schema)(value);
 const overrideSchema = readJSON('schemas/field-config.schema.json').$defs.override;
@@ -223,9 +227,9 @@ for (const set of sets) {
     const text = got?.content?.[0]?.text;
     const answers = files['grafana.json'];
     const { options, fieldConfig, ...chartWithNoOptions } = save.chart ?? {};
-    // chart holds tool arguments with a type (save.7). The type is the chart that the App test draws (fixtures.23).
+    // chart holds tool arguments with a type (save.31). The type is the chart that the App test draws (fixtures.33).
     if (!ajv.getSchema('query-datasource-args.schema.json')(save.chart) || save.chart.type !== saveBase.chart) {
-      fail('fixtures', `${set}/save-args.json: chart is not tool arguments with the type ${saveBase.chart} (save.7, fixtures.23)`);
+      fail('fixtures', `${set}/save-args.json: chart is not tool arguments with the type ${saveBase.chart} (save.31, fixtures.33)`);
     } else if (!chartOptions[save.chart.type]) fail('fixtures', `${set}: chart-options.json of the set options has no chart ${save.chart.type}`);
     else {
       const problems = optionProblems(save.chart, chartOptions[save.chart.type], validValue, overrideSchema);
@@ -239,36 +243,36 @@ for (const set of sets) {
           (answers.read !== undefined) === wantRead && (answers.write !== undefined) === wantWrite &&
           (!wantRead || SAVE_ANSWERS.read.includes(answers.read)) && (!wantWrite || SAVE_ANSWERS.write.includes(answers.write)) &&
           !(answers.write === 'conflict' && save.dashboardUid === undefined);
-      if (!answersOk) fail('fixtures', `${set}/grafana.json is not the answers of a save with these arguments (fixtures.22)`);
+      if (!answersOk) fail('fixtures', `${set}/grafana.json is not the answers of a save with these arguments (fixtures.32)`);
       else {
-        // The Source checks the options before it reads the dashboard (save.9).
+        // The Source checks the options before it reads the dashboard (save.33).
         const want = problems.length ? invalidOptionsText(save.chart.type, problems) : saveErrorText(answers, save, states.toolErrors);
         if (want !== undefined) {
           if (got?.isError !== true || got.content?.length !== 1 || text !== want || got.structuredContent !== undefined) {
-            fail('fixtures', `${set}/save-result.json is not the tool error of save.9 and save.14 to save.16: ${want}`);
+            fail('fixtures', `${set}/save-result.json is not the tool error of save.33 and save.38 to save.40: ${want}`);
           } else saveErrorSets.set(set, want);
         } else {
           const v = ajv.getSchema('save-chart-result.schema.json');
           if (got?.isError || !v(got?.structuredContent)) fail('fixtures', `${set}/save-result.json: ${v.errors ? errorText(v) : 'it must be a result'}`);
           else if (got.content?.length !== 1 || text !== saveText(got.structuredContent, save.chart)) {
-            fail('fixtures', `${set}/save-result.json: the text is not the text of save.21:\n${saveText(got.structuredContent, save.chart)}`);
+            fail('fixtures', `${set}/save-result.json: the text is not the text of save.45:\n${saveText(got.structuredContent, save.chart)}`);
           }
         }
       }
     }
-    // The App adds the chart that the user sees as type to the last tool arguments (save.24, fixtures.21).
+    // The App adds the chart that the user sees as type to the last tool arguments (save.48, fixtures.31).
     if (args && (canonical(args) !== canonical(saveBase.args) || canonical(save.chart) !== canonical({ ...saveBase.args, type: saveBase.chart }))) {
-      fail('fixtures', `${set}: args.json is not the args.json of prometheus-line, or the chart of save-args.json is not these arguments with the type ${saveBase.chart} (fixtures.21)`);
+      fail('fixtures', `${set}: args.json is not the args.json of prometheus-line, or the chart of save-args.json is not these arguments with the type ${saveBase.chart} (fixtures.31)`);
     }
-    // The App test sends the save of each set to the chat (fixtures.24), so the text must not be too long (save.31).
+    // The App test sends the save of each set to the chat (fixtures.34), so the text must not be too long (save.55).
     if ([...saveMessageText(save, messagePatterns)].length > constants.maxMessageChars.value) {
-      fail('fixtures', `${set}/save-args.json: the message of save.30 is longer than maxMessageChars (fixtures.24)`);
+      fail('fixtures', `${set}/save-args.json: the message of save.54 is longer than maxMessageChars (fixtures.34)`);
     }
     if (files['save-retry-args.json']) {
-      // The second call of save.27 has a chart with no options and no fieldConfig.
-      if (!/^invalid-options: /.test(text ?? '')) fail('fixtures', `${set}/save-result.json is not the invalid-options tool error (save.27)`);
+      // The second call of save.51 has a chart with no options and no fieldConfig.
+      if (!/^invalid-options: /.test(text ?? '')) fail('fixtures', `${set}/save-result.json is not the invalid-options tool error (save.51)`);
       if (canonical(files['save-retry-args.json']) !== canonical({ ...save, chart: chartWithNoOptions })) {
-        fail('fixtures', `${set}/save-retry-args.json is not save-args.json with a chart that has no options and no fieldConfig (save.27)`);
+        fail('fixtures', `${set}/save-retry-args.json is not save-args.json with a chart that has no options and no fieldConfig (save.51)`);
       }
     }
   }
@@ -279,7 +283,91 @@ for (const set of sets) {
     else if (spec.panel.type !== row.panel || JSON.stringify(spec.panel.options) !== JSON.stringify(row.options)) {
       fail('fixtures', `${set}: panel type or options are not those of the chart row`);
     } else if (!fits(summary(spec.data.results), row)) fail('fixtures', `${set}: the data does not fit the chart`);
+    // The data of the smoke set of a chart with a core panel also fits the core panel (save.8).
+    else if (coreOf(row.name)?.fits && !fits(summary(spec.data.results), coreOf(row.name))) fail('fixtures', `${set}: the data does not fit the core panel (save.8)`);
   }
+}
+// The cases of the set core-panel (fixtures.21): the core panel and the dropped options of save.2 to save.5.
+const coreCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-panel.json').cases : [];
+const leafPaths = (node, prefix = '') =>
+  Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leafPaths(v, `${prefix}${k}.`) : [[`${prefix}${k}`, v]]));
+const at = (node, p) => p.split('.').reduce((n, k) => n?.[k], node);
+coreCases.forEach((c, i) => {
+  const name = `core-panel case ${i + 1} (${c.chart})`;
+  const row = charts.find((x) => x.name === c.chart);
+  if (!row || !coreOf(c.chart)) return fail('fixtures', `${name}: no chart row`);
+  // The panel of a case is a panel of the chart: the type and the options preset of the chart row (tool.22).
+  if (c.panel?.type !== row.panel || leafPaths(row.options).some(([p, v]) => canonical(at(c.panel.options, p)) !== canonical(v))) {
+    fail('fixtures', `${name}: panel does not have the type and the options of the chart row`);
+  }
+  const want = corePanel(c.panel, row, coreOf(c.chart), chartOptionsFile, constants.coreVersion.value);
+  if (canonical({ core: c.core, dropped: c.dropped }) !== canonical({ core: want?.panel ?? null, dropped: want?.dropped ?? [] })) {
+    fail('fixtures', `${name}: core and dropped are not the result of save.2 to save.5:\n${JSON.stringify(want ?? null)}`);
+  }
+});
+for (const r of coreRows) if (r.panel !== 'none' && !coreCases.some((c) => c.chart === r.chart)) fail('fixtures', `no core-panel case for ${r.chart} (fixtures.21)`);
+if (!coreCases.some((c) => c.core === null)) fail('fixtures', 'no core-panel case for a chart with no core panel (fixtures.21)');
+// The cases cover each kind of dropped option (save.5), and an override that the core panel does not have.
+const allDropped = coreCases.flatMap((c) => c.dropped ?? []);
+for (const [kind, re] of [['options', /^options\./], ['fieldConfig.defaults', /^fieldConfig\.defaults\./], ['an override property', /^fieldConfig\.overrides\[\d+\]\./]]) {
+  if (!allDropped.some((d) => re.test(d))) fail('fixtures', `no core-panel case with a dropped option of ${kind} (fixtures.21)`);
+}
+if (!coreCases.some((c) => c.core && (c.panel.fieldConfig?.overrides?.length ?? 0) > c.core.fieldConfig.overrides.length)) fail('fixtures', 'no core-panel case with an override that has no carried property (fixtures.21)');
+// The cases cover each part of save.10. A standard field option of a case is a key of fieldConfig.defaults or the
+// id of an override property that is a standard field option of a core row.
+const standardIds = new Set(coreRows.flatMap((r) => r.fieldOptions ?? []));
+const standardOf = (c) => [
+  ...Object.keys(c.panel?.fieldConfig?.defaults ?? {}).map((id) => [id, 'defaults']),
+  ...(c.panel?.fieldConfig?.overrides ?? []).flatMap((o) => o.properties.map((p) => [p.id, 'override'])),
+].filter(([id]) => standardIds.has(id));
+const fieldEntry = (c, id) => chartOptions[c.chart]?.fieldConfig.find((o) => o.path === id);
+const inRow = (c, id) => (coreOf(c.chart)?.fieldOptions ?? []).includes(id);
+for (const [part, test] of [
+  ['a standard field option of fieldConfig.defaults that has no entry', (c, id, where) => where === 'defaults' && inRow(c, id) && !fieldEntry(c, id)],
+  ['a standard field option of an override that has no entry', (c, id, where) => where === 'override' && inRow(c, id) && !fieldEntry(c, id)],
+  ['a standard field option whose entry has no core', (c, id) => inRow(c, id) && fieldEntry(c, id) && !fieldEntry(c, id).core],
+  ['a standard field option of fieldConfig.defaults that the core panel does not register', (c, id, where) => where === 'defaults' && !inRow(c, id)],
+  ['a standard field option of an override that the core panel does not register', (c, id, where) => where === 'override' && !inRow(c, id)],
+]) {
+  if (!coreCases.some((c) => c.core && standardOf(c).some(([id, where]) => test(c, id, where)))) fail('fixtures', `no core-panel case with ${part} (fixtures.21)`);
+}
+// An entry with no core whose path is a standard field option of the core row gives its default (save.10).
+if (!Object.entries(chartOptions).some(([chart, entry]) => entry.fieldConfig.some((o) => !o.core && o.default !== undefined && (coreOf(chart)?.fieldOptions ?? []).includes(o.path)))) {
+  fail('fixtures', 'chart-options.json has no entry with a default and no core for a standard field option of the core row (fixtures.21)');
+}
+// The cases of core-fits.json (fixtures.21): frames that fit the chart fit the core panel or not (save.8).
+const fitsCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-fits.json').cases : [];
+fitsCases.forEach((c, i) => {
+  const name = `core-fits case ${i + 1} (${c.chart})`;
+  const row = charts.find((x) => x.name === c.chart);
+  const core = coreOf(c.chart);
+  if (!row || !core || core.panel === 'none') return fail('fixtures', `${name}: the chart has no core panel`);
+  const s = summary(c.results);
+  if (!fits(s, row)) fail('fixtures', `${name}: the frames do not fit the chart`);
+  if (c.fits !== (!core.fits || fits(s, core))) fail('fixtures', `${name}: fits is not the result of save.8`);
+});
+for (const r of coreRows.filter((x) => x.fits)) {
+  for (const want of [true, false]) if (!fitsCases.some((c) => c.chart === r.chart && c.fits === want)) fail('fixtures', `no core-fits case for ${r.chart} with fits ${want} (fixtures.21)`);
+}
+// The cases of core-version.json (fixtures.21): the result of save.9 for a version of the Grafana of the save.
+const versionCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-version.json').cases : [];
+const coreVersion = constants.coreVersion.value;
+versionCases.forEach((c, i) => {
+  const name = `core-version case ${i + 1} (${JSON.stringify(c.version)})`;
+  if (c.version !== null && typeof c.version !== 'string') return fail('fixtures', `${name}: version must be a string or null`);
+  if (c.result !== coreVersionResult(c.version, coreVersion)) fail('fixtures', `${name}: result is not the result of save.9: ${coreVersionResult(c.version, coreVersion)}`);
+});
+for (const [part, test] of [
+  ['the version coreVersion', (c) => c.version === coreVersion],
+  ['a build of coreVersion with a pre-release part', (c) => c.version?.startsWith(`${coreVersion}-`)],
+  ['a build of coreVersion with a build part', (c) => c.version?.startsWith(`${coreVersion}+`)],
+  ['a newer version', (c) => c.result === 'allowed' && c.version !== coreVersion && !/[-+]/.test(c.version)],
+  ['an older version', (c) => c.result === 'older' && !/[-+]/.test(c.version)],
+  ['an older version with a pre-release part', (c) => c.result === 'older' && c.version.includes('-')],
+  ['a version that does not have the form', (c) => c.result === 'not-known' && typeof c.version === 'string'],
+  ['a version that the Source cannot read', (c) => c.version === null],
+]) {
+  if (!versionCases.some(test)) fail('fixtures', `no core-version case with ${part} (fixtures.21)`);
 }
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
@@ -295,6 +383,30 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
     }
   }
 }
+// The core of the entries follows delivery.26.
+for (const [chart, entry] of Object.entries(chartOptions)) {
+  const cores = [...entry.options, ...entry.fieldConfig].filter((o) => o.core);
+  if (coreOf(chart)?.panel === 'none' && cores.length) fail('fixtures', `chart-options.json: ${chart} has no core panel, so no entry can have core (delivery.26)`);
+  for (const o of entry.fieldConfig) if (o.core && o.core.root !== 'fieldConfig') fail('fixtures', `chart-options.json: the core of the field option ${chart} ${o.path} must have the root fieldConfig (delivery.26)`);
+  // Only the entry of a standard field option of the core row can have the place of that option (save.10).
+  const standard = coreOf(chart)?.fieldOptions ?? [];
+  for (const o of cores) {
+    if (o.core.root === 'fieldConfig' && standard.includes(o.core.path) && !(entry.fieldConfig.includes(o) && o.path === o.core.path)) {
+      fail('fixtures', `chart-options.json: the core of ${chart} ${o.path} is the place of the standard field option ${o.core.path} (delivery.26)`);
+    }
+  }
+  for (const o of cores) {
+    const same = cores.filter((x) => x.core.root === o.core.root);
+    if (same.filter((x) => x.core.path === o.core.path).length > 1) fail('fixtures', `chart-options.json: ${chart} has the core ${o.core.root} ${o.core.path} two times (delivery.26)`);
+    if (same.some((x) => x.core.path.startsWith(`${o.core.path}.`))) fail('fixtures', `chart-options.json: the core ${o.core.root} ${o.core.path} of ${chart} is the start of another core path (delivery.26)`);
+    // A path cannot go through a value of the preset of the core row that is not an object.
+    const keys = o.core.path.split('.');
+    const through = keys.slice(0, -1).map((_, n) => at(coreOf(chart)?.options ?? {}, keys.slice(0, n + 1).join('.')));
+    if (o.core.root === 'options' && through.some((v) => v !== undefined && (v === null || typeof v !== 'object' || Array.isArray(v)))) {
+      fail('fixtures', `chart-options.json: the core options ${o.core.path} of ${chart} goes through a preset value that is not an object (delivery.26)`);
+    }
+  }
+}
 // panels has exactly the panels of the charts of the file (delivery.23).
 const optionPanels = [...new Set(Object.keys(chartOptions).map((chart) => charts.find((c) => c.name === chart)?.panel))].sort();
 const versionPanels = Object.keys(chartPanels ?? {}).sort();
@@ -302,7 +414,7 @@ if (JSON.stringify(versionPanels) !== JSON.stringify(optionPanels)) {
   fail('fixtures', `chart-options.json: panels must have exactly the panels of its charts (delivery.23): ${optionPanels.join(', ')}`);
 }
 for (const s of ['options', 'options-invalid', 'options-stale', 'options-list', 'options-list-advanced', 'options-list-unknown']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
-// Each tool error of save_chart has a set, and save-not-found has one for each kind (fixtures.21).
+// Each tool error of save_chart has a set, and save-not-found has one for each kind (fixtures.31).
 const saveErrorTexts = [...saveErrorSets.values()];
 for (const code of [...states.toolErrors.map((e) => e.code).filter((c) => c.startsWith('save-')), 'invalid-options']) {
   if (!saveErrorTexts.some((t) => t.startsWith(`${code}: `))) fail('fixtures', `no save set for the tool error ${code}`);
@@ -310,8 +422,8 @@ for (const code of [...states.toolErrors.map((e) => e.code).filter((c) => c.star
 for (const kind of ['dashboard', 'folder']) {
   if (!saveErrorTexts.some((t) => t.startsWith(`save-not-found: The ${kind} `))) fail('fixtures', `no save set for save-not-found with the kind ${kind}`);
 }
-if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'args.json')))) fail('fixtures', 'no save set with args.json (fixtures.21)');
-if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'save-retry-args.json')))) fail('fixtures', 'no save set with save-retry-args.json (fixtures.21)');
+if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'args.json')))) fail('fixtures', 'no save set with args.json (fixtures.31)');
+if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'save-retry-args.json')))) fail('fixtures', 'no save set with save-retry-args.json (fixtures.31)');
 // The set options-legend has one override with a color and one more property (fixtures.20).
 const legendOverride = sets.includes('options-legend') ? readJSON('fixtures/options-legend/spec.json').panel.fieldConfig?.overrides?.[0] : undefined;
 if (!(legendOverride?.matcher?.id === 'byName' && legendOverride.properties?.some((p) => p.id === 'color') && legendOverride.properties.length > 1)) {
@@ -325,6 +437,38 @@ const pickRuleOf = (set) => {
 };
 const pickSets = sets.filter((s) => s.startsWith('pick-'));
 for (const r of rules) if (!pickSets.some((s) => pickRuleOf(s) === r.id)) fail('fixtures', `no pick set for the rule ${r.id}`);
+// The cases of the set save-time-range (fixtures.30): the time range of a new dashboard and of the URL of a save.
+if (!sets.includes('save-time-range')) fail('fixtures', 'no set save-time-range (fixtures.30)');
+const rangeCases = sets.includes('save-time-range') ? readJSON('fixtures/save-time-range/time-range.json').cases : [];
+const saveNow = sets.includes('save-time-range') ? readJSON('fixtures/save-time-range/meta.json').now : 0;
+const isEpoch = (t) => /^\d+$/.test(String(t));
+const isRelative = (t) => typeof t === 'string' && t.startsWith('now');
+rangeCases.forEach((c, i) => {
+  const name = `save-time-range case ${i + 1}`;
+  if (!c.args || typeof c.args !== 'object') return fail('fixtures', `${name}: no args`);
+  if (Object.keys(c.args).some((k) => k !== 'from' && k !== 'to')) return fail('fixtures', `${name}: args can have only from and to`);
+  let want;
+  try {
+    want = saveTimeRange(c.args, saveNow, constants);
+  } catch (e) {
+    return fail('fixtures', `${name}: ${e.message}`);
+  }
+  if (canonical({ dashboard: c.dashboard, url: c.url }) !== canonical(want)) {
+    fail('fixtures', `${name}: dashboard and url are not the result of save.20, save.23 and save.24:\n${JSON.stringify(want)}`);
+  }
+});
+const rangeValues = rangeCases.flatMap((c) => [c.args?.from, c.args?.to]);
+for (const [part, test] of [
+  ['a relative value', () => rangeValues.some(isRelative)],
+  ['no from and no to', () => rangeCases.some((c) => c.args && c.args.from === undefined && c.args.to === undefined)],
+  ['epoch milliseconds as an integer', () => rangeValues.some((t) => Number.isInteger(t))],
+  ['epoch milliseconds as a string', () => rangeValues.some((t) => typeof t === 'string' && isEpoch(t))],
+  ['an absolute time next to a relative value', () => rangeCases.some((c) => isRelative(c.args?.from) !== isRelative(c.args?.to) && c.args?.from !== undefined && c.args?.to !== undefined)],
+  ['a value that does not start with now and is not epoch milliseconds', () => rangeValues.some((t) => t !== undefined && !isRelative(t) && !isEpoch(t))],
+  ['a relative value that the URL percent-encodes', () => rangeCases.some((c) => ['from', 'to'].some((k) => isRelative(c.args?.[k]) && /%/.test(c.url?.[k] ?? '')))],
+]) {
+  if (!test()) fail('fixtures', `no save-time-range case with ${part} (fixtures.30)`);
+}
 if (failures === fixtureFailures) pass('fixtures', `${sets.length} sets are valid`);
 
 // 5. Prose files: no literal constant value, and no internal text.

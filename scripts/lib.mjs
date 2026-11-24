@@ -92,6 +92,23 @@ export function sourceRequest(args, now, constants) {
   };
 }
 
+// The time range of a save (save.20, save.23 and save.24): the time range of a new dashboard, and the values of
+// the query parameters from and to of the URL. For a value that does not start with now, it knows epoch
+// milliseconds and a duration, for example 6h.
+export function saveTimeRange(args, now, constants) {
+  // A duration, for example 6h, is now minus the duration (save.20).
+  const absolute = (t) => resolveTime(/^\d+$/.test(String(t)) ? t : `now-${t}`, now);
+  const encode = (text) => text.replace(/[^A-Za-z0-9\-._~]/g, (c) => [...Buffer.from(c)].map((b) => `%${b.toString(16).toUpperCase().padStart(2, '0')}`).join(''));
+  const one = (t) => {
+    if (typeof t === 'string' && t.startsWith('now')) return { dashboard: t, url: encode(t) };
+    const ms = absolute(t);
+    return { dashboard: new Date(ms).toISOString(), url: String(ms) };
+  };
+  const from = one(args.from ?? constants.defaultFrom.value);
+  const to = one(args.to ?? constants.defaultTo.value);
+  return { dashboard: { from: from.dashboard, to: to.dashboard }, url: { from: from.url, to: to.url } };
+}
+
 // The code point order of two texts (tool.39). The < of JavaScript gives the order of the UTF-16 code units, which
 // is another order for a character above U+FFFF.
 export function byCodePoint(a, b) {
@@ -141,7 +158,7 @@ export const unknownChartText = (type, charts) => `unknown-chart: ${type} is not
 export const invalidOptionsText = (chart, problems) =>
   `invalid-options: ${chart} does not accept these options: ${problems.join('; ')}. get_chart_options lists the options of ${chart}.`;
 
-// The tool error of save_chart for the answers of the fake Grafana (save.14 to save.16). answers is the
+// The tool error of save_chart for the answers of the fake Grafana (save.38 to save.40). answers is the
 // grafana.json of a set, args is its save-args.json, and toolErrors is the toolErrors list of
 // registry/states.json. An answer that is not ok is the end of the code: conflict gives save-conflict. The
 // result is undefined when each answer is ok.
@@ -153,7 +170,7 @@ export function saveErrorText(answers, args, toolErrors) {
   return `${code}: ${toolErrors.find((e) => e.code === code).message.replace('<kind>', kind)}`;
 }
 
-// The text of a result of save_chart (save.21). result is its structured content, and chart is the chart of the
+// The text of a result of save_chart (save.45). result is its structured content, and chart is the chart of the
 // arguments.
 export function saveText({ dashboard, panel, dropped }, chart) {
   return [
@@ -164,7 +181,7 @@ export function saveText({ dashboard, panel, dropped }, chart) {
   ].join('\n');
 }
 
-// The text of the message that the App sends when the Host refuses a call of save_chart (save.30). args is the
+// The text of the message that the App sends when the Host refuses a call of save_chart (save.54). args is the
 // arguments of the call, and patterns is the messages list of registry/messages.json. The order of the keys is
 // free, so a test compares the JSON after the pattern, not the text.
 export const saveMessageText = (args, patterns) =>
@@ -261,6 +278,74 @@ export function panelWithOptions(panel, args, entry) {
     if (args.unit) out.fieldConfig.defaults = { ...out.fieldConfig.defaults, unit: args.unit };
   }
   return out;
+}
+
+// The core panel of a chart and its dropped options (save.2 to save.5, save.10). panel is the panel of the chart,
+// row is the row of chart-types.json, core is the row of core-panels.json, file is chart-options.json, and
+// coreVersion is the constant. With no core panel, there is no result (save.7).
+export function corePanel(panel, row, core, file, coreVersion) {
+  if (core.panel === 'none') return undefined;
+  const chart = file.charts[row.name] ?? { options: [], fieldConfig: [] };
+  // A standard field option of the core row has its place at the same path (save.10): an entry with that path is
+  // read as an entry with that core, and an id with no entry is read as an entry with only a path and that core.
+  const same = (id) => ({ root: 'fieldConfig', path: id });
+  const entry = {
+    options: chart.options,
+    fieldConfig: [
+      ...chart.fieldConfig.map((o) => (!o.core && core.fieldOptions.includes(o.path) ? { ...o, core: same(o.path) } : o)),
+      ...core.fieldOptions.filter((id) => !chart.fieldConfig.some((o) => o.path === id)).map((id) => ({ path: id, core: same(id) })),
+    ],
+  };
+  const { type, pluginVersion, options, fieldConfig, ...rest } = panel;
+  const out = { ...rest, type: core.panel, pluginVersion: coreVersion, options: structuredClone(core.options), fieldConfig: { defaults: {}, overrides: [] } };
+  const dropped = [];
+  // The paths of the options preset of the chart row. The core row takes their place (save.3).
+  const leaves = (node, prefix = '') =>
+    Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leaves(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
+  const preset = leaves(row.options);
+  const inPreset = (p) => preset.some((l) => l === p || l.startsWith(`${p}.`) || p.startsWith(`${l}.`));
+  const write = (o, value) => {
+    const keys = o.core.path.split('.');
+    const last = keys.pop();
+    // delivery.26 does not allow a path through a value that is not an object. Such a value is replaced here, so
+    // that the check reports the file and does not stop.
+    const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+    keys.reduce((node, key) => (isObject(node[key]) ? node[key] : (node[key] = {})), o.core.root === 'options' ? out.options : out.fieldConfig.defaults)[last] = structuredClone(value);
+  };
+  // First the default of each entry with core whose option the panel does not have, then the options of the
+  // panel (save.3). Thus the core panel draws an option that the panel does not have as the Renderer draws it.
+  const set = [];
+  const carry = (root, list, prefix, skip = () => false) => {
+    const { found, wrong } = findOptions(root, list);
+    const lost = wrong.map(([p]) => p).filter((p) => !skip(p));
+    for (const o of list) if (o.core && o.default !== undefined && !found.some(([p]) => p === o.path)) write(o, o.default);
+    for (const [p, value, o] of found) (o.core ? set.push([o, value]) : lost.push(p));
+    dropped.push(...[...new Set(lost)].sort(byCodePoint).map((p) => `${prefix}${p}`));
+  };
+  carry(options, entry.options, 'options.', inPreset);
+  carry(fieldConfig?.defaults, entry.fieldConfig, 'fieldConfig.defaults.');
+  for (const [o, value] of set) write(o, value);
+  (fieldConfig?.overrides ?? []).forEach((override, n) => {
+    const properties = [];
+    for (const { id, value } of override.properties) {
+      const o = entry.fieldConfig.find((x) => x.path === id);
+      if (o?.core) properties.push({ id: o.core.path, value: structuredClone(value) });
+      else dropped.push(`fieldConfig.overrides[${n}].${id}`);
+    }
+    if (properties.length) out.fieldConfig.overrides.push({ ...structuredClone(override), properties });
+  });
+  return { panel: out, dropped };
+}
+
+// The result of save.9 for the version of the Grafana of the save: allowed, older or not-known. version is not a
+// string when the Source cannot read it. Only the major, the minor and the patch number count.
+export function coreVersionResult(version, coreVersion) {
+  const numbers = (v) => /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:$|[-+])/.exec(v)?.slice(1).map(BigInt);
+  const got = typeof version === 'string' ? numbers(version) : undefined;
+  if (!got) return 'not-known';
+  const want = numbers(coreVersion);
+  const n = got.findIndex((x, i) => x !== want[i]);
+  return n >= 0 && got[n] < want[n] ? 'older' : 'allowed';
 }
 
 // JSON with the keys of each object in order. Two values that are equal give the same text.
