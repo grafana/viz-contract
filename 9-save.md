@@ -11,7 +11,9 @@ panel that the save adds to the dashboard.
 The App keeps the `from` and the `to` of the last pick, zoom or pan in the last tool arguments (`refresh.9`). It
 keeps them also if the refresh of that pick, zoom or pan fails. The chart on screen is then the old chart
 (`refresh.5`). A zoom or a pan without `onRefresh` does not change the tool arguments (`renderer.42`). No rule
-says yet which tool arguments the App gives to a save.
+says yet which tool arguments the App gives to a save. Thus, in these two cases, no rule says yet if the save
+has the time range of the last tool arguments or the time range of the chart on screen. This question is in
+item 3 of `future.md`.
 
 - `save.20` The time range of a save is the `from` and the `to` of the tool arguments of the save. If the
   arguments have no `from` or no `to`, that value is `defaultFrom` or `defaultTo`, as in `tool.5`. A value that
@@ -37,5 +39,7 @@ says yet which tool arguments the App gives to a save.
   parameters `from` and `to`. A relative value is written with no change. An absolute time is written as epoch
   milliseconds. The Source then percent-encodes each character of the value that is not a letter of ASCII, a
   digit, `-`, `.`, `_` or `~`. For example, `now+15m` becomes `now%2B15m`, because a `+` in a query parameter
-  reads as a space. Thus the dashboard opens with the time range of the chart, also when the dashboard has
+  reads as a space. This rule is stricter than the standard functions. `encodeURIComponent` of JavaScript does
+  not encode `!`, `*`, `'`, `(` and `)`. `url.QueryEscape` of Go writes a space as `+`, and this rule gives
+  `%20`. Thus the dashboard opens with the time range of the chart, also when the dashboard has
   another time range (`save.22`). The URL does not change the dashboard.

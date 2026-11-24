@@ -260,8 +260,8 @@ const isEpoch = (t) => /^\d+$/.test(String(t));
 const isRelative = (t) => typeof t === 'string' && t.startsWith('now');
 rangeCases.forEach((c, i) => {
   const name = `save-time-range case ${i + 1}`;
-  const keys = Object.keys(c.args ?? { bad: 1 });
-  if (keys.some((k) => k !== 'from' && k !== 'to')) return fail('fixtures', `${name}: args can have only from and to`);
+  if (!c.args || typeof c.args !== 'object') return fail('fixtures', `${name}: no args`);
+  if (Object.keys(c.args).some((k) => k !== 'from' && k !== 'to')) return fail('fixtures', `${name}: args can have only from and to`);
   let want;
   try {
     want = saveTimeRange(c.args, saveNow, constants);
@@ -280,7 +280,7 @@ for (const [part, test] of [
   ['epoch milliseconds as a string', () => rangeValues.some((t) => typeof t === 'string' && isEpoch(t))],
   ['an absolute time next to a relative value', () => rangeCases.some((c) => isRelative(c.args?.from) !== isRelative(c.args?.to) && c.args?.from !== undefined && c.args?.to !== undefined)],
   ['a value that does not start with now and is not epoch milliseconds', () => rangeValues.some((t) => t !== undefined && !isRelative(t) && !isEpoch(t))],
-  ['a relative value that the URL percent-encodes', () => rangeCases.some((c) => [c.url?.from, c.url?.to].some((t) => /%/.test(t ?? '')))],
+  ['a relative value that the URL percent-encodes', () => rangeCases.some((c) => ['from', 'to'].some((k) => isRelative(c.args?.[k]) && /%/.test(c.url?.[k] ?? '')))],
 ]) {
   if (!test()) fail('fixtures', `no save-time-range case with ${part} (fixtures.30)`);
 }

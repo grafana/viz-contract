@@ -96,12 +96,8 @@ export function sourceRequest(args, now, constants) {
 // the query parameters from and to of the URL. For a value that does not start with now, it knows epoch
 // milliseconds and a duration, for example 6h.
 export function saveTimeRange(args, now, constants) {
-  const absolute = (t) => {
-    if (/^\d+$/.test(String(t))) return Number(t);
-    const m = /^(\d+)([smhdw])$/.exec(t);
-    if (!m) throw new Error(`time ${t} is not a form that the fixtures use`);
-    return now - Number(m[1]) * { s: 1e3, m: 6e4, h: 36e5, d: 864e5, w: 6048e5 }[m[2]];
-  };
+  // A duration, for example 6h, is now minus the duration (save.20).
+  const absolute = (t) => resolveTime(/^\d+$/.test(String(t)) ? t : `now-${t}`, now);
   const encode = (text) => text.replace(/[^A-Za-z0-9\-._~]/g, (c) => [...Buffer.from(c)].map((b) => `%${b.toString(16).toUpperCase().padStart(2, '0')}`).join(''));
   const one = (t) => {
     if (typeof t === 'string' && t.startsWith('now')) return { dashboard: t, url: encode(t) };
