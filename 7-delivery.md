@@ -212,3 +212,20 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 
   The check cannot prove that a value has the same meaning in the core panel, or that the core panel draws as the
   Renderer does with no value. A review of the file makes sure of these.
+- `delivery.28` This is a check for an App that can show the Save control (`save.46`). If the App shows the
+  control only with a setting, the check turns the setting on. An App that cannot show the control skips the
+  check. A CI check of the App runs the tests of `fixtures.33` and `fixtures.34` for each set that has
+  `save-args.json`. It also checks these cases with a Host that the test makes:
+  - The Host answers the call of `save_chart` with a JSON-RPC error, and the test makes a `chart` at run time
+    whose text of `save.54` is longer than `maxSaveMessageChars`. The App must show no control that sends the
+    save to the chat, and its error must tell the user to ask the model in the chat (`save.55`).
+  - The `hostCapabilities` of the Host have `message` with no `text`, and the Host answers the call with a
+    JSON-RPC error. The App must show no such control, and its error must tell the user to ask the model in the
+    chat (`save.53`).
+  - After the App sends the message, the Host answers as in each case of `state.27`. The App must do as
+    `delivery.13` gives for that case.
+  - The Host gives no answer to the call in `saveTimeoutMs`. The test uses a fake clock, so it does not wait.
+    The App must stop showing that it saves, it must show that it does not know if the chart is saved, and the
+    user must be able to save again (`save.56`).
+  - After that time, the Host answers the call with the result of the set `save-result`. The App must show the
+    title of the dashboard (`save.56`). A tool error after that time must change nothing.

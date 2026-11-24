@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveTimeRange, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, invalidOptionsText, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveErrorText, saveMessageText, saveText, saveTimeRange, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -58,6 +58,7 @@ const messagePatterns = readJSON('registry/messages.json').messages;
 const X_TYPES = ['time', 'number', 'string'];
 const rel = [
   [X_TYPES.every((t) => messagePatterns.some((m) => m.code === `point-${t}`)), 'each xType of the Renderer API has a message pattern'],
+  [messagePatterns.some((m) => m.code === 'save-chart' && m.message.endsWith('<arguments>')), 'the save-chart message pattern ends with the arguments (save.54)'],
   [new Set(names).size === names.length, 'chart names are unique'],
   [charts.every((c) => panels.includes(c.panel)), 'each chart names a panel of panel-types.json'],
   [panels.every((p) => charts.some((c) => c.panel === p)), 'each panel has a chart'],
@@ -77,7 +78,16 @@ const fileSchema = {
   'chart-options.json': 'chart-options',
   'options-args.json': 'chart-options-args',
   'retry-args.json': 'query-datasource-args',
+  'save-args.json': 'save-chart-args',
+  'save-retry-args.json': 'save-chart-args',
 };
+// The answers of the fake Grafana in grafana.json (fixtures.32), and the save sets that the loop finds.
+const SAVE_ANSWERS = { read: ['ok', 'forbidden', 'not-found'], write: ['ok', 'conflict', 'forbidden', 'not-found'] };
+const saveErrorSets = new Map();
+const saveResultSets = [];
+const saveForbiddenBy = new Set();
+// The App test of a save draws the chart of the set prometheus-line (fixtures.33).
+const saveBase = { args: readJSON('fixtures/prometheus-line/args.json'), chart: readJSON('fixtures/prometheus-line/result.json').chart };
 // The chart options sets (fixtures.17) use the chart-options.json of the set options.
 const chartOptionsFile = readJSON('fixtures/options/chart-options.json');
 const { charts: chartOptions, panels: chartPanels } = chartOptionsFile;
@@ -178,7 +188,7 @@ for (const set of sets) {
     }
     if (!entry) fail('fixtures', `${set}: chart-options.json of the set options has no chart ${args.type}`);
     else if (problems.length) {
-      const text = `invalid-options: ${args.type} does not accept these options: ${problems.join('; ')}. get_chart_options lists the options of ${args.type}.`;
+      const text = invalidOptionsText(args.type, problems);
       if (result?.content?.[0]?.text !== text) fail('fixtures', `${set}/result.json is not the tool error of tool.39: ${text}`);
     } else if (!result || result.isError) fail('fixtures', `${set}: the options are correct, so result.json must be a tool result`);
     else {
@@ -211,6 +221,90 @@ for (const set of sets) {
     const got = files['options-result.json'];
     if (got?.content?.length !== 1 || got.content[0].text !== text || got.structuredContent !== undefined || (got.isError === true) === known) {
       fail('fixtures', `${set}/options-result.json is not the result of tool.43 and tool.44:\n${text}`);
+    }
+  }
+  const save = files['save-args.json'];
+  if (save) {
+    const got = files['save-result.json'];
+    const text = got?.content?.[0]?.text;
+    const answers = files['grafana.json'];
+    const { options, fieldConfig, ...chartWithNoOptions } = save.chart ?? {};
+    // chart holds tool arguments with a type (save.31). The type is the chart that the App test draws (fixtures.33).
+    if (!ajv.getSchema('query-datasource-args.schema.json')(save.chart) || save.chart.type !== saveBase.chart) {
+      fail('fixtures', `${set}/save-args.json: chart is not tool arguments with the type ${saveBase.chart} (save.31, fixtures.33)`);
+    } else if (!chartOptions[save.chart.type]) fail('fixtures', `${set}: chart-options.json of the set options has no chart ${save.chart.type}`);
+    else {
+      const problems = optionProblems(save.chart, chartOptions[save.chart.type], validValue, overrideSchema);
+      // grafana.json has read only for a dashboard that exists, and write only after a read that is ok.
+      const wantRead = !problems.length && save.dashboardUid !== undefined;
+      const wantWrite = !problems.length && (answers?.read ?? 'ok') === 'ok';
+      // A set with a result and no grafana.json is a set of the App test only (fixtures.35).
+      const appOnly = !problems.length && answers === undefined && got?.isError !== true && got?.structuredContent !== undefined;
+      const answersOk = appOnly || (problems.length
+        ? answers === undefined
+        : answers !== undefined &&
+          Object.keys(answers).every((k) => k in SAVE_ANSWERS) &&
+          (answers.read !== undefined) === wantRead && (answers.write !== undefined) === wantWrite &&
+          (!wantRead || SAVE_ANSWERS.read.includes(answers.read)) && (!wantWrite || SAVE_ANSWERS.write.includes(answers.write)) &&
+          !(answers.write === 'conflict' && save.dashboardUid === undefined));
+      if (!answersOk) fail('fixtures', `${set}/grafana.json is not the answers of a save with these arguments (fixtures.32)`);
+      else {
+        // The Source checks the options before it reads the dashboard (save.33).
+        const want = problems.length ? invalidOptionsText(save.chart.type, problems) : appOnly ? undefined : saveErrorText(answers, save, states.toolErrors);
+        if (want !== undefined) {
+          if (got?.isError !== true || got.content?.length !== 1 || text !== want || got.structuredContent !== undefined) {
+            fail('fixtures', `${set}/save-result.json is not the tool error of save.33 and save.38 to save.40: ${want}`);
+          } else {
+            saveErrorSets.set(set, want);
+            if (want.startsWith('save-forbidden: ')) saveForbiddenBy.add(answers.read === 'forbidden' ? 'read' : 'write');
+          }
+        } else {
+          const v = ajv.getSchema('save-chart-result.schema.json');
+          if (got?.isError || !v(got?.structuredContent)) fail('fixtures', `${set}/save-result.json: ${v.errors ? errorText(v) : 'it must be a result'}`);
+          else if (got.content?.length !== 1 || text !== saveText(got.structuredContent, save.chart)) {
+            fail('fixtures', `${set}/save-result.json: the text is not the text of save.45:\n${saveText(got.structuredContent, save.chart)}`);
+          } else {
+            const { dashboard, panel, dropped } = got.structuredContent;
+            // dashboard.url ends with the UID and the time range of the chart (save.43, save.24).
+            const range = saveTimeRange(save.chart, files['meta.json']?.now, constants).url;
+            const urlEnd = `/d/${dashboard.uid}?from=${range.from}&to=${range.to}`;
+            if (dashboard.url !== undefined && !dashboard.url.endsWith(urlEnd)) fail('fixtures', `${set}/save-result.json: dashboard.url does not end with ${urlEnd} (save.43)`);
+            // The saved panel is the panel of the chart, which drops no option, or its core panel (save.44, save.5).
+            const row = charts.find((c) => c.name === save.chart.type);
+            const chartPanel = { type: row.panel, options: row.options };
+            if (save.chart.title) chartPanel.title = save.chart.title;
+            if (save.chart.unit) chartPanel.fieldConfig = { defaults: { unit: save.chart.unit } };
+            const core = coreOf(save.chart.type);
+            const wantDropped =
+              panel.type === row.panel
+                ? []
+                : panel.type === core?.panel
+                  ? corePanel(panelWithOptions(chartPanel, save.chart, chartOptions[save.chart.type]), row, core, chartOptionsFile, constants.coreVersion.value).dropped
+                  : undefined;
+            if (!wantDropped) fail('fixtures', `${set}/save-result.json: panel.type is not the panel of the chart or its core panel`);
+            else if (canonical(dropped) !== canonical(wantDropped)) fail('fixtures', `${set}/save-result.json: dropped is not the list of save.5: ${JSON.stringify(wantDropped)}`);
+            // The dashboard of the result is the target of the arguments (save.30).
+            else if (save.dashboardUid !== undefined ? dashboard.uid !== save.dashboardUid : dashboard.title !== save.title) {
+              fail('fixtures', `${set}/save-result.json: dashboard is not the target of save-args.json (save.30)`);
+            } else saveResultSets.push({ set, url: dashboard.url !== undefined, dropped, target: save.dashboardUid !== undefined ? 'dashboard' : save.folderUid !== undefined ? 'folder' : 'root' });
+          }
+        }
+      }
+    }
+    // The App adds the chart that the user sees as type to the last tool arguments (save.48, fixtures.31).
+    if (args && (canonical(args) !== canonical(saveBase.args) || canonical(save.chart) !== canonical({ ...saveBase.args, type: saveBase.chart }))) {
+      fail('fixtures', `${set}: args.json is not the args.json of prometheus-line, or the chart of save-args.json is not these arguments with the type ${saveBase.chart} (fixtures.31)`);
+    }
+    // The App test sends the save of each set to the chat (fixtures.34), so the text must not be too long (save.55).
+    if ([...saveMessageText(save, messagePatterns)].length > constants.maxSaveMessageChars.value) {
+      fail('fixtures', `${set}/save-args.json: the message of save.54 is longer than maxSaveMessageChars (fixtures.34)`);
+    }
+    if (files['save-retry-args.json']) {
+      // The second call of save.51 has a chart with no options and no fieldConfig.
+      if (!/^invalid-options: /.test(text ?? '')) fail('fixtures', `${set}/save-result.json is not the invalid-options tool error (save.51)`);
+      if (canonical(files['save-retry-args.json']) !== canonical({ ...save, chart: chartWithNoOptions })) {
+        fail('fixtures', `${set}/save-retry-args.json is not save-args.json with a chart that has no options and no fieldConfig (save.51)`);
+      }
     }
   }
   if (set.startsWith('smoke-')) {
@@ -351,6 +445,27 @@ if (JSON.stringify(versionPanels) !== JSON.stringify(optionPanels)) {
   fail('fixtures', `chart-options.json: panels must have exactly the panels of its charts (delivery.23): ${optionPanels.join(', ')}`);
 }
 for (const s of ['options', 'options-invalid', 'options-stale', 'options-list', 'options-list-advanced', 'options-list-unknown']) if (!sets.includes(s)) fail('fixtures', `no chart options set ${s}`);
+// Each tool error of save_chart has a set, and save-not-found has one for each kind (fixtures.31).
+const saveErrorTexts = [...saveErrorSets.values()];
+for (const code of [...states.toolErrors.map((e) => e.code).filter((c) => c.startsWith('save-')), 'invalid-options']) {
+  if (!saveErrorTexts.some((t) => t.startsWith(`${code}: `))) fail('fixtures', `no save set for the tool error ${code}`);
+}
+for (const kind of ['dashboard', 'folder']) {
+  if (!saveErrorTexts.some((t) => t.startsWith(`save-not-found: The ${kind} `))) fail('fixtures', `no save set for save-not-found with the kind ${kind}`);
+}
+// The set save-result is a save that works, with a URL and a dropped option of options and of fieldConfig.defaults (fixtures.35).
+const saveResult = saveResultSets.find((s) => s.set === 'save-result');
+if (!(saveResult?.url && saveResult.dropped.some((d) => d.startsWith('options.')) && saveResult.dropped.some((d) => d.startsWith('fieldConfig.defaults.')))) {
+  fail('fixtures', 'the set save-result needs a result with dashboard.url and a dropped option of options and of fieldConfig.defaults (fixtures.35)');
+}
+// A save that works has a set for each kind of target, and with and without a URL and dropped options (fixtures.35).
+for (const target of ['dashboard', 'root', 'folder']) if (!saveResultSets.some((s) => s.target === target)) fail('fixtures', `no set of a save that works for the target ${target} (fixtures.35)`);
+if (!saveResultSets.some((s) => !s.url)) fail('fixtures', 'no set of a save that works with no dashboard.url (fixtures.35)');
+if (!saveResultSets.some((s) => !s.dropped.length)) fail('fixtures', 'no set of a save that works with no dropped option (fixtures.35)');
+// save-forbidden has a set for a refused read and one for a refused write (save.39).
+for (const step of ['read', 'write']) if (!saveForbiddenBy.has(step)) fail('fixtures', `no save set for save-forbidden from the ${step} (fixtures.31)`);
+if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'args.json')))) fail('fixtures', 'no save set with args.json (fixtures.31)');
+if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'save-retry-args.json')))) fail('fixtures', 'no save set with save-retry-args.json (fixtures.31)');
 // The set options-legend has one override with a color and one more property (fixtures.20).
 const legendOverride = sets.includes('options-legend') ? readJSON('fixtures/options-legend/spec.json').panel.fieldConfig?.overrides?.[0] : undefined;
 if (!(legendOverride?.matcher?.id === 'byName' && legendOverride.properties?.some((p) => p.id === 'color') && legendOverride.properties.length > 1)) {

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "save_chart result",
+  "description": "The structuredContent of the result of save_chart. The App reads it.",
+  "type": "object",
+  "required": [
+    "dashboard",
+    "panel",
+    "dropped"
+  ],
+  "properties": {
+    "dashboard": {
+      "type": "object",
+      "description": "The dashboard that has the saved panel.",
+      "required": [
+        "uid",
+        "title"
+      ],
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "The URL of the dashboard that a browser can open. Absent when the Source knows no such URL."
+        }
+      }
+    },
+    "panel": {
+      "type": "object",
+      "description": "The saved panel.",
+      "required": [
+        "id",
+        "type"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "The ID of the panel in the dashboard."
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The panel type of the saved panel. It can be a core panel of Grafana."
+        }
+      }
+    },
+    "dropped": {
+      "type": "array",
+      "description": "The path of each option of chart that the saved panel does not have. Can be empty.",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$comment": "Generated from schemas/save-chart-result.schema.json. Do not edit."
+}

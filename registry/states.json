@@ -73,6 +73,21 @@
       "code": "unknown-chart",
       "when": "The type of the get_chart_options arguments is not a chart of chart-types.json",
       "message": "<type> is not a chart. The charts are: <charts>."
+    },
+    {
+      "code": "save-conflict",
+      "when": "Grafana refuses the write of save_chart, because the dashboard changed after the Source read it",
+      "message": "The dashboard changed during the save. The chart is not saved. Save again."
+    },
+    {
+      "code": "save-forbidden",
+      "when": "Grafana refuses the read or the write of save_chart, because the user does not have the permission",
+      "message": "The user does not have the permission to save to this target. The chart is not saved."
+    },
+    {
+      "code": "save-not-found",
+      "when": "The dashboard or the folder of the target of save_chart does not exist",
+      "message": "The <kind> of the target does not exist. The chart is not saved."
     }
   ],
   "refresh": [

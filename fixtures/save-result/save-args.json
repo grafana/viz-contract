@@ -1,0 +1,32 @@
+{
+  "dashboardUid": "save-target",
+  "chart": {
+    "datasourceUid": "lgtm-prometheus",
+    "queries": [
+      {
+        "refId": "A",
+        "expr": "sum by (handler) (rate(grafana_http_request_duration_seconds_count[5m]))",
+        "legendFormat": "{{handler}}",
+        "format": "time_series"
+      }
+    ],
+    "from": "now-15m",
+    "to": "now",
+    "unit": "reqps",
+    "type": "timeseries",
+    "options": {
+      "lineWidth": 2,
+      "animation": {
+        "enabled": false
+      }
+    },
+    "fieldConfig": {
+      "defaults": {
+        "min": 0,
+        "custom": {
+          "axisSoftMin": 0
+        }
+      }
+    }
+  }
+}

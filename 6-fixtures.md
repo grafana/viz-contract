@@ -19,6 +19,10 @@ are in `fixtures/`, one directory for each set.
 | `options-args.json` | The arguments of `get_chart_options` | Source |
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
 | `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
+| `save-args.json` | The arguments of `save_chart` | Source, App |
+| `grafana.json` | The answers of the fake Grafana to a save: `read` for the read of the dashboard, and `write` for the write of the dashboard. An answer is `ok`, `conflict`, `forbidden` or `not-found` | Source |
+| `save-result.json` | The expected result of `save_chart`, or the expected tool error | Source, App |
+| `save-retry-args.json` | The expected arguments of the second call of a save | App |
 | `core-panel.json` | `cases`: a list. Each case has a `description`, a `chart`, the `panel` of that chart, the expected `core` (the core panel, or `null` for a chart with no core panel) and the expected `dropped` list | Source |
 | `core-fits.json` | `cases`: a list. Each case has a `description`, a `chart`, `results` (the frames, as `data.results` of a viz spec), and `fits`: `true` when the frames fit the core panel of the chart | Source |
 | `core-version.json` | `cases`: a list. Each case has a `description`, a `version` (the version of the Grafana of the save, or `null` when the Source cannot read it) and the expected `result`: `allowed`, `older` or `not-known` | Source |
@@ -133,6 +137,37 @@ are in `fixtures/`, one directory for each set.
   - An absolute time next to a relative value.
   - A value that does not start with `now` and is not epoch milliseconds (`save.20`).
   - A relative value with a character that the URL percent-encodes.
+- `fixtures.31` One set or more for each tool error of `save_chart` that has a code in `states.json`. Each set
+  has `save-args.json`, and its `save-result.json` is the expected tool error. The `type` of each `chart` is the
+  chart of the set `prometheus-line`.
+  - `save-conflict`: a dashboard that exists. The write gets the answer `conflict` (`save.38`). The set also has
+    `args.json`. It is the `args.json` of the set `prometheus-line`, which has no `type`. The `chart` of
+    `save-args.json` is these arguments with the chart of that set as `type` (`save.48`).
+  - `save-forbidden`: a dashboard that exists. The write gets the answer `forbidden` (`save.39`).
+  - `save-forbidden-read`: the read of the dashboard gets the answer `forbidden`. The Source makes no write.
+  - `save-not-found`: the read of the dashboard gets the answer `not-found`. `<kind>` is `dashboard` (`save.40`).
+  - `save-not-found-folder`: a new dashboard in a folder. The write gets the answer `not-found`. `<kind>` is
+    `folder`.
+  - `save-invalid-options`: the `chart` is the `args.json` of the set `options-stale`. The expected result is the
+    `invalid-options` tool error (`save.33`). The set has no `grafana.json`, because the Source does not read the
+    dashboard. `save-retry-args.json` is `save-args.json` with a `chart` that has no `options` and no
+    `fieldConfig` (`save.51`).
+- `fixtures.35` Three sets for a save that works, one for each kind of target (`save.30`). Each set has
+  `save-args.json` and `save-result.json` only. `save-result.json` is a result: one text item and the structured
+  content (`save.42` to `save.45`).
+  - `save-result`: a dashboard that exists. The saved panel is the core panel of the chart. The `chart` has
+    options that the core panel gets, and one option of `options` and one of `fieldConfig.defaults` that it
+    drops, so `dropped` has two paths in the order of `save.5`. `dashboard.url` has the time range of the
+    `chart` (`save.43`).
+  - `save-result-new`: a new dashboard with no folder. The saved panel is the panel of the chart, so `dropped`
+    is empty, and the text has no line for it.
+  - `save-result-new-folder`: a new dashboard in a folder. `dashboard` has no `url`, so the text has no line for
+    it.
+
+  Only the App test uses these sets (`fixtures.33`, `fixtures.34`). The Source test does not, because a set does
+  not give the dashboard that the ID of the saved panel comes from. A check makes sure that the text,
+  `dashboard.url` and `dropped` follow from the structured content and the `chart`, and that the `dashboard` is
+  the target of the arguments: the `uid` of `dashboardUid`, or the `title` of a new dashboard.
 
 ## Conformance tests
 
@@ -154,6 +189,32 @@ are in `fixtures/`, one directory for each set.
   the chart of that set. Thus the test answers the second call with the `result.json` of the set
   `prometheus-line`. The viz spec of the `update` must equal the `spec.json` of that set with one more field: a
   `notices` list that has only the `options-dropped` notice (`refresh.19`).
+- `fixtures.32` For a set of `fixtures.31`, the Source test gives `save-args.json` to `save_chart`. The
+  Source uses the `chart-options.json` of the set `options`, as in `fixtures.18`. A fake Grafana gives the answer
+  `read` of `grafana.json` to the read of the dashboard, and the answer `write` to the write of the dashboard.
+  For `conflict`, `forbidden` and `not-found`, it answers as Grafana does in that case. For the `read` `ok`, it
+  gives a dashboard that the test makes, with the UID of the arguments. `grafana.json` has a `read` only if the
+  arguments have a `dashboardUid`, and it has a `write` only if the Source can get to the write. The test runs a
+  set that has a `read` two times: with a dashboard of the v1 schema, and with a dashboard of the v2 schema
+  (`save.37`). The tool result must equal `save-result.json`. With no `grafana.json`, the Source must make no
+  request to Grafana. With no `write`, it must make no write. `save-args.json` and `save-retry-args.json`
+  validate against the schema of the arguments of `save_chart`.
+- `fixtures.33` This test and the test of `fixtures.34` are for an App that can show the Save control
+  (`save.46`). If the App shows the control only with a setting, the test turns the setting on. An App that
+  cannot show the control skips both tests (`delivery.28`). For a set with `save-args.json`, the App test draws
+  the chart of the set `prometheus-line` with the `result.json` of that set. If the set has `args.json`, the
+  last tool arguments of the App are `args.json`. Otherwise they are the `chart` of `save-args.json`. The user
+  saves the chart to the target of `save-args.json`. The arguments of the call of `save_chart` must equal
+  `save-args.json`. The test answers the call with `save-result.json`. If the set has `save-retry-args.json`,
+  the App must call `save_chart` a second time, and the arguments of that call must equal
+  `save-retry-args.json` (`save.51`). Otherwise the App must make no second call. If `save-result.json` is a
+  tool error, the App must show the message of the tool error (`save.52`). If it is a result, the App must show
+  the title of the dashboard, a link to `dashboard.url` and each path of `dropped` (`save.50`).
+- `fixtures.34` For a set with `save-args.json`, the App test also runs the save of `fixtures.33` with a Host
+  that answers the call of `save_chart` with a JSON-RPC error. The App must send no message before the user uses
+  the control of `save.53`. Then it must send one message. The text must be the `save-chart` pattern of
+  `messages.json`, and its `<arguments>` must be JSON with no white space that equals `save-args.json`
+  (`save.54`). Thus the text of each set is not longer than `maxSaveMessageChars`.
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response
