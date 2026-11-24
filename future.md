@@ -13,7 +13,7 @@ specified.
    (`tool.41`). Grafana runs the migrations of a panel from the `pluginVersion` of the saved panel. Thus the saved
    panel needs as its `pluginVersion` the version of the panel that the Source checked the options against, and
    that panel must give its migrations to Grafana. `chart-options.json` gives this version (`delivery.23`). The
-   time range of a saved panel is specified (`save.10` to `save.15`).
+   time range of a saved panel is specified (`save.20` to `save.24`).
 4. Open a dashboard panel. The App draws a panel of an existing dashboard from its panel JSON.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.

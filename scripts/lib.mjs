@@ -92,6 +92,27 @@ export function sourceRequest(args, now, constants) {
   };
 }
 
+// The time range of a save (save.20, save.23 and save.24): the time range of a new dashboard, and the values of
+// the query parameters from and to of the URL. For a value that does not start with now, it knows epoch
+// milliseconds and a duration, for example 6h.
+export function saveTimeRange(args, now, constants) {
+  const absolute = (t) => {
+    if (/^\d+$/.test(String(t))) return Number(t);
+    const m = /^(\d+)([smhdw])$/.exec(t);
+    if (!m) throw new Error(`time ${t} is not a form that the fixtures use`);
+    return now - Number(m[1]) * { s: 1e3, m: 6e4, h: 36e5, d: 864e5, w: 6048e5 }[m[2]];
+  };
+  const encode = (text) => text.replace(/[^A-Za-z0-9\-._~]/g, (c) => [...Buffer.from(c)].map((b) => `%${b.toString(16).toUpperCase().padStart(2, '0')}`).join(''));
+  const one = (t) => {
+    if (typeof t === 'string' && t.startsWith('now')) return { dashboard: t, url: encode(t) };
+    const ms = absolute(t);
+    return { dashboard: new Date(ms).toISOString(), url: String(ms) };
+  };
+  const from = one(args.from ?? constants.defaultFrom.value);
+  const to = one(args.to ?? constants.defaultTo.value);
+  return { dashboard: { from: from.dashboard, to: to.dashboard }, url: { from: from.url, to: to.url } };
+}
+
 // The code point order of two texts (tool.39). The < of JavaScript gives the order of the UTF-16 code units, which
 // is another order for a character above U+FFFF.
 export function byCodePoint(a, b) {

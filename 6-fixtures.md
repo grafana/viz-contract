@@ -19,6 +19,7 @@ are in `fixtures/`, one directory for each set.
 | `options-args.json` | The arguments of `get_chart_options` | Source |
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
 | `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
+| `time-range.json` | `cases`: a list. Each case has a `description`, `args` (the `from` and the `to` of the tool arguments of a save, or none of them), the expected `dashboard` (the `from` and the `to` of a new dashboard) and the expected `url` (the values of the query parameters `from` and `to`) | Source |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -88,6 +89,16 @@ are in `fixtures/`, one directory for each set.
   the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
   have the color of the legend and the line style of the override. The same must be true after an `update` with
   the same viz spec (`renderer.35`).
+- `fixtures.30` One `save-time-range` set. It has `time-range.json`, and a `meta.json` with `now` only. For each
+  case of `time-range.json`, the Source test gives `args` as the `from` and the `to` of the tool arguments of a
+  save, and `now` as the time of the save. The time range of a new dashboard must equal `dashboard` (`save.23`).
+  The values of the query parameters `from` and `to` of the URL must equal `url` (`save.24`). The cases cover
+  these parts:
+  - A relative value, and arguments with no `from` and no `to`.
+  - Epoch milliseconds as an integer and as a string.
+  - An absolute time next to a relative value.
+  - A value that does not start with `now` and is not epoch milliseconds (`save.20`).
+  - A relative value with a character that the URL percent-encodes.
 
 ## Conformance tests
 
