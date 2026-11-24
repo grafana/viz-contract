@@ -12,8 +12,10 @@ chart. A Grafana of `coreVersion` or of a newer version can read the core panel 
 
 The map from a chart to its core panel has two parts. `registry/core-panels.json` gives the core panel of each
 chart. The `chart-options.json` of the Renderer gives the place of each chart option in that core panel
-(`delivery.25`). Thus the names of the options stay data of the Renderer (`version.13`). The Source makes the
-core panel, because it reads both files (`tool.37`). Both parts are written for Grafana of `coreVersion`.
+(`delivery.25`). Thus the names of the options stay data of the Renderer (`version.13`). The standard field
+options of Grafana are not options of one chart, so `registry/core-panels.json` gives their place (`save.10`).
+The Source makes the core panel, because it reads both files (`tool.37`). Both parts are written for Grafana of
+`coreVersion`.
 `coreVersion` is a version of Semantic Versioning 2.0.0 (`version.14`).
 
 - `save.1` `registry/core-panels.json` has one row for each row of `registry/chart-types.json`, in the same
@@ -28,7 +30,7 @@ core panel, because it reads both files (`tool.37`). Both parts are written for 
   fit the core panel. For example, a `barchart` draws number fields with no other field, and the core `barchart`
   panel needs a string or time field. A core panel shows a message or no data for frames that do not fit it. The
   `fits` of a row come from the code of the core panel in Grafana of `coreVersion`. The core panel of `save.2` to
-  `save.5` does not depend on the frames.
+  `save.5` and `save.10` does not depend on the frames.
 - `save.2` The core panel is made from the panel of the chart (`tool.22`, `tool.41`) and the row of the chart:
   - `type` is the `panel` of the row.
   - `pluginVersion` is `coreVersion`. Grafana then runs the migrations of the core panel from that version.
@@ -37,7 +39,8 @@ core panel, because it reads both files (`tool.37`). Both parts are written for 
   - Each other key of the panel of the chart is in the core panel with no change, for example `title`.
 - `save.3` The options of the panel of the chart are found key by key, as in `tool.38`: in `options` with the
   `options` list of the chart, and in `fieldConfig.defaults` with the `fieldConfig` list. A carried option is an
-  option whose entry has `core`. The core panel gets values in two steps:
+  option whose entry has `core`, or a standard field option that `save.10` carries. The core panel gets values in
+  two steps:
   1. Each entry of the two lists that has `core` and a `default` gives its `default`, if the panel of the chart
      does not have the option. The Renderer applies that default to the chart (`tool.42`), and the core panel has
      its own defaults. Thus the core panel draws the option as the chart does.
@@ -50,11 +53,33 @@ core panel, because it reads both files (`tool.37`). Both parts are written for 
   panel take its place.
 - `save.4` Each override of the panel of the chart keeps its `matcher` with no change. A property whose `id` is
   the path of an entry of the `fieldConfig` list that has `core` is a carried property: its `id` becomes the
-  `path` of `core`, and it keeps its `value`. An override with no carried property is not in the core panel.
+  `path` of `core`, and it keeps its `value`. A property that `save.10` carries is also a carried property. An
+  override with no carried property is not in the core panel.
+- `save.10` A standard field option is a field option that Grafana gives to each panel, for example `unit` or
+  `color`. Its id and its meaning are the same in each panel that registers it. A row with a core panel has
+  `fieldOptions`: the id of each standard field option that the core panel registers in Grafana of
+  `coreVersion`. The list does not have `links`, `actions` and `filterable`, because the chart has no data links
+  and no filter buttons (`renderer.12`). An id is one key of `fieldConfig.defaults`. The core panel gets a
+  standard field option of the list at the same place, and the chart needs no entry for it in
+  `chart-options.json`:
+  - A key of `fieldConfig.defaults` of the panel of the chart that is in `fieldOptions` is a carried option. Its
+    value goes to the same key of `fieldConfig.defaults` of the core panel. The Source does not read the keys
+    inside the value.
+  - An override property whose `id` is in `fieldOptions` is a carried property. It keeps its `id` and its
+    `value`.
+  - An entry of the `fieldConfig` list whose `path` is in `fieldOptions` is read as an entry with a `core` of
+    the `root` `fieldConfig` and that `path`. Thus the core panel also gets its `default` (`save.3`).
+
+  For example, the `unit` of the arguments (`tool.22`) is in the core panel of each chart whose row has `unit`,
+  also when the chart has no entry for `unit`. A core panel does not register each standard field option. For
+  example, the core `heatmap` panel registers `unit` and no other option of the list, and the core `nodeGraph`
+  panel registers none. Grafana removes a field option that the panel does not register, with no error. Thus
+  the core panel gets a standard field option that is not in `fieldOptions` only at the `core` of its entry.
+  With no such `core`, it is a dropped option (`save.5`).
 - `save.5` The core panel does not have a dropped option. A dropped option is one of these:
-  - An option of the panel of the chart whose entry has no `core`.
-  - A path of the panel of the chart that is not an option of the chart, and is not a path of the `options` of
-    the chart row (`save.3`).
+  - An option of the panel of the chart whose entry has no `core`, and that `save.10` does not carry.
+  - A path of the panel of the chart that is not an option of the chart, that is not a path of the `options` of
+    the chart row (`save.3`), and that `save.10` does not carry.
   - An override property that is not carried.
 
   The map gives the list of the dropped options, in this order:

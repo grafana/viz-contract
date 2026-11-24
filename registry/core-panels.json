@@ -1,17 +1,65 @@
 {
   "charts": [
-    { "chart": "timeseries", "panel": "timeseries", "options": {} },
-    { "chart": "barchart", "panel": "barchart", "options": {}, "fits": [{ "hasFieldType.string": true }, { "hasFieldType.time": true }] },
-    { "chart": "histogram", "panel": "histogram", "options": {} },
-    { "chart": "candlestick", "panel": "candlestick", "options": {}, "fits": [{ "hasFieldType.time": true }] },
+    {
+      "chart": "timeseries",
+      "panel": "timeseries",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"]
+    },
+    {
+      "chart": "barchart",
+      "panel": "barchart",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"],
+      "fits": [{ "hasFieldType.string": true }, { "hasFieldType.time": true }]
+    },
+    {
+      "chart": "histogram",
+      "panel": "histogram",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"]
+    },
+    {
+      "chart": "candlestick",
+      "panel": "candlestick",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"],
+      "fits": [{ "hasFieldType.time": true }]
+    },
     { "chart": "boxplot", "panel": "none" },
-    { "chart": "piechart", "panel": "piechart", "options": { "reduceOptions": { "values": true } } },
+    {
+      "chart": "piechart",
+      "panel": "piechart",
+      "options": { "reduceOptions": { "values": true } },
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings"]
+    },
     { "chart": "funnel", "panel": "none" },
-    { "chart": "heatmap", "panel": "heatmap", "options": { "calculate": false } },
-    { "chart": "geomap", "panel": "geomap", "options": {} },
-    { "chart": "state-timeline", "panel": "state-timeline", "options": {} },
-    { "chart": "status-history", "panel": "status-history", "options": {} },
-    { "chart": "nodeGraph", "panel": "nodeGraph", "options": {}, "fits": [{ "hasPreferredVisualisationType.nodeGraph": true }, { "hasFieldName.id": true }] },
+    { "chart": "heatmap", "panel": "heatmap", "options": { "calculate": false }, "fieldOptions": ["unit"] },
+    {
+      "chart": "geomap",
+      "panel": "geomap",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"]
+    },
+    {
+      "chart": "state-timeline",
+      "panel": "state-timeline",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"]
+    },
+    {
+      "chart": "status-history",
+      "panel": "status-history",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"]
+    },
+    {
+      "chart": "nodeGraph",
+      "panel": "nodeGraph",
+      "options": {},
+      "fieldOptions": [],
+      "fits": [{ "hasPreferredVisualisationType.nodeGraph": true }, { "hasFieldName.id": true }]
+    },
     { "chart": "sankey", "panel": "none" },
     { "chart": "chord", "panel": "none" },
     { "chart": "treemap", "panel": "none" },
@@ -20,7 +68,17 @@
     { "chart": "parallel", "panel": "none" },
     { "chart": "streamgraph", "panel": "none" },
     { "chart": "bubble", "panel": "none" },
-    { "chart": "gauge", "panel": "gauge", "options": {} },
-    { "chart": "stat", "panel": "stat", "options": {} }
+    {
+      "chart": "gauge",
+      "panel": "gauge",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"]
+    },
+    {
+      "chart": "stat",
+      "panel": "stat",
+      "options": {},
+      "fieldOptions": ["unit", "min", "max", "fieldMinMax", "decimals", "displayName", "color", "noValue", "mappings", "thresholds"]
+    }
   ]
 }

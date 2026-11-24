@@ -111,7 +111,7 @@
             "oneOf": [
               {
                 "type": "object",
-                "required": ["chart", "panel", "options"],
+                "required": ["chart", "panel", "options", "fieldOptions"],
                 "properties": {
                   "chart": { "type": "string", "description": "A name of registry/chart-types.json" },
                   "panel": {
@@ -121,6 +121,12 @@
                     "description": "The type of the core Grafana panel that draws the data of the chart"
                   },
                   "options": { "type": "object", "description": "The options preset that the core panel gets" },
+                  "fieldOptions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "description": "The ids of the standard field options of Grafana that the core panel registers. The core panel gets each of them at the same path",
+                    "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" }
+                  },
                   "fits": {
                     "type": "array",
                     "minItems": 1,

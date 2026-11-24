@@ -54,6 +54,7 @@ flowchart TB
 | Chart option | A panel option or a field option of a chart that the model can set (`tool.36`). `chart-options.json` of the Renderer lists the chart options of each chart (`delivery.16`) |
 | Core panel | The core Grafana panel that draws the data of a chart in a Grafana that cannot draw the panel of the chart (`save.1`). A chart can have none |
 | Dropped option | A chart option that the core panel does not have (`save.5`) |
+| Standard field option | A field option that Grafana gives to each panel, for example `unit` or `color`. The core panel gets it at the same path (`save.10`) |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
 | Chart line | The text line that names the chart of a tool result, and that the model reads in the same turn (`tool.46`). Not a note: `maxAppNotes` does not count it |
 | Legend overrides | The `fieldConfig` overrides that the user makes with the legend: hide, show and color an item. Only the Renderer keeps them (`renderer.37`) |

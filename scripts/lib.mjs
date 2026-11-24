@@ -230,12 +230,22 @@ export function panelWithOptions(panel, args, entry) {
   return out;
 }
 
-// The core panel of a chart and its dropped options (save.2 to save.5). panel is the panel of the chart, row is
-// the row of chart-types.json, core is the row of core-panels.json, file is chart-options.json, and coreVersion
-// is the constant. With no core panel, there is no result (save.7).
+// The core panel of a chart and its dropped options (save.2 to save.5, save.10). panel is the panel of the chart,
+// row is the row of chart-types.json, core is the row of core-panels.json, file is chart-options.json, and
+// coreVersion is the constant. With no core panel, there is no result (save.7).
 export function corePanel(panel, row, core, file, coreVersion) {
   if (core.panel === 'none') return undefined;
-  const entry = file.charts[row.name] ?? { options: [], fieldConfig: [] };
+  const chart = file.charts[row.name] ?? { options: [], fieldConfig: [] };
+  // A standard field option of the core row has its place at the same path (save.10): an entry with that path is
+  // read as an entry with that core, and an id with no entry is read as an entry with only a path and that core.
+  const same = (id) => ({ root: 'fieldConfig', path: id });
+  const entry = {
+    options: chart.options,
+    fieldConfig: [
+      ...chart.fieldConfig.map((o) => (!o.core && core.fieldOptions.includes(o.path) ? { ...o, core: same(o.path) } : o)),
+      ...core.fieldOptions.filter((id) => !chart.fieldConfig.some((o) => o.path === id)).map((id) => ({ path: id, core: same(id) })),
+    ],
+  };
   const { type, pluginVersion, options, fieldConfig, ...rest } = panel;
   const out = { ...rest, type: core.panel, pluginVersion: coreVersion, options: structuredClone(core.options), fieldConfig: { defaults: {}, overrides: [] } };
   const dropped = [];

@@ -191,7 +191,8 @@
                 "required": [
                   "chart",
                   "panel",
-                  "options"
+                  "options",
+                  "fieldOptions"
                 ],
                 "properties": {
                   "chart": {
@@ -209,6 +210,15 @@
                   "options": {
                     "type": "object",
                     "description": "The options preset that the core panel gets"
+                  },
+                  "fieldOptions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "description": "The ids of the standard field options of Grafana that the core panel registers. The core panel gets each of them at the same path",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9]*$"
+                    }
                   },
                   "fits": {
                     "type": "array",

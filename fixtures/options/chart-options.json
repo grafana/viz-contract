@@ -15,7 +15,15 @@
           "core": { "root": "options", "path": "reduceOptions.values" }
         }
       ],
-      "fieldConfig": []
+      "fieldConfig": [
+        {
+          "path": "decimals",
+          "description": "Number of decimals of the values",
+          "tier": "default",
+          "default": 1,
+          "schema": { "type": "integer", "minimum": 0 }
+        }
+      ]
     },
     "timeseries": {
       "options": [

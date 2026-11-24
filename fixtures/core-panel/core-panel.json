@@ -46,14 +46,14 @@
       "dropped": []
     },
     {
-      "description": "piechart with no chart option: the default of the entry is the value of the preset",
+      "description": "piechart with no chart option: the default of the entry with core is the value of the preset, and the default of the standard field option decimals, whose entry has no core, is at the same path",
       "chart": "piechart",
       "panel": { "type": "grafana-echartsparttowhole-panel", "options": { "seriesType": "pie" } },
       "core": {
         "type": "piechart",
         "pluginVersion": "12.3.0",
         "options": { "reduceOptions": { "values": true } },
-        "fieldConfig": { "defaults": {}, "overrides": [] }
+        "fieldConfig": { "defaults": { "decimals": 1 }, "overrides": [] }
       },
       "dropped": []
     },
@@ -184,7 +184,7 @@
         "type": "piechart",
         "pluginVersion": "12.3.0",
         "options": { "reduceOptions": { "values": false } },
-        "fieldConfig": { "defaults": {}, "overrides": [] }
+        "fieldConfig": { "defaults": { "decimals": 1 }, "overrides": [] }
       },
       "dropped": []
     },
@@ -202,6 +202,99 @@
         }
       },
       "dropped": ["options.oldOption", "options.Ａ", "options.😀"]
+    },
+    {
+      "description": "piechart with standard field options: the value of decimals, whose entry has no core, replaces its default at the same path, and the core piechart panel does not register thresholds",
+      "chart": "piechart",
+      "panel": {
+        "type": "grafana-echartsparttowhole-panel",
+        "options": { "seriesType": "pie" },
+        "fieldConfig": {
+          "defaults": { "decimals": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } }
+        }
+      },
+      "core": {
+        "type": "piechart",
+        "pluginVersion": "12.3.0",
+        "options": { "reduceOptions": { "values": true } },
+        "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] }
+      },
+      "dropped": ["fieldConfig.defaults.thresholds"]
+    },
+    {
+      "description": "heatmap with the unit of the arguments and a min: the chart has no entry, the core heatmap panel registers unit, and it does not register min",
+      "chart": "heatmap",
+      "panel": {
+        "type": "grafana-echartsheatmap-panel",
+        "options": {},
+        "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 } }
+      },
+      "core": {
+        "type": "heatmap",
+        "pluginVersion": "12.3.0",
+        "options": { "calculate": false },
+        "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+      },
+      "dropped": ["fieldConfig.defaults.min"]
+    },
+    {
+      "description": "barchart with standard field options and no entry: a default whose value is an object, and an override with a carried color and a dropped property that is not a standard field option",
+      "chart": "barchart",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "options": { "seriesType": "bar" },
+        "fieldConfig": {
+          "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "errors" },
+              "properties": [
+                { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } },
+                { "id": "custom.lineWidth", "value": 2 }
+              ]
+            }
+          ]
+        }
+      },
+      "core": {
+        "type": "barchart",
+        "pluginVersion": "12.3.0",
+        "options": {},
+        "fieldConfig": {
+          "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "errors" },
+              "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+            }
+          ]
+        }
+      },
+      "dropped": ["fieldConfig.overrides[0].custom.lineWidth"]
+    },
+    {
+      "description": "nodeGraph with the unit of the arguments and a color override: the core nodeGraph panel registers no standard field option of the list, so both are dropped, and the override is not in the core panel",
+      "chart": "nodeGraph",
+      "panel": {
+        "type": "grafana-relations-panel",
+        "options": { "seriesType": "graph" },
+        "fieldConfig": {
+          "defaults": { "unit": "short" },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "arc__errors" },
+              "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+            }
+          ]
+        }
+      },
+      "core": {
+        "type": "nodeGraph",
+        "pluginVersion": "12.3.0",
+        "options": {},
+        "fieldConfig": { "defaults": {}, "overrides": [] }
+      },
+      "dropped": ["fieldConfig.defaults.unit", "fieldConfig.overrides[0].color"]
     }
   ]
 }

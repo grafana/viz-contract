@@ -250,6 +250,28 @@ for (const [kind, re] of [['options', /^options\./], ['fieldConfig.defaults', /^
   if (!allDropped.some((d) => re.test(d))) fail('fixtures', `no core-panel case with a dropped option of ${kind} (fixtures.21)`);
 }
 if (!coreCases.some((c) => c.core && (c.panel.fieldConfig?.overrides?.length ?? 0) > c.core.fieldConfig.overrides.length)) fail('fixtures', 'no core-panel case with an override that has no carried property (fixtures.21)');
+// The cases cover each part of save.10. A standard field option of a case is a key of fieldConfig.defaults or the
+// id of an override property that is a standard field option of a core row.
+const standardIds = new Set(coreRows.flatMap((r) => r.fieldOptions ?? []));
+const standardOf = (c) => [
+  ...Object.keys(c.panel?.fieldConfig?.defaults ?? {}).map((id) => [id, 'defaults']),
+  ...(c.panel?.fieldConfig?.overrides ?? []).flatMap((o) => o.properties.map((p) => [p.id, 'override'])),
+].filter(([id]) => standardIds.has(id));
+const fieldEntry = (c, id) => chartOptions[c.chart]?.fieldConfig.find((o) => o.path === id);
+const inRow = (c, id) => (coreOf(c.chart)?.fieldOptions ?? []).includes(id);
+for (const [part, test] of [
+  ['a standard field option of fieldConfig.defaults that has no entry', (c, id, where) => where === 'defaults' && inRow(c, id) && !fieldEntry(c, id)],
+  ['a standard field option of an override that has no entry', (c, id, where) => where === 'override' && inRow(c, id) && !fieldEntry(c, id)],
+  ['a standard field option whose entry has no core', (c, id) => inRow(c, id) && fieldEntry(c, id) && !fieldEntry(c, id).core],
+  ['a standard field option of fieldConfig.defaults that the core panel does not register', (c, id, where) => where === 'defaults' && !inRow(c, id)],
+  ['a standard field option of an override that the core panel does not register', (c, id, where) => where === 'override' && !inRow(c, id)],
+]) {
+  if (!coreCases.some((c) => c.core && standardOf(c).some(([id, where]) => test(c, id, where)))) fail('fixtures', `no core-panel case with ${part} (fixtures.21)`);
+}
+// An entry with no core whose path is a standard field option of the core row gives its default (save.10).
+if (!Object.entries(chartOptions).some(([chart, entry]) => entry.fieldConfig.some((o) => !o.core && o.default !== undefined && (coreOf(chart)?.fieldOptions ?? []).includes(o.path)))) {
+  fail('fixtures', 'chart-options.json has no entry with a default and no core for a standard field option of the core row (fixtures.21)');
+}
 // The cases of core-fits.json (fixtures.21): frames that fit the chart fit the core panel or not (save.8).
 const fitsCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-fits.json').cases : [];
 fitsCases.forEach((c, i) => {
@@ -283,6 +305,13 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
   const cores = [...entry.options, ...entry.fieldConfig].filter((o) => o.core);
   if (coreOf(chart)?.panel === 'none' && cores.length) fail('fixtures', `chart-options.json: ${chart} has no core panel, so no entry can have core (delivery.26)`);
   for (const o of entry.fieldConfig) if (o.core && o.core.root !== 'fieldConfig') fail('fixtures', `chart-options.json: the core of the field option ${chart} ${o.path} must have the root fieldConfig (delivery.26)`);
+  // Only the entry of a standard field option of the core row can have the place of that option (save.10).
+  const standard = coreOf(chart)?.fieldOptions ?? [];
+  for (const o of cores) {
+    if (o.core.root === 'fieldConfig' && standard.includes(o.core.path) && !(entry.fieldConfig.includes(o) && o.path === o.core.path)) {
+      fail('fixtures', `chart-options.json: the core of ${chart} ${o.path} is the place of the standard field option ${o.core.path} (delivery.26)`);
+    }
+  }
   for (const o of cores) {
     const same = cores.filter((x) => x.core.root === o.core.root);
     if (same.filter((x) => x.core.path === o.core.path).length > 1) fail('fixtures', `chart-options.json: ${chart} has the core ${o.core.root} ${o.core.path} two times (delivery.26)`);

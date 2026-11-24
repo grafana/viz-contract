@@ -93,9 +93,9 @@ are in `fixtures/`, one directory for each set.
   the same viz spec (`renderer.35`).
 - `fixtures.21` One `core-panel` set. It has `core-panel.json` and `core-fits.json` only. For each case of
   `core-panel.json`, the Source test makes the core panel of `panel` for the chart `chart`, with the
-  `chart-options.json` of the set `options` (`fixtures.17`) and `coreVersion`. The core panel must equal `core`, and the list of the dropped options must
-  equal `dropped` (`save.2` to `save.5`). With a `core` of `null`, the chart has no core panel (`save.7`). The
-  cases cover these parts:
+  `chart-options.json` of the set `options` (`fixtures.17`) and `coreVersion`. The core panel must equal `core`,
+  and the list of the dropped options must equal `dropped` (`save.2` to `save.5`, `save.10`). With a `core` of
+  `null`, the chart has no core panel (`save.7`). The cases cover these parts:
   - Each chart that has a core panel, with a panel that has no chart option. For a chart with an entry in
     `chart-options.json`, the core panel has the `default` of each entry with `core` (`save.3`).
   - One chart with no core panel.
@@ -104,6 +104,9 @@ are in `fixtures/`, one directory for each set.
     property, and the override after it has a dropped property, so `<n>` counts both (`save.5`).
   - Three paths that are not options of the chart, next to a path of the chart row. Two of them are not ASCII,
     so their code point order is not the order of their UTF-16 code units (`save.5`).
+  - Each part of `save.10`: a standard field option of `fieldConfig.defaults` and of an override that has no
+    entry, a standard field option whose entry has a `default` and no `core`, and a standard field option of
+    `fieldConfig.defaults` and of an override that the core panel does not register.
 
   For each case of `core-fits.json`, the frames of `results` fit the chart `chart`. The test makes sure that
   they fit the core panel only when `fits` is `true` (`save.8`). Each row of `core-panels.json` that has `fits`
