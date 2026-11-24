@@ -28,6 +28,11 @@ gives the tool result. [Chart options](#chart-options) gives the shapes of the c
 - `tool.8` `unit` is a Grafana unit ID, for example `bytes`. It applies to all queries of the call. Thus two queries
   in different units show the same unit. The Source does not check the unit. The Renderer checks it
   (`state.9`).
+- `tool.50` The description of `type` in the schema of the tool arguments is `Optional chart to draw. With no
+  type, the chart comes from the data. get_chart_options gives the data that a chart needs.` It does not list the
+  data that each chart needs. The text of `get_chart_options` gives the data that one chart needs (`tool.44`), and
+  the `type-mismatch` tool error gives it too (`tool.20`). Thus the tool list of a Host does not grow with the
+  charts.
 
 ## Query rules
 
@@ -149,7 +154,8 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   returns the `unknown-chart` tool error of `states.json`. `<charts>` lists each chart, in the order of
   `chart-types.json`.
 - `tool.44` The text of `get_chart_options` has these lines, in this order:
-  1. `Options of <chart>. Set them in options.`
+  1. `Options of <chart>. It needs <dataShape>. Set them in options.` `<dataShape>` is the `dataShape` of the
+     chart in `chart-types.json`.
   2. One line for each entry of the `options` list of the chart, in the order of the file.
   3. `Field options of <chart>. Set them in fieldConfig.defaults for all fields, or in the properties of an
      override.`
