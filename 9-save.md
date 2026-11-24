@@ -127,6 +127,10 @@ says yet which tool arguments the App gives to a save. Thus, in these two cases,
 has the time range of the last tool arguments or the time range of the chart on screen. This question is in
 item 3 of `future.md`.
 
+`save.20` gives the time range of a save. It does not depend on the place of the save. `save.21` to `save.24`
+are rules for a save to a dashboard only. If the contract later saves the chart to another place, for example a
+notebook, that place needs its own rules for the time range.
+
 - `save.20` The time range of a save is the `from` and the `to` of the tool arguments of the save. If the
   arguments have no `from` or no `to`, that value is `defaultFrom` or `defaultTo`, as in `tool.5`. A value that
   starts with `now` is a relative value, for example `now-6h`. For each other value, the Source uses the
