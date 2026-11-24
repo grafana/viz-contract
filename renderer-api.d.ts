@@ -32,8 +32,8 @@ export interface RenderOptions {
   onState?: (state: RenderState) => void;
   /**
    * Called when the user clicks Refresh or picks a time range, and for each zoom, zoom out and pan of the chart
-   * (renderer.74). Also called for each Reset, if the Renderer offers Reset (renderer.71). The Renderer shows
-   * Refresh and the time picker only when the App gives this option.
+   * (renderer.74). Also called for each Reset, if the Renderer offers Reset with onRefresh (renderer.71). The
+   * Renderer shows Refresh and the time picker only when the App gives this option.
    */
   onRefresh?: (request: RefreshRequest) => void;
   /**
