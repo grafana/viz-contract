@@ -21,6 +21,7 @@ are in `fixtures/`, one directory for each set.
 | `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
 | `core-panel.json` | `cases`: a list. Each case has a `description`, a `chart`, the `panel` of that chart, the expected `core` (the core panel, or `null` for a chart with no core panel) and the expected `dropped` list | Source |
 | `core-fits.json` | `cases`: a list. Each case has a `description`, a `chart`, `results` (the frames, as `data.results` of a viz spec), and `fits`: `true` when the frames fit the core panel of the chart | Source |
+| `core-version.json` | `cases`: a list. Each case has a `description`, a `version` (the version of the Grafana of the save, or `null` when the Source cannot read it) and the expected `result`: `allowed`, `older` or `not-known` | Source |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -91,11 +92,11 @@ are in `fixtures/`, one directory for each set.
   the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
   have the color of the legend and the line style of the override. The same must be true after an `update` with
   the same viz spec (`renderer.35`).
-- `fixtures.21` One `core-panel` set. It has `core-panel.json` and `core-fits.json` only. For each case of
-  `core-panel.json`, the Source test makes the core panel of `panel` for the chart `chart`, with the
-  `chart-options.json` of the set `options` (`fixtures.17`) and `coreVersion`. The core panel must equal `core`,
-  and the list of the dropped options must equal `dropped` (`save.2` to `save.5`, `save.10`). With a `core` of
-  `null`, the chart has no core panel (`save.7`). The cases cover these parts:
+- `fixtures.21` One `core-panel` set. It has `core-panel.json`, `core-fits.json` and `core-version.json` only.
+  For each case of `core-panel.json`, the Source test makes the core panel of `panel` for the chart `chart`,
+  with the `chart-options.json` of the set `options` (`fixtures.17`) and `coreVersion`. The core panel must
+  equal `core`, and the list of the dropped options must equal `dropped` (`save.2` to `save.5`, `save.10`).
+  With a `core` of `null`, the chart has no core panel (`save.7`). The cases cover these parts:
   - Each chart that has a core panel, with a panel that has no chart option. For a chart with an entry in
     `chart-options.json`, the core panel has the `default` of each entry with `core` (`save.3`).
   - One chart with no core panel.
@@ -112,6 +113,15 @@ are in `fixtures/`, one directory for each set.
   they fit the core panel only when `fits` is `true` (`save.8`). Each row of `core-panels.json` that has `fits`
   has one case of each kind. A check also makes sure that the data of the smoke set of each chart fits its core
   panel.
+
+  For each case of `core-version.json`, the Source test gives `version` as the version of the Grafana of a save
+  that needs the core panel, with `coreVersion` (`save.9`). With the `result` `allowed`, the save is not refused
+  for its version. With `older`, the save is refused, and it tells the version and `coreVersion`. With
+  `not-known`, the save is refused, and it tells that the version is not known. The cases cover these parts:
+  - The version `coreVersion`, a newer version and an older version. One newer and one older version have a
+    number of two digits next to a number of one digit, so a compare of the text gives the wrong order.
+  - A build of `coreVersion` with a pre-release part and with a build part, and a build of an older version.
+  - A version that the Source cannot read, and each kind of version that does not have the form of `save.9`.
 
 ## Conformance tests
 

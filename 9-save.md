@@ -99,7 +99,16 @@ The Source makes the core panel, because it reads both files (`tool.37`). Both p
   from `coreVersion`. An older Grafana does not know that form, and it ignores an option that it does not know.
   When a save needs the core panel and the version of the Grafana of the save is older than `coreVersion`, the
   save is refused: it writes no panel. It tells the user and the model the version of the Grafana and
-  `coreVersion`. The order of two versions is the precedence of Semantic Versioning 2.0.0. If the Source cannot
-  read the version of the Grafana of the save, or that version is not a version of Semantic Versioning 2.0.0,
-  the save is also refused. It then tells the user and the model that the version is not known, and
   `coreVersion`.
+
+  The Source compares only the major, the minor and the patch number of the two versions. It compares them as
+  numbers, in that order. It does not read the text after the patch number, which is the pre-release part and
+  the build part of Semantic Versioning 2.0.0. A Grafana reports a build of a version with such a part, for
+  example `13.1.0-98765` in Grafana Cloud. In the precedence of Semantic Versioning 2.0.0, that build is older
+  than the version with no part. Thus the precedence would refuse a build of `coreVersion`, and the Source does
+  not use it.
+
+  The version of the Grafana of the save is known when it has this form: three numbers with a `.` between them,
+  and then nothing or a text that starts with `-` or `+`. A number has only the digits `0` to `9`. It is `0`, or
+  it does not start with `0`. If the Source cannot read the version, or the version does not have this form, the
+  save is also refused. It then tells the user and the model that the version is not known, and `coreVersion`.

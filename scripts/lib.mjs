@@ -287,6 +287,17 @@ export function corePanel(panel, row, core, file, coreVersion) {
   return { panel: out, dropped };
 }
 
+// The result of save.9 for the version of the Grafana of the save: allowed, older or not-known. version is not a
+// string when the Source cannot read it. Only the major, the minor and the patch number count.
+export function coreVersionResult(version, coreVersion) {
+  const numbers = (v) => /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:$|[-+])/.exec(v)?.slice(1).map(BigInt);
+  const got = typeof version === 'string' ? numbers(version) : undefined;
+  if (!got) return 'not-known';
+  const want = numbers(coreVersion);
+  const n = got.findIndex((x, i) => x !== want[i]);
+  return n >= 0 && got[n] < want[n] ? 'older' : 'allowed';
+}
+
 // JSON with the keys of each object in order. Two values that are equal give the same text.
 export const canonical = (value) =>
   JSON.stringify(value, (_, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : 1))) : v));

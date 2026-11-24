@@ -1,0 +1,43 @@
+{
+  "cases": [
+    { "description": "the version is coreVersion", "version": "12.3.0", "result": "allowed" },
+    { "description": "a newer patch number", "version": "12.3.1", "result": "allowed" },
+    {
+      "description": "a newer minor number: the numbers compare as numbers, so 10 is more than 3",
+      "version": "12.10.0",
+      "result": "allowed"
+    },
+    { "description": "a newer major number with an older minor number", "version": "13.0.0", "result": "allowed" },
+    {
+      "description": "a Grafana Cloud build of coreVersion: the Source does not read the pre-release part, although the precedence of Semantic Versioning 2.0.0 makes this version older than coreVersion",
+      "version": "12.3.0-18925857539",
+      "result": "allowed"
+    },
+    { "description": "a build part after coreVersion", "version": "12.3.0+security-01", "result": "allowed" },
+    { "description": "a local build of a newer version", "version": "13.4.0-local", "result": "allowed" },
+    { "description": "an older patch number with an older minor number", "version": "12.2.9", "result": "older" },
+    {
+      "description": "a Grafana Cloud build of an older version: the pre-release part does not make it newer",
+      "version": "12.2.0-18925857539",
+      "result": "older"
+    },
+    {
+      "description": "an older major number: the numbers compare as numbers, so 9 is less than 12",
+      "version": "9.5.21",
+      "result": "older"
+    },
+    { "description": "a build part after an older version", "version": "11.6.0+security-01", "result": "older" },
+    { "description": "two numbers", "version": "12.3", "result": "not-known" },
+    { "description": "four numbers", "version": "12.3.0.1", "result": "not-known" },
+    { "description": "a letter before the numbers", "version": "v12.3.0", "result": "not-known" },
+    { "description": "a number that starts with 0", "version": "12.03.0", "result": "not-known" },
+    {
+      "description": "a text after the patch number that does not start with - or +",
+      "version": "12.3.0pre",
+      "result": "not-known"
+    },
+    { "description": "digits that are not 0 to 9", "version": "１２.3.0", "result": "not-known" },
+    { "description": "an empty version", "version": "", "result": "not-known" },
+    { "description": "the Source cannot read the version", "version": null, "result": "not-known" }
+  ]
+}

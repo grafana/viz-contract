@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -285,6 +285,26 @@ fitsCases.forEach((c, i) => {
 });
 for (const r of coreRows.filter((x) => x.fits)) {
   for (const want of [true, false]) if (!fitsCases.some((c) => c.chart === r.chart && c.fits === want)) fail('fixtures', `no core-fits case for ${r.chart} with fits ${want} (fixtures.21)`);
+}
+// The cases of core-version.json (fixtures.21): the result of save.9 for a version of the Grafana of the save.
+const versionCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-version.json').cases : [];
+const coreVersion = constants.coreVersion.value;
+versionCases.forEach((c, i) => {
+  const name = `core-version case ${i + 1} (${JSON.stringify(c.version)})`;
+  if (c.version !== null && typeof c.version !== 'string') return fail('fixtures', `${name}: version must be a string or null`);
+  if (c.result !== coreVersionResult(c.version, coreVersion)) fail('fixtures', `${name}: result is not the result of save.9: ${coreVersionResult(c.version, coreVersion)}`);
+});
+for (const [part, test] of [
+  ['the version coreVersion', (c) => c.version === coreVersion],
+  ['a build of coreVersion with a pre-release part', (c) => c.version?.startsWith(`${coreVersion}-`)],
+  ['a build of coreVersion with a build part', (c) => c.version?.startsWith(`${coreVersion}+`)],
+  ['a newer version', (c) => c.result === 'allowed' && c.version !== coreVersion && !/[-+]/.test(c.version)],
+  ['an older version', (c) => c.result === 'older' && !/[-+]/.test(c.version)],
+  ['an older version with a pre-release part', (c) => c.result === 'older' && c.version.includes('-')],
+  ['a version that does not have the form', (c) => c.result === 'not-known' && typeof c.version === 'string'],
+  ['a version that the Source cannot read', (c) => c.version === null],
+]) {
+  if (!versionCases.some(test)) fail('fixtures', `no core-version case with ${part} (fixtures.21)`);
 }
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
