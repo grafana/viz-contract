@@ -8,15 +8,15 @@ specified.
    conversation with `ui/message` of MCP Apps. A message about a point is specified (`renderer.30`, `state.20`).
    See https://github.com/grafana/viz-contract/issues/17.
 3. Save to a dashboard. The user saves the chart to a Grafana dashboard. The core panel of a chart lets a
-   Grafana that cannot draw the panel of the chart open the saved panel (`save.1` to `save.9`). The frames of a
+   Grafana that cannot draw the panel of the chart open the saved panel (`save.1` to `save.10`). The frames of a
    chart can fit the chart and not its core panel (`save.8`). The save rules must say how a save finds such
    frames, and what it does then. The saved panel also needs the legend overrides, and now only the Renderer has
    them (`renderer.37`). A legend override is an override property, so the core panel gets it or drops it as each
-   other property (`save.4`, `save.10`). The saved panel also has the chart options (`tool.41`). Grafana runs the migrations of a
-   panel from the `pluginVersion` of the saved panel. Thus a saved panel of the chart needs as its
-   `pluginVersion` the version of the panel that the Source checked the options against, and that panel must
-   give its migrations to Grafana. `chart-options.json` gives this version (`delivery.23`). A saved core panel
-   has `coreVersion` (`save.2`).
+   other property (`save.4`, `save.10`). The saved panel also has the chart options (`tool.41`). Grafana runs the
+   migrations of a panel from the `pluginVersion` of the saved panel. Thus a saved panel of the chart needs as
+   its `pluginVersion` the version of the panel that the Source checked the options against, and that panel
+   must give its migrations to Grafana. `chart-options.json` gives this version (`delivery.23`). A saved core
+   panel has `coreVersion` (`save.2`).
 4. Open a dashboard panel. The App draws a panel of an existing dashboard from its panel JSON.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.
