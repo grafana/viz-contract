@@ -453,6 +453,22 @@ if (!(saveResult?.url && saveResult.dropped.some((d) => d.startsWith('options.')
 }
 if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'args.json')))) fail('fixtures', 'no save set with args.json (fixtures.31)');
 if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'save-retry-args.json')))) fail('fixtures', 'no save set with save-retry-args.json (fixtures.31)');
+// The sets of the save of the tool result (fixtures.36): the files of epoch-range, and a result.json with a save.
+for (const [set, available] of [['save-available', true], ['save-not-available', false]]) {
+  const file = (name) => (fs.existsSync(path.join(FIX, set, name)) ? readJSON(`fixtures/${set}/${name}`) : undefined);
+  const base = (name) => readJSON(`fixtures/epoch-range/${name}`);
+  if (canonical(file('result.json')) !== canonical({ ...base('result.json'), save: { available } })) {
+    fail('fixtures', `${set}/result.json is not the result.json of epoch-range with save.available ${available} (fixtures.36)`);
+  }
+  for (const name of ['args.json', 'spec.json']) {
+    if (canonical(file(name)) !== canonical(base(name))) fail('fixtures', `${set}/${name} is not the ${name} of epoch-range (fixtures.36)`);
+  }
+  if (fs.readdirSync(path.join(FIX, set)).length !== 3) fail('fixtures', `${set} has args.json, result.json and spec.json only (fixtures.36)`);
+}
+// The App does not write the save of the tool result to the viz spec (save.58).
+for (const set of sets) {
+  if (fs.existsSync(path.join(FIX, set, 'spec.json')) && readJSON(`fixtures/${set}/spec.json`).save !== undefined) fail('fixtures', `${set}/spec.json has a save (save.58)`);
+}
 // The set options-legend has one override with a color and one more property (fixtures.20).
 const legendOverride = sets.includes('options-legend') ? readJSON('fixtures/options-legend/spec.json').panel.fieldConfig?.overrides?.[0] : undefined;
 if (!(legendOverride?.matcher?.id === 'byName' && legendOverride.properties?.some((p) => p.id === 'color') && legendOverride.properties.length > 1)) {

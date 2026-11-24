@@ -9,8 +9,7 @@ specified.
    See https://github.com/grafana/viz-contract/issues/17.
 3. The saved panel. `save_chart` saves the chart to a Grafana dashboard (`save.25`). These parts of a save are
    not specified: the JSON of the saved panel, its place in the dashboard, and how the Source knows that a save
-   needs the core panel. The tool result must also tell the App if the user can save, so that the App shows no
-   Save control that always fails. The core panel of a chart lets a Grafana that cannot draw the panel of the
+   needs the core panel. The core panel of a chart lets a Grafana that cannot draw the panel of the
    chart open the saved panel (`save.1` to `save.10`). The frames of a chart can fit the chart and not its core
    panel (`save.8`). The Source does not query in a save, so it has no frames (`save.35`). The save rules must
    say how a save finds such frames, and what it does then. The saved panel also needs the legend overrides, and

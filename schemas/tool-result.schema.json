@@ -42,6 +42,19 @@
       "type": "string",
       "format": "uri",
       "description": "The base URL of the Grafana that the Source queries."
+    },
+    "save": {
+      "type": "object",
+      "description": "Tells the App if the user can save the chart to a dashboard. A tool result of an older Source has none, and the App then does as for false.",
+      "required": [
+        "available"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean",
+          "description": "True only if the server lists save_chart and the user can write a dashboard or create one. It can be older than the save."
+        }
+      }
     }
   },
   "$defs": {
