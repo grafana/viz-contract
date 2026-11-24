@@ -56,6 +56,24 @@
       "title": "registry/constants.json",
       "type": "object",
       "propertyNames": { "pattern": "^[a-z][A-Za-z0-9]*$" },
+      "required": ["coreVersion"],
+      "properties": {
+        "coreVersion": {
+          "allOf": [
+            { "$ref": "#/$defs/constant" },
+            {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$",
+                  "description": "A version of Semantic Versioning 2.0.0"
+                }
+              }
+            }
+          ]
+        }
+      },
       "additionalProperties": { "$ref": "#/$defs/constant" }
     },
     "panelTypes": {
@@ -75,6 +93,59 @@
               "name": { "type": "string", "minLength": 1, "description": "The name of the panel that a user reads, in lower case" }
             },
             "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "corePanels": {
+      "title": "registry/core-panels.json",
+      "type": "object",
+      "required": ["charts"],
+      "properties": {
+        "charts": {
+          "type": "array",
+          "minItems": 1,
+          "description": "One row for each row of registry/chart-types.json, in the same order",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": ["chart", "panel", "options", "fieldOptions"],
+                "properties": {
+                  "chart": { "type": "string", "description": "A name of registry/chart-types.json" },
+                  "panel": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9-]*$",
+                    "not": { "const": "none" },
+                    "description": "The type of the core Grafana panel that draws the data of the chart"
+                  },
+                  "options": { "type": "object", "description": "The options preset that the core panel gets" },
+                  "fieldOptions": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "description": "The ids of the standard field options of Grafana that the core panel registers. The core panel gets each of them at the same path",
+                    "items": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9]*$" }
+                  },
+                  "fits": {
+                    "type": "array",
+                    "minItems": 1,
+                    "description": "The frames that fit the chart fit the core panel when one condition of the list matches. With no fits, they always fit the core panel",
+                    "items": { "$ref": "#/$defs/condition" }
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": ["chart", "panel"],
+                "properties": {
+                  "chart": { "type": "string", "description": "A name of registry/chart-types.json" },
+                  "panel": { "const": "none", "description": "No core Grafana panel draws the data of the chart" }
+                },
+                "additionalProperties": false
+              }
+            ]
           }
         }
       },

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveTimeRange, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveTimeRange, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -40,7 +40,7 @@ if (old.length) fail('generated', `not current: ${old.join(', ')}. Run node scri
 else pass('generated', 'schemas, bundled schemas and the constants table are current');
 
 // 3. The registries are valid, and they agree with each other.
-const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', pick: 'pick', states: 'states', notices: 'notices', messages: 'messages' };
+const defs = { constants: 'constants', 'panel-types': 'panelTypes', 'chart-types': 'chartTypes', 'core-panels': 'corePanels', pick: 'pick', states: 'states', notices: 'notices', messages: 'messages' };
 for (const [file, def] of Object.entries(defs)) {
   const v = ajv.getSchema(`registry.schema.json#/$defs/${def}`);
   if (v(readJSON(`registry/${file}.json`))) pass('registry', `${file}.json is valid`);
@@ -49,6 +49,8 @@ for (const [file, def] of Object.entries(defs)) {
 const panels = readJSON('registry/panel-types.json').panels.map((p) => p.id);
 const charts = readJSON('registry/chart-types.json').charts;
 const names = charts.map((c) => c.name);
+const coreRows = readJSON('registry/core-panels.json').charts;
+const coreOf = (chart) => coreRows.find((c) => c.chart === chart);
 const rules = readJSON('registry/pick.json').rules;
 const states = readJSON('registry/states.json');
 const noticeCodes = readJSON('registry/notices.json').notices.map((n) => n.code);
@@ -59,6 +61,7 @@ const rel = [
   [new Set(names).size === names.length, 'chart names are unique'],
   [charts.every((c) => panels.includes(c.panel)), 'each chart names a panel of panel-types.json'],
   [panels.every((p) => charts.some((c) => c.panel === p)), 'each panel has a chart'],
+  [JSON.stringify(coreRows.map((c) => c.chart)) === JSON.stringify(names), 'core-panels.json has one row for each chart, in the order of chart-types.json (save.1)'],
   [rules.every((r) => names.includes(r.chart)), 'each pick rule names a chart'],
   [Object.keys(rules.at(-1).when).length === 0, 'the last pick rule has an empty when'],
 ];
@@ -76,7 +79,8 @@ const fileSchema = {
   'retry-args.json': 'query-datasource-args',
 };
 // The chart options sets (fixtures.17) use the chart-options.json of the set options.
-const { charts: chartOptions, panels: chartPanels } = readJSON('fixtures/options/chart-options.json');
+const chartOptionsFile = readJSON('fixtures/options/chart-options.json');
+const { charts: chartOptions, panels: chartPanels } = chartOptionsFile;
 const valueAjv = newAjv();
 const validValue = (schema, value) => valueAjv.compile(schema)(value);
 const overrideSchema = readJSON('schemas/field-config.schema.json').$defs.override;
@@ -216,7 +220,91 @@ for (const set of sets) {
     else if (spec.panel.type !== row.panel || JSON.stringify(spec.panel.options) !== JSON.stringify(row.options)) {
       fail('fixtures', `${set}: panel type or options are not those of the chart row`);
     } else if (!fits(summary(spec.data.results), row)) fail('fixtures', `${set}: the data does not fit the chart`);
+    // The data of the smoke set of a chart with a core panel also fits the core panel (save.8).
+    else if (coreOf(row.name)?.fits && !fits(summary(spec.data.results), coreOf(row.name))) fail('fixtures', `${set}: the data does not fit the core panel (save.8)`);
   }
+}
+// The cases of the set core-panel (fixtures.21): the core panel and the dropped options of save.2 to save.5.
+const coreCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-panel.json').cases : [];
+const leafPaths = (node, prefix = '') =>
+  Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leafPaths(v, `${prefix}${k}.`) : [[`${prefix}${k}`, v]]));
+const at = (node, p) => p.split('.').reduce((n, k) => n?.[k], node);
+coreCases.forEach((c, i) => {
+  const name = `core-panel case ${i + 1} (${c.chart})`;
+  const row = charts.find((x) => x.name === c.chart);
+  if (!row || !coreOf(c.chart)) return fail('fixtures', `${name}: no chart row`);
+  // The panel of a case is a panel of the chart: the type and the options preset of the chart row (tool.22).
+  if (c.panel?.type !== row.panel || leafPaths(row.options).some(([p, v]) => canonical(at(c.panel.options, p)) !== canonical(v))) {
+    fail('fixtures', `${name}: panel does not have the type and the options of the chart row`);
+  }
+  const want = corePanel(c.panel, row, coreOf(c.chart), chartOptionsFile, constants.coreVersion.value);
+  if (canonical({ core: c.core, dropped: c.dropped }) !== canonical({ core: want?.panel ?? null, dropped: want?.dropped ?? [] })) {
+    fail('fixtures', `${name}: core and dropped are not the result of save.2 to save.5:\n${JSON.stringify(want ?? null)}`);
+  }
+});
+for (const r of coreRows) if (r.panel !== 'none' && !coreCases.some((c) => c.chart === r.chart)) fail('fixtures', `no core-panel case for ${r.chart} (fixtures.21)`);
+if (!coreCases.some((c) => c.core === null)) fail('fixtures', 'no core-panel case for a chart with no core panel (fixtures.21)');
+// The cases cover each kind of dropped option (save.5), and an override that the core panel does not have.
+const allDropped = coreCases.flatMap((c) => c.dropped ?? []);
+for (const [kind, re] of [['options', /^options\./], ['fieldConfig.defaults', /^fieldConfig\.defaults\./], ['an override property', /^fieldConfig\.overrides\[\d+\]\./]]) {
+  if (!allDropped.some((d) => re.test(d))) fail('fixtures', `no core-panel case with a dropped option of ${kind} (fixtures.21)`);
+}
+if (!coreCases.some((c) => c.core && (c.panel.fieldConfig?.overrides?.length ?? 0) > c.core.fieldConfig.overrides.length)) fail('fixtures', 'no core-panel case with an override that has no carried property (fixtures.21)');
+// The cases cover each part of save.10. A standard field option of a case is a key of fieldConfig.defaults or the
+// id of an override property that is a standard field option of a core row.
+const standardIds = new Set(coreRows.flatMap((r) => r.fieldOptions ?? []));
+const standardOf = (c) => [
+  ...Object.keys(c.panel?.fieldConfig?.defaults ?? {}).map((id) => [id, 'defaults']),
+  ...(c.panel?.fieldConfig?.overrides ?? []).flatMap((o) => o.properties.map((p) => [p.id, 'override'])),
+].filter(([id]) => standardIds.has(id));
+const fieldEntry = (c, id) => chartOptions[c.chart]?.fieldConfig.find((o) => o.path === id);
+const inRow = (c, id) => (coreOf(c.chart)?.fieldOptions ?? []).includes(id);
+for (const [part, test] of [
+  ['a standard field option of fieldConfig.defaults that has no entry', (c, id, where) => where === 'defaults' && inRow(c, id) && !fieldEntry(c, id)],
+  ['a standard field option of an override that has no entry', (c, id, where) => where === 'override' && inRow(c, id) && !fieldEntry(c, id)],
+  ['a standard field option whose entry has no core', (c, id) => inRow(c, id) && fieldEntry(c, id) && !fieldEntry(c, id).core],
+  ['a standard field option of fieldConfig.defaults that the core panel does not register', (c, id, where) => where === 'defaults' && !inRow(c, id)],
+  ['a standard field option of an override that the core panel does not register', (c, id, where) => where === 'override' && !inRow(c, id)],
+]) {
+  if (!coreCases.some((c) => c.core && standardOf(c).some(([id, where]) => test(c, id, where)))) fail('fixtures', `no core-panel case with ${part} (fixtures.21)`);
+}
+// An entry with no core whose path is a standard field option of the core row gives its default (save.10).
+if (!Object.entries(chartOptions).some(([chart, entry]) => entry.fieldConfig.some((o) => !o.core && o.default !== undefined && (coreOf(chart)?.fieldOptions ?? []).includes(o.path)))) {
+  fail('fixtures', 'chart-options.json has no entry with a default and no core for a standard field option of the core row (fixtures.21)');
+}
+// The cases of core-fits.json (fixtures.21): frames that fit the chart fit the core panel or not (save.8).
+const fitsCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-fits.json').cases : [];
+fitsCases.forEach((c, i) => {
+  const name = `core-fits case ${i + 1} (${c.chart})`;
+  const row = charts.find((x) => x.name === c.chart);
+  const core = coreOf(c.chart);
+  if (!row || !core || core.panel === 'none') return fail('fixtures', `${name}: the chart has no core panel`);
+  const s = summary(c.results);
+  if (!fits(s, row)) fail('fixtures', `${name}: the frames do not fit the chart`);
+  if (c.fits !== (!core.fits || fits(s, core))) fail('fixtures', `${name}: fits is not the result of save.8`);
+});
+for (const r of coreRows.filter((x) => x.fits)) {
+  for (const want of [true, false]) if (!fitsCases.some((c) => c.chart === r.chart && c.fits === want)) fail('fixtures', `no core-fits case for ${r.chart} with fits ${want} (fixtures.21)`);
+}
+// The cases of core-version.json (fixtures.21): the result of save.9 for a version of the Grafana of the save.
+const versionCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-version.json').cases : [];
+const coreVersion = constants.coreVersion.value;
+versionCases.forEach((c, i) => {
+  const name = `core-version case ${i + 1} (${JSON.stringify(c.version)})`;
+  if (c.version !== null && typeof c.version !== 'string') return fail('fixtures', `${name}: version must be a string or null`);
+  if (c.result !== coreVersionResult(c.version, coreVersion)) fail('fixtures', `${name}: result is not the result of save.9: ${coreVersionResult(c.version, coreVersion)}`);
+});
+for (const [part, test] of [
+  ['the version coreVersion', (c) => c.version === coreVersion],
+  ['a build of coreVersion with a pre-release part', (c) => c.version?.startsWith(`${coreVersion}-`)],
+  ['a build of coreVersion with a build part', (c) => c.version?.startsWith(`${coreVersion}+`)],
+  ['a newer version', (c) => c.result === 'allowed' && c.version !== coreVersion && !/[-+]/.test(c.version)],
+  ['an older version', (c) => c.result === 'older' && !/[-+]/.test(c.version)],
+  ['an older version with a pre-release part', (c) => c.result === 'older' && c.version.includes('-')],
+  ['a version that does not have the form', (c) => c.result === 'not-known' && typeof c.version === 'string'],
+  ['a version that the Source cannot read', (c) => c.version === null],
+]) {
+  if (!versionCases.some(test)) fail('fixtures', `no core-version case with ${part} (fixtures.21)`);
 }
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});
@@ -229,6 +317,30 @@ for (const [chart, entry] of Object.entries(chartOptions)) {
       if (name === 'options' && preset.some((p) => p === o.path || p.startsWith(`${o.path}.`) || o.path.startsWith(`${p}.`))) {
         fail('fixtures', `chart-options.json: ${chart} ${o.path} is in the options of the chart row (delivery.17)`);
       }
+    }
+  }
+}
+// The core of the entries follows delivery.26.
+for (const [chart, entry] of Object.entries(chartOptions)) {
+  const cores = [...entry.options, ...entry.fieldConfig].filter((o) => o.core);
+  if (coreOf(chart)?.panel === 'none' && cores.length) fail('fixtures', `chart-options.json: ${chart} has no core panel, so no entry can have core (delivery.26)`);
+  for (const o of entry.fieldConfig) if (o.core && o.core.root !== 'fieldConfig') fail('fixtures', `chart-options.json: the core of the field option ${chart} ${o.path} must have the root fieldConfig (delivery.26)`);
+  // Only the entry of a standard field option of the core row can have the place of that option (save.10).
+  const standard = coreOf(chart)?.fieldOptions ?? [];
+  for (const o of cores) {
+    if (o.core.root === 'fieldConfig' && standard.includes(o.core.path) && !(entry.fieldConfig.includes(o) && o.path === o.core.path)) {
+      fail('fixtures', `chart-options.json: the core of ${chart} ${o.path} is the place of the standard field option ${o.core.path} (delivery.26)`);
+    }
+  }
+  for (const o of cores) {
+    const same = cores.filter((x) => x.core.root === o.core.root);
+    if (same.filter((x) => x.core.path === o.core.path).length > 1) fail('fixtures', `chart-options.json: ${chart} has the core ${o.core.root} ${o.core.path} two times (delivery.26)`);
+    if (same.some((x) => x.core.path.startsWith(`${o.core.path}.`))) fail('fixtures', `chart-options.json: the core ${o.core.root} ${o.core.path} of ${chart} is the start of another core path (delivery.26)`);
+    // A path cannot go through a value of the preset of the core row that is not an object.
+    const keys = o.core.path.split('.');
+    const through = keys.slice(0, -1).map((_, n) => at(coreOf(chart)?.options ?? {}, keys.slice(0, n + 1).join('.')));
+    if (o.core.root === 'options' && through.some((v) => v !== undefined && (v === null || typeof v !== 'object' || Array.isArray(v)))) {
+      fail('fixtures', `chart-options.json: the core options ${o.core.path} of ${chart} goes through a preset value that is not an object (delivery.26)`);
     }
   }
 }

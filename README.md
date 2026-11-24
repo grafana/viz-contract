@@ -39,6 +39,7 @@ flowchart TB
 | Renderer API | App | Renderer | [3-renderer.md](3-renderer.md), `renderer-api.d.ts` |
 | States, notices and model context | Renderer, App | App, Model | [4-states-and-notices.md](4-states-and-notices.md) |
 | Refresh | Renderer, App | App, Source | [5-refresh.md](5-refresh.md) |
+| Core panel | Renderer build | Source | [9-save.md](9-save.md), [7-delivery.md](7-delivery.md), `registry/core-panels.json`, `schemas/chart-options.schema.json` |
 
 ## Terms
 
@@ -51,6 +52,9 @@ flowchart TB
 | Viz spec | The JSON object that the App gives to the Renderer |
 | Icon cache | The `react-inlinesvg` cache of the copy of `@grafana/ui` in the App. `Icon` reads an SVG from it, and makes no request for that SVG |
 | Chart option | A panel option or a field option of a chart that the model can set (`tool.36`). `chart-options.json` of the Renderer lists the chart options of each chart (`delivery.16`) |
+| Core panel | The core Grafana panel that draws the data of a chart in a Grafana that cannot draw the panel of the chart (`save.1`). A chart can have none |
+| Dropped option | A chart option that the core panel does not have (`save.5`) |
+| Standard field option | A field option that Grafana gives to each panel, for example `unit` or `color`. The core panel gets it at the same path (`save.10`) |
 | Note | A text line that the Source gives to `render_grafana_app`, and that the model reads in the same turn (`tool.28`). Not a notice: the Renderer shows a notice in the chart (`state.7`) |
 | Chart line | The text line that names the chart of a tool result, and that the model reads in the same turn (`tool.46`). Not a note: `maxAppNotes` does not count it |
 | Legend overrides | The `fieldConfig` overrides that the user makes with the legend: hide, show and color an item. Only the Renderer keeps them (`renderer.37`) |
@@ -62,15 +66,15 @@ The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 
 ## How to read
 
-1. Files 1 to 5 give the interfaces in build order. Files 6 to 8 apply to all of them. File 9 gives the time
-   range of a saved panel, for a save to a dashboard.
+1. Files 1 to 5 give the interfaces in build order. Files 6 to 8 apply to all of them. File 9 gives the core
+   panel of a chart and the time range of a saved panel, for a save to a dashboard.
 2. Read the files of your part only:
 
    | Part | Files |
    | ---- | ----- |
    | Source | 1, 6, 8, 9, the schemas of the tool arguments, the tool result and the chart options, and `registry/` |
    | App | 1 to 8, and the registries of states, notices and constants |
-   | Renderer | 2 to 8, `renderer-api.d.ts`, and the registries of panel types, states, notices and constants |
+   | Renderer | 2 to 9, `renderer-api.d.ts`, and the registries of panel types, core panels, states, notices and constants |
 
 3. The schemas give the shapes. The prose gives the behavior only, and does not repeat a schema.
    `schemas/bundled/` holds each schema as one file with no reference to another file. Consumers use the bundled
@@ -163,6 +167,7 @@ version.
 | `messageTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a message |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
+| `coreVersion` | 12.3.0 | version | yes | The version of Grafana whose core panels the core panel map is written for. It is the pluginVersion of a core panel |
 <!-- constants:end -->
 
 ## Not in this contract
