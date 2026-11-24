@@ -15,6 +15,12 @@ export declare const version: string;
 /** The specVersion values that the Renderer supports. */
 export declare const specVersions: readonly number[];
 
+/** The name of an optional control (renderer.71). It is also the value of data-viz-control (renderer.72). */
+export type OptionalControl = 'reset-with-refresh' | 'reset-without-refresh' | 'picker-zoom-out';
+
+/** The optional controls that the Renderer offers (renderer.71). A Renderer that offers none exports an empty list. */
+export declare const optionalControls: readonly OptionalControl[];
+
 /**
  * Draws a viz spec into el, and returns at once. A spec that is not correct gives the error state. It does not
  * throw. render throws only if el is not an HTMLElement.
@@ -26,7 +32,7 @@ export interface RenderOptions {
   onState?: (state: RenderState) => void;
   /**
    * Called when the user clicks Refresh or picks a time range, and for each zoom, zoom out and pan of the chart
-   * (renderer.43). Also called for each Reset, if the Renderer offers Reset (renderer.71). The Renderer shows
+   * (renderer.74). Also called for each Reset, if the Renderer offers Reset (renderer.71). The Renderer shows
    * Refresh and the time picker only when the App gives this option.
    */
   onRefresh?: (request: RefreshRequest) => void;

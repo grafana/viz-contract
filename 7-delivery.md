@@ -108,38 +108,43 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.11` A CI check reports the gzip size of `icons.json`, and does not fail. `icons.json` adds to the size
   of `app.html`, but `maxBundleGzipBytes` (`delivery.5`) is for the Renderer bundle only, and does not include
   `icons.json`.
-- `delivery.12` A CI check of the Renderer draws the `prometheus-line` fixture. It does each zoom, zoom out by a
-  double click on the plot area, and pan, with `onRefresh` and with no `onRefresh`. It also does each optional
-  control of the list of `delivery.29`. The check does not do a control that is not in the list, and it skips the
-  cases of that control. With `onRefresh`, the check acts as the App. It ends each busy state with
-  `setRefreshed(<id>, true)`, unless a case below gives another answer. It fails in these cases:
-  - With `onRefresh`, an action does not call `onRefresh` one time with the cause `timeRange`, or the chart is not
-    busy after the call (`renderer.43`).
-  - With `onRefresh`, a zoom out after `render` does not give a range that is wider than `data.range` and has the
-    same center (`renderer.44`).
-  - With `onRefresh`, a pan calls `onRefresh` before the end of the drag, or more than one time (`renderer.46`).
-  - While the chart is busy, an action calls `onRefresh` (`renderer.47`).
-  - With no `onRefresh`, an action makes a network request, or the time range on screen leaves `data.range`
-    (`renderer.42`).
-
-  For a Renderer that offers Reset with `onRefresh`, the check also fails in these cases:
-  - With `onRefresh`, Reset after a zoom does not give the `from` and `to` of the `timeRange` of the fixture, for
-    example `now-15m` and `now` (`renderer.45`).
-  - With `onRefresh`, after a pick of the time picker and a zoom, Reset does not give the `from` and `to` of the
-    pick (`renderer.45`).
-  - With `onRefresh`, Reset with no zoom, zoom out or pan before it calls `onRefresh` (`renderer.48`).
-  - With `onRefresh`, after a zoom and a Reset that the check answers with `setRefreshed(<id>, false)`, a second
-    Reset does not call `onRefresh` (`renderer.48`).
-- `delivery.29` The source of the Renderer has a fixed list of the optional controls that the Renderer offers
-  (`renderer.71`). The list can have these entries: Reset with `onRefresh`, Reset with no `onRefresh`, and the
-  Zoom out button of the time picker. The time picker shows only with `onRefresh` (`refresh.1`), so its button
-  has one entry. The check of `delivery.12` reads the list. It does not find the optional controls from the
-  screen. It fails in these cases:
-  - The check cannot do a control of the list, for example because the chart does not show the control.
-  - The chart shows an optional control that is not in the list.
+- `delivery.29` A CI check of the Renderer makes sure that `optionalControls` and the chart agree (`renderer.71`,
+  `renderer.72`). It draws the `prometheus-line` fixture with `onRefresh` and with no `onRefresh`. In each draw,
+  it does one zoom. With `onRefresh`, it ends the busy state with `setRefreshed(<id>, true)`. Then it reads the
+  `data-viz-control` of each element. It fails in these cases:
+  - `optionalControls` has a value that is not a name of `renderer.71`, or it has a name two times.
+  - With `onRefresh`, `optionalControls` has `reset-with-refresh` or `picker-zoom-out`, and no element has that
+    name.
+  - With no `onRefresh`, `optionalControls` has `reset-without-refresh`, and no element has that name.
+  - An element has a name that `optionalControls` does not have.
+  - An element has the name of a control of the other draw. For example, with no `onRefresh`, an element has
+    `picker-zoom-out`.
 
   Thus a change that removes a control by mistake fails the check. A change that omits a control on purpose also
-  removes its entry from the list.
+  removes its name from `optionalControls`.
+- `delivery.30` A CI check of the Renderer draws the `prometheus-line` fixture. It does each zoom, zoom out by a
+  double click on the plot area, and pan, with `onRefresh` and with no `onRefresh`. It also does each control of
+  `optionalControls` (`renderer.71`). It finds the element of the control by its `data-viz-control`
+  (`renderer.72`). The check skips the cases of a control that `optionalControls` does not have. With
+  `onRefresh`, the check acts as the App. It ends each busy state with `setRefreshed(<id>, true)`, unless a case
+  below gives another answer. It fails in these cases:
+  - With `onRefresh`, an action does not call `onRefresh` one time with the cause `timeRange`, or the chart is not
+    busy after the call (`renderer.74`).
+  - With `onRefresh`, a zoom out after `render` does not give a range that is wider than `data.range` and has the
+    same center (`renderer.75`).
+  - With `onRefresh`, a pan calls `onRefresh` before the end of the drag, or more than one time (`renderer.46`).
+  - While the chart is busy, an action calls `onRefresh` (`renderer.78`).
+  - With no `onRefresh`, an action makes a network request, or the time range on screen leaves `data.range`
+    (`renderer.73`).
+
+  If `optionalControls` has `reset-with-refresh`, the check also fails in these cases:
+  - Reset after a zoom does not give the `from` and `to` of the `timeRange` of the fixture, for example `now-15m`
+    and `now` (`renderer.76`).
+  - After a pick of the time picker and a zoom, Reset does not give the `from` and `to` of the pick
+    (`renderer.76`).
+  - Reset with no zoom, zoom out or pan before it calls `onRefresh` (`renderer.77`).
+  - After a zoom and a Reset that the check answers with `setRefreshed(<id>, false)`, a second Reset does not
+    call `onRefresh` (`renderer.77`).
 - `delivery.13` A CI check of the App runs the test of `fixtures.15` for each set that has `message.json`. It also
   checks each answer of `state.27` with a Host that the test makes:
   - With `isError` `true`, and with a JSON-RPC error, the text box has exactly the text that the App sent.
