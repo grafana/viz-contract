@@ -60,7 +60,7 @@ flowchart TB
 | Legend overrides | The `fieldConfig` overrides that the user makes with the legend: hide, show and color an item. Only the Renderer keeps them (`renderer.37`) |
 | Time axis | An x axis that the panel draws from a field of type `time`. For example, a `timeseries` chart has a time axis. A `barchart` has one only if its categories are a `time` field. A `histogram` has none |
 | Saved annotations | The annotations that the user adds from the chart and that the App saves. Only the Renderer keeps them (`renderer.63`) |
-| Reset range | The time range that Reset asks for: the `timeRange` of the viz spec of `render`, or the last pick of the time picker (`renderer.45`) |
+| Reset range | The time range that Reset asks for: the `timeRange` of the viz spec of `render`, or the last pick of the time picker (`renderer.45`). Reset is an optional control (`renderer.71`) |
 
 The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 
