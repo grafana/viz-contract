@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "chart-options.json",
-  "description": "The options of each chart that the model can set, and the version of each panel. The Renderer build writes this file.",
+  "description": "The options of each chart that the model can set, the version of each panel, and the place of each option in the core panel of the chart. The Renderer build writes this file.",
   "type": "object",
   "required": [
     "panels",
@@ -38,12 +38,16 @@
       ],
       "properties": {
         "pluginVersion": {
-          "type": "string",
-          "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$",
-          "description": "The version of the panel: info.version of its built plugin.json. A version of Semantic Versioning 2.0.0, for example 0.4.1."
+          "$ref": "#/$defs/version",
+          "description": "The version of the panel: info.version of its built plugin.json, for example 0.4.1."
         }
       },
       "additionalProperties": false
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?(\\+[0-9A-Za-z-]+(\\.[0-9A-Za-z-]+)*)?$",
+      "description": "A version of Semantic Versioning 2.0.0."
     },
     "chart": {
       "type": "object",
@@ -100,6 +104,29 @@
         },
         "schema": {
           "$ref": "#/$defs/valueSchema"
+        },
+        "core": {
+          "type": "object",
+          "description": "The place of the option in the core panel of the chart, in Grafana of the constant coreVersion. With no core, the option does not carry over to the core panel.",
+          "required": [
+            "root",
+            "path"
+          ],
+          "properties": {
+            "root": {
+              "enum": [
+                "options",
+                "fieldConfig"
+              ],
+              "description": "options: the path starts at the options object of the core panel. fieldConfig: the path starts at fieldConfig.defaults of the core panel."
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*$",
+              "description": "The names of the keys from the root object to the value in the core panel, joined with dots."
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

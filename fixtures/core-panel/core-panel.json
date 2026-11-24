@@ -1,0 +1,300 @@
+{
+  "cases": [
+    {
+      "description": "timeseries with no chart option: the core panel has the default of each entry with core, and each other key of the panel",
+      "chart": "timeseries",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "title": "Requests",
+        "options": { "seriesType": "line" },
+        "datasource": { "uid": "testdata" },
+        "targets": [{ "refId": "A" }]
+      },
+      "core": {
+        "type": "timeseries",
+        "pluginVersion": "12.3.0",
+        "title": "Requests",
+        "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "single" } },
+        "fieldConfig": {
+          "defaults": { "custom": { "stacking": { "mode": "none" }, "lineWidth": 1, "spanNulls": false } },
+          "overrides": []
+        },
+        "datasource": { "uid": "testdata" },
+        "targets": [{ "refId": "A" }]
+      },
+      "dropped": []
+    },
+    {
+      "description": "barchart with no chart option",
+      "chart": "barchart",
+      "panel": { "type": "grafana-echartscartesian-panel", "options": { "seriesType": "bar" } },
+      "core": { "type": "barchart", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "histogram with no chart option",
+      "chart": "histogram",
+      "panel": { "type": "grafana-echartscartesian-panel", "options": { "histogram": true } },
+      "core": { "type": "histogram", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "candlestick with no chart option",
+      "chart": "candlestick",
+      "panel": { "type": "grafana-echartscartesian-panel", "options": { "seriesType": "candlestick" } },
+      "core": { "type": "candlestick", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "piechart with no chart option: the default of the entry with core is the value of the preset, and the default of the standard field option decimals, whose entry has no core, is at the same path",
+      "chart": "piechart",
+      "panel": { "type": "grafana-echartsparttowhole-panel", "options": { "seriesType": "pie" } },
+      "core": {
+        "type": "piechart",
+        "pluginVersion": "12.3.0",
+        "options": { "reduceOptions": { "values": true } },
+        "fieldConfig": { "defaults": { "decimals": 1 }, "overrides": [] }
+      },
+      "dropped": []
+    },
+    {
+      "description": "heatmap with no chart option: the core panel has the preset",
+      "chart": "heatmap",
+      "panel": { "type": "grafana-echartsheatmap-panel", "options": {} },
+      "core": {
+        "type": "heatmap",
+        "pluginVersion": "12.3.0",
+        "options": { "calculate": false },
+        "fieldConfig": { "defaults": {}, "overrides": [] }
+      },
+      "dropped": []
+    },
+    {
+      "description": "geomap with no chart option",
+      "chart": "geomap",
+      "panel": { "type": "grafana-echartsgeo-panel", "options": {} },
+      "core": { "type": "geomap", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "state-timeline with no chart option",
+      "chart": "state-timeline",
+      "panel": { "type": "grafana-echartsstatetimeline-panel", "options": {} },
+      "core": { "type": "state-timeline", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "status-history with no chart option",
+      "chart": "status-history",
+      "panel": { "type": "grafana-echartsstatushistory-panel", "options": {} },
+      "core": { "type": "status-history", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "nodeGraph with no chart option",
+      "chart": "nodeGraph",
+      "panel": { "type": "grafana-relations-panel", "options": { "seriesType": "graph" } },
+      "core": { "type": "nodeGraph", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "gauge with no chart option",
+      "chart": "gauge",
+      "panel": { "type": "grafana-echartsgauge-panel", "options": {} },
+      "core": { "type": "gauge", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "stat with no chart option",
+      "chart": "stat",
+      "panel": { "type": "grafana-echartsstat-panel", "options": {} },
+      "core": { "type": "stat", "pluginVersion": "12.3.0", "options": {}, "fieldConfig": { "defaults": {}, "overrides": [] } },
+      "dropped": []
+    },
+    {
+      "description": "sankey has no core panel (save.7)",
+      "chart": "sankey",
+      "panel": { "type": "grafana-relations-panel", "options": { "seriesType": "sankey" } },
+      "core": null,
+      "dropped": []
+    },
+    {
+      "description": "timeseries with chart options: carried options of each root, a default for an option that the panel does not have, a dropped option of options and of fieldConfig.defaults, an override with no carried property, and an override with a carried and a dropped property",
+      "chart": "timeseries",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "options": {
+          "seriesType": "line",
+          "stacking": "normal",
+          "lineWidth": 2,
+          "legend": { "placement": "right" },
+          "tooltip": { "mode": "multi" },
+          "animation": { "enabled": false }
+        },
+        "fieldConfig": {
+          "defaults": { "min": 0, "unit": "reqps", "custom": { "axisSoftMin": 0 } },
+          "overrides": [
+            {
+              "matcher": { "id": "byFrameRefID", "options": "B" },
+              "properties": [{ "id": "custom.axisSoftMin", "value": 5 }]
+            },
+            {
+              "matcher": { "id": "byName", "options": "/api/health" },
+              "properties": [
+                { "id": "custom.lineStyle", "value": { "fill": "dash" } },
+                { "id": "custom.axisSoftMin", "value": 1 }
+              ]
+            }
+          ]
+        }
+      },
+      "core": {
+        "type": "timeseries",
+        "pluginVersion": "12.3.0",
+        "options": { "legend": { "showLegend": true, "placement": "right" }, "tooltip": { "mode": "multi" } },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "unit": "reqps",
+            "custom": { "stacking": { "mode": "normal" }, "lineWidth": 2, "spanNulls": false }
+          },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "/api/health" },
+              "properties": [{ "id": "custom.lineStyle", "value": { "fill": "dash" } }]
+            }
+          ]
+        }
+      },
+      "dropped": [
+        "options.animation.enabled",
+        "fieldConfig.defaults.custom.axisSoftMin",
+        "fieldConfig.overrides[0].custom.axisSoftMin",
+        "fieldConfig.overrides[1].custom.axisSoftMin"
+      ]
+    },
+    {
+      "description": "piechart with a carried option that replaces a value of the preset",
+      "chart": "piechart",
+      "panel": {
+        "type": "grafana-echartsparttowhole-panel",
+        "options": { "seriesType": "pie", "reduceOptions": { "values": false } }
+      },
+      "core": {
+        "type": "piechart",
+        "pluginVersion": "12.3.0",
+        "options": { "reduceOptions": { "values": false } },
+        "fieldConfig": { "defaults": { "decimals": 1 }, "overrides": [] }
+      },
+      "dropped": []
+    },
+    {
+      "description": "timeseries with three paths that are not options of the chart: the paths are dropped in code point order, which is not the order of their UTF-16 code units, and the path of the chart row is not dropped",
+      "chart": "timeseries",
+      "panel": { "type": "grafana-echartscartesian-panel", "options": { "seriesType": "line", "😀": 1, "Ａ": 1, "oldOption": 1 } },
+      "core": {
+        "type": "timeseries",
+        "pluginVersion": "12.3.0",
+        "options": { "legend": { "showLegend": true, "placement": "bottom" }, "tooltip": { "mode": "single" } },
+        "fieldConfig": {
+          "defaults": { "custom": { "stacking": { "mode": "none" }, "lineWidth": 1, "spanNulls": false } },
+          "overrides": []
+        }
+      },
+      "dropped": ["options.oldOption", "options.Ａ", "options.😀"]
+    },
+    {
+      "description": "piechart with standard field options: the value of decimals, whose entry has no core, replaces its default at the same path, and the core piechart panel does not register thresholds",
+      "chart": "piechart",
+      "panel": {
+        "type": "grafana-echartsparttowhole-panel",
+        "options": { "seriesType": "pie" },
+        "fieldConfig": {
+          "defaults": { "decimals": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } }
+        }
+      },
+      "core": {
+        "type": "piechart",
+        "pluginVersion": "12.3.0",
+        "options": { "reduceOptions": { "values": true } },
+        "fieldConfig": { "defaults": { "decimals": 0 }, "overrides": [] }
+      },
+      "dropped": ["fieldConfig.defaults.thresholds"]
+    },
+    {
+      "description": "heatmap with the unit of the arguments and a min: the chart has no entry, the core heatmap panel registers unit, and it does not register min",
+      "chart": "heatmap",
+      "panel": {
+        "type": "grafana-echartsheatmap-panel",
+        "options": {},
+        "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 } }
+      },
+      "core": {
+        "type": "heatmap",
+        "pluginVersion": "12.3.0",
+        "options": { "calculate": false },
+        "fieldConfig": { "defaults": { "unit": "bytes" }, "overrides": [] }
+      },
+      "dropped": ["fieldConfig.defaults.min"]
+    },
+    {
+      "description": "barchart with standard field options and no entry: a default whose value is an object, and an override with a carried color and a dropped property that is not a standard field option",
+      "chart": "barchart",
+      "panel": {
+        "type": "grafana-echartscartesian-panel",
+        "options": { "seriesType": "bar" },
+        "fieldConfig": {
+          "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "errors" },
+              "properties": [
+                { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } },
+                { "id": "custom.lineWidth", "value": 2 }
+              ]
+            }
+          ]
+        }
+      },
+      "core": {
+        "type": "barchart",
+        "pluginVersion": "12.3.0",
+        "options": {},
+        "fieldConfig": {
+          "defaults": { "unit": "short", "color": { "mode": "palette-classic" } },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "errors" },
+              "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+            }
+          ]
+        }
+      },
+      "dropped": ["fieldConfig.overrides[0].custom.lineWidth"]
+    },
+    {
+      "description": "nodeGraph with the unit of the arguments and a color override: the core nodeGraph panel registers no standard field option of the list, so both are dropped, and the override is not in the core panel",
+      "chart": "nodeGraph",
+      "panel": {
+        "type": "grafana-relations-panel",
+        "options": { "seriesType": "graph" },
+        "fieldConfig": {
+          "defaults": { "unit": "short" },
+          "overrides": [
+            {
+              "matcher": { "id": "byName", "options": "arc__errors" },
+              "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }]
+            }
+          ]
+        }
+      },
+      "core": {
+        "type": "nodeGraph",
+        "pluginVersion": "12.3.0",
+        "options": {},
+        "fieldConfig": { "defaults": {}, "overrides": [] }
+      },
+      "dropped": ["fieldConfig.defaults.unit", "fieldConfig.overrides[0].color"]
+    }
+  ]
+}

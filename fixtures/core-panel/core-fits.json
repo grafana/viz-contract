@@ -1,0 +1,115 @@
+{
+  "cases": [
+    {
+      "description": "barchart with a string field: the frames fit the core panel",
+      "chart": "barchart",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": { "refId": "A", "fields": [{ "name": "host", "type": "string" }, { "name": "cpu", "type": "number" }] },
+              "data": { "values": [["host-0", "host-1"], [71, 54]] }
+            }
+          ]
+        }
+      },
+      "fits": true
+    },
+    {
+      "description": "barchart with number fields only: the frames fit the chart and not the core panel",
+      "chart": "barchart",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": { "refId": "A", "fields": [{ "name": "cpu", "type": "number" }, { "name": "memory", "type": "number" }] },
+              "data": { "values": [[71, 54], [63, 64]] }
+            }
+          ]
+        }
+      },
+      "fits": false
+    },
+    {
+      "description": "candlestick with a time field: the frames fit the core panel",
+      "chart": "candlestick",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": {
+                "refId": "A",
+                "fields": [
+                  { "name": "time", "type": "time" },
+                  { "name": "open", "type": "number" },
+                  { "name": "high", "type": "number" },
+                  { "name": "low", "type": "number" },
+                  { "name": "close", "type": "number" }
+                ]
+              },
+              "data": { "values": [[1790352817294, 1790352877294], [10, 11], [12, 13], [9, 10], [11, 12]] }
+            }
+          ]
+        }
+      },
+      "fits": true
+    },
+    {
+      "description": "candlestick with a string field for the categories and no time field: the frames fit the chart and not the core panel",
+      "chart": "candlestick",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": {
+                "refId": "A",
+                "fields": [
+                  { "name": "day", "type": "string" },
+                  { "name": "open", "type": "number" },
+                  { "name": "high", "type": "number" },
+                  { "name": "low", "type": "number" },
+                  { "name": "close", "type": "number" }
+                ]
+              },
+              "data": { "values": [["Mon", "Tue"], [10, 11], [12, 13], [9, 10], [11, 12]] }
+            }
+          ]
+        }
+      },
+      "fits": false
+    },
+    {
+      "description": "nodeGraph with one frame that has an id field: the frames fit the core panel",
+      "chart": "nodeGraph",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": {
+                "refId": "A",
+                "fields": [{ "name": "id", "type": "string" }, { "name": "source", "type": "string" }, { "name": "target", "type": "string" }]
+              },
+              "data": { "values": [["e1", "e2"], ["api", "api"], ["db", "cache"]] }
+            }
+          ]
+        }
+      },
+      "fits": true
+    },
+    {
+      "description": "nodeGraph with source and target fields only: the frames fit the chart and not the core panel",
+      "chart": "nodeGraph",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": { "refId": "A", "fields": [{ "name": "source", "type": "string" }, { "name": "target", "type": "string" }] },
+              "data": { "values": [["api", "api"], ["db", "cache"]] }
+            }
+          ]
+        }
+      },
+      "fits": false
+    }
+  ]
+}

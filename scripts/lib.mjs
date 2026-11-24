@@ -230,6 +230,74 @@ export function panelWithOptions(panel, args, entry) {
   return out;
 }
 
+// The core panel of a chart and its dropped options (save.2 to save.5, save.10). panel is the panel of the chart,
+// row is the row of chart-types.json, core is the row of core-panels.json, file is chart-options.json, and
+// coreVersion is the constant. With no core panel, there is no result (save.7).
+export function corePanel(panel, row, core, file, coreVersion) {
+  if (core.panel === 'none') return undefined;
+  const chart = file.charts[row.name] ?? { options: [], fieldConfig: [] };
+  // A standard field option of the core row has its place at the same path (save.10): an entry with that path is
+  // read as an entry with that core, and an id with no entry is read as an entry with only a path and that core.
+  const same = (id) => ({ root: 'fieldConfig', path: id });
+  const entry = {
+    options: chart.options,
+    fieldConfig: [
+      ...chart.fieldConfig.map((o) => (!o.core && core.fieldOptions.includes(o.path) ? { ...o, core: same(o.path) } : o)),
+      ...core.fieldOptions.filter((id) => !chart.fieldConfig.some((o) => o.path === id)).map((id) => ({ path: id, core: same(id) })),
+    ],
+  };
+  const { type, pluginVersion, options, fieldConfig, ...rest } = panel;
+  const out = { ...rest, type: core.panel, pluginVersion: coreVersion, options: structuredClone(core.options), fieldConfig: { defaults: {}, overrides: [] } };
+  const dropped = [];
+  // The paths of the options preset of the chart row. The core row takes their place (save.3).
+  const leaves = (node, prefix = '') =>
+    Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leaves(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
+  const preset = leaves(row.options);
+  const inPreset = (p) => preset.some((l) => l === p || l.startsWith(`${p}.`) || p.startsWith(`${l}.`));
+  const write = (o, value) => {
+    const keys = o.core.path.split('.');
+    const last = keys.pop();
+    // delivery.26 does not allow a path through a value that is not an object. Such a value is replaced here, so
+    // that the check reports the file and does not stop.
+    const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+    keys.reduce((node, key) => (isObject(node[key]) ? node[key] : (node[key] = {})), o.core.root === 'options' ? out.options : out.fieldConfig.defaults)[last] = structuredClone(value);
+  };
+  // First the default of each entry with core whose option the panel does not have, then the options of the
+  // panel (save.3). Thus the core panel draws an option that the panel does not have as the Renderer draws it.
+  const set = [];
+  const carry = (root, list, prefix, skip = () => false) => {
+    const { found, wrong } = findOptions(root, list);
+    const lost = wrong.map(([p]) => p).filter((p) => !skip(p));
+    for (const o of list) if (o.core && o.default !== undefined && !found.some(([p]) => p === o.path)) write(o, o.default);
+    for (const [p, value, o] of found) (o.core ? set.push([o, value]) : lost.push(p));
+    dropped.push(...[...new Set(lost)].sort(byCodePoint).map((p) => `${prefix}${p}`));
+  };
+  carry(options, entry.options, 'options.', inPreset);
+  carry(fieldConfig?.defaults, entry.fieldConfig, 'fieldConfig.defaults.');
+  for (const [o, value] of set) write(o, value);
+  (fieldConfig?.overrides ?? []).forEach((override, n) => {
+    const properties = [];
+    for (const { id, value } of override.properties) {
+      const o = entry.fieldConfig.find((x) => x.path === id);
+      if (o?.core) properties.push({ id: o.core.path, value: structuredClone(value) });
+      else dropped.push(`fieldConfig.overrides[${n}].${id}`);
+    }
+    if (properties.length) out.fieldConfig.overrides.push({ ...structuredClone(override), properties });
+  });
+  return { panel: out, dropped };
+}
+
+// The result of save.9 for the version of the Grafana of the save: allowed, older or not-known. version is not a
+// string when the Source cannot read it. Only the major, the minor and the patch number count.
+export function coreVersionResult(version, coreVersion) {
+  const numbers = (v) => /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:$|[-+])/.exec(v)?.slice(1).map(BigInt);
+  const got = typeof version === 'string' ? numbers(version) : undefined;
+  if (!got) return 'not-known';
+  const want = numbers(coreVersion);
+  const n = got.findIndex((x, i) => x !== want[i]);
+  return n >= 0 && got[n] < want[n] ? 'older' : 'allowed';
+}
+
 // JSON with the keys of each object in order. Two values that are equal give the same text.
 export const canonical = (value) =>
   JSON.stringify(value, (_, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => (a < b ? -1 : 1))) : v));
