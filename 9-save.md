@@ -266,8 +266,9 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
   failed, that is the time range that the user asked for. After a zoom or a pan without `onRefresh`, the App does
   not know the time range on screen, because the Renderer does not give it to the App. The App makes one call
   for each save. It does not ask the Source first which options a save drops. The result gives them (`save.44`).
-- `save.49` While the App waits for the result, it shows that it saves, and the user cannot save again, because a
-  second call adds a second panel (`save.28`).
+- `save.49` While the App waits for the answer of the Host, it shows that it saves, and the user cannot save
+  again, because a second call adds a second panel (`save.28`). The wait ends with the answer, or after
+  `saveTimeoutMs` (`save.57`).
 - `save.50` If the call gives a result, the App shows the title of the dashboard. If `dashboard` has a `url`, the
   App shows a link to it and opens it with `ui/open-link`, as in `spec.7`. If `dropped` is not empty, the App
   shows its paths.
@@ -278,20 +279,36 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
   does not change the last tool arguments. The next refresh handles them (`refresh.19`).
 - `save.52` If a call gives another tool error, the App shows the message of the tool error in its shell. The
   form stays open, so the user can save again.
-- `save.53` The Host refuses a call when it answers the call with a JSON-RPC error. A tool error is not a
-  refusal, because it comes from the Source (`save.52`). If the Host refuses the call, the App shows a short error
-  in its shell. If the App can send a text message (`state.20`), it also shows a control that sends the save to
-  the chat. The App sends no message until the user uses that control, because the user can be the one who
-  refused the call.
+- `save.53` If the Host answers a call with a JSON-RPC error, the App does not know the cause. A tool error is not
+  such an error, because it comes from the Source (`save.52`). The Host can refuse the call. The server can also
+  have no `save_chart` (`save.26`):
+  [MCP](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling) answers a call of a
+  tool that the server does not list with a JSON-RPC error, and the App has no way to know if the server lists
+  `save_chart`. The App then shows a short error in its shell. The error tells the user that the App could not
+  save the chart, and that the user can ask the model in the chat to save it. If the App can send a text message
+  (`state.20`), it also shows a control that sends the save to the chat. The App sends no message until the user
+  uses that control, because the user can be the one who refused the call.
 - `save.54` When the user uses that control, the App sends one message with `ui/message` of MCP Apps. The message
   has the `role` `user` and one text item, as in `state.21`. The text is the `save-chart` pattern of
-  `messages.json`. `<arguments>` is the arguments of the call that the Host refused, as one JSON object with no
-  white space, as `JSON.stringify` gives it. The order of the keys is free. The model then calls `save_chart` with
-  these arguments (`save.56`), and the Host applies its own rules to a tool call of the model. The App does not
-  get the result of that save. The model reads it (`save.45`). `state.26` and `state.27` apply to the message.
-- `save.55` If the text of `save.54` is longer than `maxMessageChars`, the App does not show the control of
-  `save.53`, and it sends no message. The length is in Unicode code points. The user can still ask the model in
-  the chat to save the chart (`save.56`).
+  `messages.json`. `<arguments>` is the arguments of the call that got the JSON-RPC error, as one JSON object with
+  no white space, as `JSON.stringify` gives it. The order of the keys is free. The model then calls `save_chart`
+  with these arguments (`save.56`), and the Host applies its own rules to a tool call of the model. The pattern
+  also tells a model that has no `save_chart` tool to tell the user that save is not available, and not to save
+  the chart with another tool. Thus a server that does not list `save_chart` gets no panel from another tool
+  (`save.53`). The App does not get the result of that save. The model reads it (`save.45`). `state.26` and
+  `state.27` apply to the message.
+- `save.55` If the text of `save.54` is longer than `maxSaveMessageChars`, the App does not show the control of
+  `save.53`, and it sends no message. The length is in Unicode code points. `maxMessageChars` does not apply to
+  this message, because the tool arguments of a chart with options or a long query are longer than a message
+  about a point. The error of `save.53` still tells the user to ask the model in the chat (`save.56`).
+- `save.57` The App waits for the answer of the Host to a call of `save_chart` for `saveTimeoutMs` or less. If the
+  Host gives no answer in that time, the App stops the wait, and the user can save again (`save.49`). The App
+  then does not know if the chart is saved, because the save can still complete. The App shows this in its
+  shell, and it tells the user that a second save can add a second panel. An answer that comes after
+  `saveTimeoutMs` is a late answer. A late result is a saved panel. The App shows it as in `save.50`, also if the
+  user saved again. A late tool error and a late JSON-RPC error do nothing, because the user already saw that
+  the App got no answer. A Host that asks the user before each tool call can take longer than `saveTimeoutMs`.
+  The late result then shows the saved panel.
 
 ## The model
 

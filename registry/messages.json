@@ -17,8 +17,8 @@
     },
     {
       "code": "save-chart",
-      "when": "The Host refuses the call of save_chart from the App, and the user sends the save to the chat",
-      "message": "Save this chart to a dashboard. Call save_chart with these arguments: <arguments>"
+      "when": "The Host answers the call of save_chart from the App with a JSON-RPC error, and the user sends the save to the chat",
+      "message": "Save this chart to a dashboard. Call save_chart with the arguments below. If you do not have the save_chart tool, do not save the chart with another tool, and tell me that save is not available. Arguments: <arguments>"
     }
   ]
 }

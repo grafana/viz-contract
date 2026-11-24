@@ -167,10 +167,12 @@ Renderer, pin a tagged version.
 | `maxAppNotes` | 5 | notes | yes | Most notes of the Source that render_grafana_app adds to its text line |
 | `maxAppNoteChars` | 200 | characters | yes | Longest note in the text line of render_grafana_app |
 | `maxTitleChars` | 100 | characters | yes | Longest title of the tool arguments |
-| `maxMessageChars` | 1000 | characters | yes | Longest text of a message that the App sends to the conversation |
+| `maxMessageChars` | 1000 | characters | yes | Longest text of a message about a point that the App sends to the conversation |
 | `maxMessageLabels` | 10 | labels | yes | Most labels of the series in a message |
 | `maxMessageValueChars` | 100 | characters | yes | Longest value or label key in a message, for example a series name or a label value |
 | `messageTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a message |
+| `maxSaveMessageChars` | 4000 | characters | yes | Longest text of the message that sends a save to the conversation |
+| `saveTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a call of save_chart |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
 | `coreVersion` | 12.3.0 | version | yes | The version of Grafana whose core panels the core panel map is written for. It is the pluginVersion of a core panel |

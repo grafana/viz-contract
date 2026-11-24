@@ -151,6 +151,14 @@ are in `fixtures/`, one directory for each set.
     `invalid-options` tool error (`save.33`). The set has no `grafana.json`, because the Source does not read the
     dashboard. `save-retry-args.json` is `save-args.json` with a `chart` that has no `options` and no
     `fieldConfig` (`save.51`).
+- `fixtures.35` One `save-result` set for a save that works. It has `save-args.json` and `save-result.json`
+  only. `save-result.json` is a result: one text item and the structured content (`save.42` to `save.45`). The
+  saved panel is the core panel of the chart. The `chart` has options that the core panel gets, and one option
+  of `options` and one of `fieldConfig.defaults` that it drops, so `dropped` has two paths in the order of
+  `save.5`. `dashboard.url` has the time range of the `chart` (`save.43`). Only the App test uses the set
+  (`fixtures.33`, `fixtures.34`). The Source test does not, because the set does not give the dashboard that the
+  ID of the saved panel comes from. A check makes sure that the text, `dashboard.url` and `dropped` follow from
+  the structured content and the `chart`.
 
 ## Conformance tests
 
@@ -172,7 +180,7 @@ are in `fixtures/`, one directory for each set.
   the chart of that set. Thus the test answers the second call with the `result.json` of the set
   `prometheus-line`. The viz spec of the `update` must equal the `spec.json` of that set with one more field: a
   `notices` list that has only the `options-dropped` notice (`refresh.19`).
-- `fixtures.32` For a set with `save-args.json`, the Source test gives `save-args.json` to `save_chart`. The
+- `fixtures.32` For a set of `fixtures.31`, the Source test gives `save-args.json` to `save_chart`. The
   Source uses the `chart-options.json` of the set `options`, as in `fixtures.18`. A fake Grafana gives the answer
   `read` of `grafana.json` to the read of the dashboard, and the answer `write` to the write of the dashboard.
   For `conflict`, `forbidden` and `not-found`, it answers as Grafana does in that case. For the `read` `ok`, it
@@ -188,12 +196,14 @@ are in `fixtures/`, one directory for each set.
   The arguments of the call of `save_chart` must equal `save-args.json`. The test answers the call with
   `save-result.json`. If the set has `save-retry-args.json`, the App must call `save_chart` a second time, and
   the arguments of that call must equal `save-retry-args.json` (`save.51`). Otherwise the App must make no second
-  call, and it must show the message of the tool error (`save.52`).
+  call. If `save-result.json` is a tool error, the App must show the message of the tool error (`save.52`). If
+  it is a result, the App must show the title of the dashboard, a link to `dashboard.url` and each path of
+  `dropped` (`save.50`).
 - `fixtures.34` For a set with `save-args.json`, the App test also runs the save of `fixtures.33` with a Host
   that answers the call of `save_chart` with a JSON-RPC error. The App must send no message before the user uses
   the control of `save.53`. Then it must send one message. The text must be the `save-chart` pattern of
   `messages.json`, and its `<arguments>` must be JSON with no white space that equals `save-args.json`
-  (`save.30`). Thus the text of each set is not longer than `maxMessageChars`.
+  (`save.54`). Thus the text of each set is not longer than `maxSaveMessageChars`.
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response
