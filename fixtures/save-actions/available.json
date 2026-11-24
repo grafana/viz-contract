@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "description": "dashboards:write for all dashboards",
+      "listed": true,
+      "actions": { "dashboards:read": ["dashboards:*"], "dashboards:write": ["dashboards:*"] },
+      "available": true
+    },
+    {
+      "description": "dashboards:write for one folder only: the scope does not count",
+      "listed": true,
+      "actions": { "dashboards:read": ["dashboards:*"], "dashboards:write": ["folders:uid:team-a"] },
+      "available": true
+    },
+    {
+      "description": "dashboards:write for one dashboard only",
+      "listed": true,
+      "actions": { "dashboards:write": ["dashboards:uid:http-overview"] },
+      "available": true
+    },
+    {
+      "description": "dashboards:create with no dashboards:write",
+      "listed": true,
+      "actions": { "dashboards:read": ["dashboards:*"], "dashboards:create": ["folders:uid:team-a"] },
+      "available": true
+    },
+    {
+      "description": "dashboards:write and dashboards:create",
+      "listed": true,
+      "actions": { "dashboards:write": ["dashboards:*", "folders:*"], "dashboards:create": ["folders:*"] },
+      "available": true
+    },
+    {
+      "description": "other actions only: an action to read a dashboard, to write a folder or to delete a dashboard is not an action to write a dashboard",
+      "listed": true,
+      "actions": {
+        "dashboards:read": ["dashboards:*"],
+        "dashboards:delete": ["dashboards:*"],
+        "folders:write": ["folders:*"],
+        "datasources:query": ["datasources:*"]
+      },
+      "available": false
+    },
+    { "description": "no action", "listed": true, "actions": {}, "available": false },
+    { "description": "the Source cannot read the actions", "listed": true, "actions": null, "available": false },
+    {
+      "description": "the server does not list save_chart, and the user has dashboards:write",
+      "listed": false,
+      "actions": { "dashboards:write": ["dashboards:*"], "dashboards:create": ["folders:*"] },
+      "available": false
+    },
+    {
+      "description": "the server does not list save_chart, and the Source cannot read the actions",
+      "listed": false,
+      "actions": null,
+      "available": false
+    }
+  ]
+}

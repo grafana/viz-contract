@@ -216,8 +216,8 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   source, target and value fields. Charts that fit: timeseries, barchart.`
   `render_grafana_app` gives a tool error of the Source to the model in the same turn.
 - `tool.27` If the Source knows a URL of its Grafana that a browser can open, it writes that URL to `grafanaUrl`.
-- `tool.51` The Source writes `save` to the tool result. `save.available` is `true` only if both of these are
-  true:
+- `tool.51` The Source writes `save` to the tool result. The `available` of `save` is `true` if both of these are
+  true. Otherwise it is `false`:
   - The server lists `save_chart` (`save.26`).
   - The user has the Grafana action `dashboards:write` or `dashboards:create`, in any scope. For example, a user
     who can write the dashboards of one folder only has such an action.

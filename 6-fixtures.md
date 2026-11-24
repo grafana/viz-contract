@@ -27,6 +27,7 @@ are in `fixtures/`, one directory for each set.
 | `core-fits.json` | `cases`: a list. Each case has a `description`, a `chart`, `results` (the frames, as `data.results` of a viz spec), and `fits`: `true` when the frames fit the core panel of the chart | Source |
 | `core-version.json` | `cases`: a list. Each case has a `description`, a `version` (the version of the Grafana of the save, or `null` when the Source cannot read it) and the expected `result`: `allowed`, `older` or `not-known` | Source |
 | `time-range.json` | `cases`: a list. Each case has a `description`, `args` (the `from` and the `to` of the tool arguments of a save, or none of them), the expected `dashboard` (the `from` and the `to` of a new dashboard) and the expected `url` (the values of the query parameters `from` and `to`) | Source |
+| `available.json` | `cases`: a list. Each case has a `description`, `listed` (`true` when the server lists `save_chart`), `actions` (the Grafana actions of the user, each with the list of its scopes, or `null` when the Source cannot read them) and the expected `available` (the `available` of the `save` of the tool result) | Source |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -163,8 +164,20 @@ are in `fixtures/`, one directory for each set.
   and `spec.json` only. `args.json` and `spec.json` are the files of the set `epoch-range`. `result.json` is the
   `result.json` of that set with a `save`. Thus `spec.json` has no `save` (`save.58`). Only the App test uses
   these sets (`fixtures.37`). The Source test does not, because it does not compare `save` (`fixtures.8`).
-  - `save-available`: `save.available` is `true`.
-  - `save-not-available`: `save.available` is `false`.
+  - `save-available`: the `available` of `save` is `true`.
+  - `save-not-available`: the `available` of `save` is `false`.
+- `fixtures.38` One `save-actions` set. It has `available.json` only. For each case, the Source test makes a
+  server that lists `save_chart` only if `listed` is `true`. It gives `actions` to the Source as the actions of
+  the user. With an `actions` of `null`, the Source cannot read the actions. The test then calls the Source, for
+  example with the files of the set `epoch-range`. The `available` of the `save` of the tool result must equal
+  `available` (`tool.51`). How the test gives the actions to the Source is not in this contract. The cases cover
+  these parts:
+  - `dashboards:write` with no `dashboards:create`: for all dashboards, for one folder only, and for one
+    dashboard only.
+  - `dashboards:create` with no `dashboards:write`.
+  - Other actions only, and no action.
+  - Actions that the Source cannot read.
+  - A server that does not list `save_chart`, with a user who has `dashboards:write`.
 
 ## Conformance tests
 
@@ -172,7 +185,7 @@ are in `fixtures/`, one directory for each set.
   the `body` of `response.json`. The Source resolves relative times with `now` of `meta.json`, and its
   `data.capturedAt` is `capturedAt` of `meta.json`. If the set has
   `request.json`, the request body must equal it. The tool result must equal `result.json`, but the test does not
-  compare `grafanaUrl` and `save`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
+  compare `grafanaUrl` and `save`. The test of `fixtures.38` covers `save`. If the `status` is not 200, one tool error for the whole call is also correct (`tool.16`).
 - `fixtures.18` For a set of `fixtures.17`, the Source test gives the `chart-options.json` of the set `options` to
   the Source in place of the file of the Renderer. The test does not run the checks of `tool.48` on this file,
   because it has an entry for two charts only. A set with `options-args.json` is a test of
@@ -213,8 +226,9 @@ are in `fixtures/`, one directory for each set.
   `messages.json`, and its `<arguments>` must be JSON with no white space that equals `save-args.json`
   (`save.54`). Thus the text of each set is not longer than `maxSaveMessageChars`.
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
-- `fixtures.37` In the test of `fixtures.9`, the App must show the Save control only if `result.json` has a
-  `save` whose `available` is `true` (`save.58`). Thus the App shows the control for the set `save-available`. It
+- `fixtures.37` In the test of `fixtures.9`, the App must show the Save control if `result.json` has a `save`
+  whose `available` is `true` (`save.58`). Otherwise it must show none. Thus the App shows the control for the
+  set `save-available`. It
   shows no control for the set `save-not-available`, and for a set whose `result.json` has no `save`, for example
   `prometheus-line`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
