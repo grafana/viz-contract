@@ -257,10 +257,13 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
 
 - `save.46` Save is a control of the App, in its shell. The Renderer shows no Save control, and the Renderer API
   has no option for a save. The Renderer gives nothing to a save, and the form of a save needs the dashboards of
-  Grafana, which the Renderer cannot read (`renderer.7`). The App can leave the Save control out. An App that
-  shows the control also shows it for a server that does not list `save_chart` (`save.26`), and each save then
-  ends in the error of `save.53`. Thus an App can keep the control off until the tool result tells it if the
-  user can save (`future.md`).
+  Grafana, which the Renderer cannot read (`renderer.7`).
+- `save.58` The App shows the Save control if the `available` of the `save` of the tool result of the chart on
+  screen is `true` (`tool.51`). Otherwise it shows none, and it gives the user no way to save. This applies to
+  an `available` of `false` and to a tool result with no `save`. The tool result of an older Source has no
+  `save`. Thus the App shows no Save control that always fails. The value only shows or hides the control. A
+  save can still fail, and the App then does as in `save.52` and `save.53`. The App does not write `save` to the
+  viz spec, because the Renderer shows no Save control (`save.46`).
 - `save.47` The user picks the target in a form of the App: a new dashboard with a title and an optional folder,
   or a dashboard that exists. How the App finds the dashboards and the folders of the form is not in this
   contract.
@@ -289,8 +292,8 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
   such an error, because it comes from the Source (`save.52`). The Host can refuse the call. The server can also
   have no `save_chart` (`save.26`):
   [MCP](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling) answers a call of a
-  tool that the server does not list with a JSON-RPC error, and the App has no way to know if the server lists
-  `save_chart`. The App then shows a short error in its shell. The error tells the user that the App could not
+  tool that the server does not list with a JSON-RPC error, and the `available` of `save` can be older than the call
+  (`tool.51`). The App then shows a short error in its shell. The error tells the user that the App could not
   save the chart, and that the user can ask the model in the chat to save it. If the App can send a text message
   (`state.20`), it also shows a control that sends the save to the chat. The App sends no message until the user
   uses that control, because the user can be the one who refused the call.

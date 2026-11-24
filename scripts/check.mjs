@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, invalidOptionsText, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveErrorText, saveMessageText, saveText, saveTimeRange, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, invalidOptionsText, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, SAVE_ACTIONS, saveAvailable, saveErrorText, saveMessageText, saveText, saveTimeRange, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -466,6 +466,57 @@ if (!saveResultSets.some((s) => !s.dropped.length)) fail('fixtures', 'no set of 
 for (const step of ['read', 'write']) if (!saveForbiddenBy.has(step)) fail('fixtures', `no save set for save-forbidden from the ${step} (fixtures.31)`);
 if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'args.json')))) fail('fixtures', 'no save set with args.json (fixtures.31)');
 if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'save-retry-args.json')))) fail('fixtures', 'no save set with save-retry-args.json (fixtures.31)');
+// The sets of the save of the tool result (fixtures.36): the files of epoch-range, and a result.json with a save.
+for (const [set, available] of [['save-available', true], ['save-not-available', false]]) {
+  if (!sets.includes(set)) {
+    fail('fixtures', `no set ${set} (fixtures.36)`);
+    continue;
+  }
+  const file =(name) => (fs.existsSync(path.join(FIX, set, name)) ? readJSON(`fixtures/${set}/${name}`) : undefined);
+  const base = (name) => readJSON(`fixtures/epoch-range/${name}`);
+  if (canonical(file('result.json')) !== canonical({ ...base('result.json'), save: { available } })) {
+    fail('fixtures', `${set}/result.json is not the result.json of epoch-range with a save whose available is ${available} (fixtures.36)`);
+  }
+  for (const name of ['args.json', 'spec.json']) {
+    if (canonical(file(name)) !== canonical(base(name))) fail('fixtures', `${set}/${name} is not the ${name} of epoch-range (fixtures.36)`);
+  }
+  if (fs.readdirSync(path.join(FIX, set)).length !== 3) fail('fixtures', `${set} has args.json, result.json and spec.json only (fixtures.36)`);
+}
+// The cases of the set save-actions (fixtures.38): the available of the save of the tool result (tool.51).
+const availableFile = path.join(FIX, 'save-actions', 'available.json');
+const availableCases = fs.existsSync(availableFile) ? readJSON('fixtures/save-actions/available.json').cases : undefined;
+if (!Array.isArray(availableCases)) fail('fixtures', 'no set save-actions with the cases of available.json (fixtures.38)');
+else {
+  const isActions = (a) => a === null || (typeof a === 'object' && !Array.isArray(a) && Object.values(a).every((s) => Array.isArray(s) && s.length && s.every(isText)));
+  const hasOnly = (c, action) => c.listed && c.actions && Object.hasOwn(c.actions, action) && SAVE_ACTIONS.every((a) => a === action || !Object.hasOwn(c.actions, a));
+  availableCases.forEach((c, i) => {
+    const name = `save-actions/available.json case ${i + 1}`;
+    if (!isText(c.description) || typeof c.listed !== 'boolean' || !isActions(c.actions) || typeof c.available !== 'boolean') {
+      return fail('fixtures', `${name}: it needs a description, a listed, actions (scopes for each action, or null) and an available`);
+    }
+    if (c.available !== saveAvailable(c.listed, c.actions)) fail('fixtures', `${name}: available is not the value of tool.51: ${saveAvailable(c.listed, c.actions)}`);
+  });
+  if (!availableCases.some((c) => !isActions(c.actions))) {
+    for (const [part, test] of [
+      ['dashboards:write for all dashboards', (c) => hasOnly(c, 'dashboards:write') && c.actions['dashboards:write'].includes('dashboards:*')],
+      ['dashboards:write for one folder only', (c) => hasOnly(c, 'dashboards:write') && c.actions['dashboards:write'].every((s) => /^folders:uid:./.test(s))],
+      ['dashboards:write for one dashboard only', (c) => hasOnly(c, 'dashboards:write') && c.actions['dashboards:write'].every((s) => /^dashboards:uid:./.test(s))],
+      ['dashboards:create and no dashboards:write', (c) => hasOnly(c, 'dashboards:create')],
+      ['other actions only', (c) => c.listed && c.actions && Object.keys(c.actions).length && !c.available],
+      ['no action', (c) => c.listed && c.actions && !Object.keys(c.actions).length],
+      ['actions that the Source cannot read', (c) => c.listed && c.actions === null],
+      ['a server that does not list save_chart and a user who has dashboards:write', (c) => !c.listed && c.actions && Object.hasOwn(c.actions, 'dashboards:write')],
+    ]) {
+      if (!availableCases.some(test)) fail('fixtures', `no save-actions case with ${part} (fixtures.38)`);
+    }
+  }
+}
+// tool.51 names each action that the cases use.
+for (const a of SAVE_ACTIONS) if (!read('1-tool.md').includes(`\`${a}\``)) fail('fixtures', `1-tool.md does not name the action ${a} (tool.51)`);
+// The App does not write the save of the tool result to the viz spec (save.58).
+for (const set of sets) {
+  if (fs.existsSync(path.join(FIX, set, 'spec.json')) && readJSON(`fixtures/${set}/spec.json`).save !== undefined) fail('fixtures', `${set}/spec.json has a save (save.58)`);
+}
 // The set options-legend has one override with a color and one more property (fixtures.20).
 const legendOverride = sets.includes('options-legend') ? readJSON('fixtures/options-legend/spec.json').panel.fieldConfig?.overrides?.[0] : undefined;
 if (!(legendOverride?.matcher?.id === 'byName' && legendOverride.properties?.some((p) => p.id === 'color') && legendOverride.properties.length > 1)) {

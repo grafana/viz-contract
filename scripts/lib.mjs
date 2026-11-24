@@ -92,6 +92,11 @@ export function sourceRequest(args, now, constants) {
   };
 }
 
+// The available of the save of the tool result (tool.51). listed is true when the server lists save_chart. actions
+// has the Grafana actions of the user as its keys. It is null when the Source cannot read them.
+export const SAVE_ACTIONS = ['dashboards:write', 'dashboards:create'];
+export const saveAvailable = (listed, actions) => listed === true && actions !== null && SAVE_ACTIONS.some((a) => Object.hasOwn(actions, a));
+
 // The time range of a save (save.20, save.23 and save.24): the time range of a new dashboard, and the values of
 // the query parameters from and to of the URL. For a value that does not start with now, it knows epoch
 // milliseconds and a duration, for example 6h.

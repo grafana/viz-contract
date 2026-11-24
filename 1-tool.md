@@ -216,6 +216,19 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   source, target and value fields. Charts that fit: timeseries, barchart.`
   `render_grafana_app` gives a tool error of the Source to the model in the same turn.
 - `tool.27` If the Source knows a URL of its Grafana that a browser can open, it writes that URL to `grafanaUrl`.
+- `tool.51` The Source writes `save` to the tool result. The `available` of `save` is `true` if both of these are
+  true. Otherwise it is `false`:
+  - The server lists `save_chart` (`save.26`).
+  - The user has the Grafana action `dashboards:write` or `dashboards:create`, in any scope. For example, a user
+    who can write the dashboards of one folder only has such an action.
+
+  If the Source cannot read the actions of the user, `available` is `false`. The value does not name a target.
+  The Source makes the tool result before the save, and it can keep the actions that it read. Thus the value can
+  be older than the save. `save_chart` checks its target at the time of the save, and it returns the
+  `save-forbidden` tool error if the user cannot write there (`save.39`). How the Source reads the actions of the
+  user, and how long it keeps them, is not in this contract. `save` is an object, so a later version can add the
+  cause with no new field. The schema does not require `save`, because the tool result of an older Source has
+  none (`save.58`).
 - `tool.28` `render_grafana_app` replaces the text of the Source with its own text line, and adds the notes of
   the Source after that line, one note on each line. The Source gives its notes to `render_grafana_app` as an
   ordered list of text lines, next to its structured content. A Source that gives no list leaves the text line
