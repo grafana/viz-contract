@@ -1,0 +1,19 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Saved timeseries as panel 1 (grafana-echartscartesian-panel) of the dashboard save-new.\nTitle: HTTP requests"
+    }
+  ],
+  "structuredContent": {
+    "dashboard": {
+      "uid": "save-new",
+      "title": "HTTP requests"
+    },
+    "panel": {
+      "id": 1,
+      "type": "grafana-echartscartesian-panel"
+    },
+    "dropped": []
+  }
+}

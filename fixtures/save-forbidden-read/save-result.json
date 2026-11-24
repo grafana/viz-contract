@@ -1,0 +1,9 @@
+{
+  "isError": true,
+  "content": [
+    {
+      "type": "text",
+      "text": "save-forbidden: The user does not have the permission to save to this target. The chart is not saved."
+    }
+  ]
+}

@@ -85,6 +85,7 @@ const fileSchema = {
 const SAVE_ANSWERS = { read: ['ok', 'forbidden', 'not-found'], write: ['ok', 'conflict', 'forbidden', 'not-found'] };
 const saveErrorSets = new Map();
 const saveResultSets = [];
+const saveForbiddenBy = new Set();
 // The App test of a save draws the chart of the set prometheus-line (fixtures.33).
 const saveBase = { args: readJSON('fixtures/prometheus-line/args.json'), chart: readJSON('fixtures/prometheus-line/result.json').chart };
 // The chart options sets (fixtures.17) use the chart-options.json of the set options.
@@ -253,7 +254,10 @@ for (const set of sets) {
         if (want !== undefined) {
           if (got?.isError !== true || got.content?.length !== 1 || text !== want || got.structuredContent !== undefined) {
             fail('fixtures', `${set}/save-result.json is not the tool error of save.33 and save.38 to save.40: ${want}`);
-          } else saveErrorSets.set(set, want);
+          } else {
+            saveErrorSets.set(set, want);
+            if (want.startsWith('save-forbidden: ')) saveForbiddenBy.add(answers.read === 'forbidden' ? 'read' : 'write');
+          }
         } else {
           const v = ajv.getSchema('save-chart-result.schema.json');
           if (got?.isError || !v(got?.structuredContent)) fail('fixtures', `${set}/save-result.json: ${v.errors ? errorText(v) : 'it must be a result'}`);
@@ -279,7 +283,10 @@ for (const set of sets) {
                   : undefined;
             if (!wantDropped) fail('fixtures', `${set}/save-result.json: panel.type is not the panel of the chart or its core panel`);
             else if (canonical(dropped) !== canonical(wantDropped)) fail('fixtures', `${set}/save-result.json: dropped is not the list of save.5: ${JSON.stringify(wantDropped)}`);
-            else saveResultSets.push({ set, url: dashboard.url !== undefined, dropped });
+            // The dashboard of the result is the target of the arguments (save.30).
+            else if (save.dashboardUid !== undefined ? dashboard.uid !== save.dashboardUid : dashboard.title !== save.title) {
+              fail('fixtures', `${set}/save-result.json: dashboard is not the target of save-args.json (save.30)`);
+            } else saveResultSets.push({ set, url: dashboard.url !== undefined, dropped, target: save.dashboardUid !== undefined ? 'dashboard' : save.folderUid !== undefined ? 'folder' : 'root' });
           }
         }
       }
@@ -451,6 +458,12 @@ const saveResult = saveResultSets.find((s) => s.set === 'save-result');
 if (!(saveResult?.url && saveResult.dropped.some((d) => d.startsWith('options.')) && saveResult.dropped.some((d) => d.startsWith('fieldConfig.defaults.')))) {
   fail('fixtures', 'the set save-result needs a result with dashboard.url and a dropped option of options and of fieldConfig.defaults (fixtures.35)');
 }
+// A save that works has a set for each kind of target, and with and without a URL and dropped options (fixtures.35).
+for (const target of ['dashboard', 'root', 'folder']) if (!saveResultSets.some((s) => s.target === target)) fail('fixtures', `no set of a save that works for the target ${target} (fixtures.35)`);
+if (!saveResultSets.some((s) => !s.url)) fail('fixtures', 'no set of a save that works with no dashboard.url (fixtures.35)');
+if (!saveResultSets.some((s) => !s.dropped.length)) fail('fixtures', 'no set of a save that works with no dropped option (fixtures.35)');
+// save-forbidden has a set for a refused read and one for a refused write (save.39).
+for (const step of ['read', 'write']) if (!saveForbiddenBy.has(step)) fail('fixtures', `no save set for save-forbidden from the ${step} (fixtures.31)`);
 if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'args.json')))) fail('fixtures', 'no save set with args.json (fixtures.31)');
 if (![...saveErrorSets.keys()].some((s) => fs.existsSync(path.join(FIX, s, 'save-retry-args.json')))) fail('fixtures', 'no save set with save-retry-args.json (fixtures.31)');
 // The sets of the save of the tool result (fixtures.36): the files of epoch-range, and a result.json with a save.

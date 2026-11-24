@@ -145,6 +145,7 @@ are in `fixtures/`, one directory for each set.
     `args.json`. It is the `args.json` of the set `prometheus-line`, which has no `type`. The `chart` of
     `save-args.json` is these arguments with the chart of that set as `type` (`save.48`).
   - `save-forbidden`: a dashboard that exists. The write gets the answer `forbidden` (`save.39`).
+  - `save-forbidden-read`: the read of the dashboard gets the answer `forbidden`. The Source makes no write.
   - `save-not-found`: the read of the dashboard gets the answer `not-found`. `<kind>` is `dashboard` (`save.40`).
   - `save-not-found-folder`: a new dashboard in a folder. The write gets the answer `not-found`. `<kind>` is
     `folder`.
@@ -152,14 +153,22 @@ are in `fixtures/`, one directory for each set.
     `invalid-options` tool error (`save.33`). The set has no `grafana.json`, because the Source does not read the
     dashboard. `save-retry-args.json` is `save-args.json` with a `chart` that has no `options` and no
     `fieldConfig` (`save.51`).
-- `fixtures.35` One `save-result` set for a save that works. It has `save-args.json` and `save-result.json`
-  only. `save-result.json` is a result: one text item and the structured content (`save.42` to `save.45`). The
-  saved panel is the core panel of the chart. The `chart` has options that the core panel gets, and one option
-  of `options` and one of `fieldConfig.defaults` that it drops, so `dropped` has two paths in the order of
-  `save.5`. `dashboard.url` has the time range of the `chart` (`save.43`). Only the App test uses the set
-  (`fixtures.33`, `fixtures.34`). The Source test does not, because the set does not give the dashboard that the
-  ID of the saved panel comes from. A check makes sure that the text, `dashboard.url` and `dropped` follow from
-  the structured content and the `chart`.
+- `fixtures.35` Three sets for a save that works, one for each kind of target (`save.30`). Each set has
+  `save-args.json` and `save-result.json` only. `save-result.json` is a result: one text item and the structured
+  content (`save.42` to `save.45`).
+  - `save-result`: a dashboard that exists. The saved panel is the core panel of the chart. The `chart` has
+    options that the core panel gets, and one option of `options` and one of `fieldConfig.defaults` that it
+    drops, so `dropped` has two paths in the order of `save.5`. `dashboard.url` has the time range of the
+    `chart` (`save.43`).
+  - `save-result-new`: a new dashboard with no folder. The saved panel is the panel of the chart, so `dropped`
+    is empty, and the text has no line for it.
+  - `save-result-new-folder`: a new dashboard in a folder. `dashboard` has no `url`, so the text has no line for
+    it.
+
+  Only the App test uses these sets (`fixtures.33`, `fixtures.34`). The Source test does not, because a set does
+  not give the dashboard that the ID of the saved panel comes from. A check makes sure that the text,
+  `dashboard.url` and `dropped` follow from the structured content and the `chart`, and that the `dashboard` is
+  the target of the arguments: the `uid` of `dashboardUid`, or the `title` of a new dashboard.
 - `fixtures.36` Two sets for the `save` of the tool result (`tool.51`). Each set has `args.json`, `result.json`
   and `spec.json` only. `args.json` and `spec.json` are the files of the set `epoch-range`. `result.json` is the
   `result.json` of that set with a `save`. Thus `spec.json` has no `save` (`save.58`). Only the App test uses

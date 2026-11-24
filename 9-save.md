@@ -220,7 +220,10 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
   `metadata.resourceVersion`.
 - `save.38` If Grafana refuses the write because the dashboard changed after the read, the Source returns the
   `save-conflict` tool error of `states.json`. The Source does not read and write a second time. A new call reads
-  the dashboard again.
+  the dashboard again. Only the write of a dashboard that exists gives `save-conflict`. The write of a new
+  dashboard never gives it. For example, some Grafana versions refuse a new dashboard whose title is already in
+  its folder, with the same HTTP status as for a dashboard that changed. That is a tool error of `save.41`,
+  because a new save with the same title fails in the same way.
 - `save.39` If Grafana refuses the read or the write because the user does not have the permission, the Source
   returns the `save-forbidden` tool error.
 - `save.40` If the dashboard of `dashboardUid` or the folder of `folderUid` does not exist, the Source returns the
@@ -258,8 +261,9 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
 - `save.58` The App shows the Save control if the `available` of the `save` of the tool result of the chart on
   screen is `true` (`tool.51`). Otherwise it shows none, and it gives the user no way to save. This applies to
   an `available` of `false` and to a tool result with no `save`. The tool result of an older Source has no
-  `save`. Thus the App shows no Save control that always fails. The value only shows or hides the control. A save can still fail, and the App then does as in `save.52` and `save.53`. The App does not
-  write `save` to the viz spec, because the Renderer shows no Save control (`save.46`).
+  `save`. Thus the App shows no Save control that always fails. The value only shows or hides the control. A
+  save can still fail, and the App then does as in `save.52` and `save.53`. The App does not write `save` to the
+  viz spec, because the Renderer shows no Save control (`save.46`).
 - `save.47` The user picks the target in a form of the App: a new dashboard with a title and an optional folder,
   or a dashboard that exists. How the App finds the dashboards and the folders of the form is not in this
   contract.
@@ -273,7 +277,7 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
   for each save. It does not ask the Source first which options a save drops. The result gives them (`save.44`).
 - `save.49` While the App waits for the answer of the Host, it shows that it saves, and the user cannot save
   again, because a second call adds a second panel (`save.28`). The wait ends with the answer, or after
-  `saveTimeoutMs` (`save.57`).
+  `saveTimeoutMs` (`save.56`).
 - `save.50` If the call gives a result, the App shows the title of the dashboard. If `dashboard` has a `url`, the
   App shows a link to it and opens it with `ui/open-link`, as in `spec.7`. If `dropped` is not empty, the App
   shows its paths.
@@ -297,7 +301,7 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
   has the `role` `user` and one text item, as in `state.21`. The text is the `save-chart` pattern of
   `messages.json`. `<arguments>` is the arguments of the call that got the JSON-RPC error, as one JSON object with
   no white space, as `JSON.stringify` gives it. The order of the keys is free. The model then calls `save_chart`
-  with these arguments (`save.56`), and the Host applies its own rules to a tool call of the model. The pattern
+  with these arguments (`save.57`), and the Host applies its own rules to a tool call of the model. The pattern
   also tells a model that has no `save_chart` tool to tell the user that save is not available, and not to save
   the chart with another tool. Thus a server that does not list `save_chart` gets no panel from another tool
   (`save.53`). The App does not get the result of that save. The model reads it (`save.45`). `state.26` and
@@ -305,8 +309,8 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
 - `save.55` If the text of `save.54` is longer than `maxSaveMessageChars`, the App does not show the control of
   `save.53`, and it sends no message. The length is in Unicode code points. `maxMessageChars` does not apply to
   this message, because the tool arguments of a chart with options or a long query are longer than a message
-  about a point. The error of `save.53` still tells the user to ask the model in the chat (`save.56`).
-- `save.57` The App waits for the answer of the Host to a call of `save_chart` for `saveTimeoutMs` or less. If the
+  about a point. The error of `save.53` still tells the user to ask the model in the chat.
+- `save.56` The App waits for the answer of the Host to a call of `save_chart` for `saveTimeoutMs` or less. If the
   Host gives no answer in that time, the App stops the wait, and the user can save again (`save.49`). The App
   then does not know if the chart is saved, because the save can still complete. The App shows this in its
   shell, and it tells the user that a second save can add a second panel. An answer that comes after
@@ -317,6 +321,6 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
 
 ## The model
 
-- `save.56` The model calls `save_chart` with a target and with the tool arguments that it wrote for the chart as
+- `save.57` The model calls `save_chart` with a target and with the tool arguments that it wrote for the chart as
   `chart`. If those arguments have no `type`, the model adds the chart of the chart line (`tool.46`). After a
   message of `save.54`, the model uses the arguments of the message.

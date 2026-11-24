@@ -224,6 +224,6 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
     `delivery.13` gives for that case.
   - The Host gives no answer to the call in `saveTimeoutMs`. The test uses a fake clock, so it does not wait.
     The App must stop showing that it saves, it must show that it does not know if the chart is saved, and the
-    user must be able to save again (`save.57`).
+    user must be able to save again (`save.56`).
   - After that time, the Host answers the call with the result of the set `save-result`. The App must show the
-    title of the dashboard (`save.57`). A tool error after that time must change nothing.
+    title of the dashboard (`save.56`). A tool error after that time must change nothing.
