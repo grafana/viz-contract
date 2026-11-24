@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveTimeRange, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -364,6 +364,38 @@ const pickRuleOf = (set) => {
 };
 const pickSets = sets.filter((s) => s.startsWith('pick-'));
 for (const r of rules) if (!pickSets.some((s) => pickRuleOf(s) === r.id)) fail('fixtures', `no pick set for the rule ${r.id}`);
+// The cases of the set save-time-range (fixtures.30): the time range of a new dashboard and of the URL of a save.
+if (!sets.includes('save-time-range')) fail('fixtures', 'no set save-time-range (fixtures.30)');
+const rangeCases = sets.includes('save-time-range') ? readJSON('fixtures/save-time-range/time-range.json').cases : [];
+const saveNow = sets.includes('save-time-range') ? readJSON('fixtures/save-time-range/meta.json').now : 0;
+const isEpoch = (t) => /^\d+$/.test(String(t));
+const isRelative = (t) => typeof t === 'string' && t.startsWith('now');
+rangeCases.forEach((c, i) => {
+  const name = `save-time-range case ${i + 1}`;
+  if (!c.args || typeof c.args !== 'object') return fail('fixtures', `${name}: no args`);
+  if (Object.keys(c.args).some((k) => k !== 'from' && k !== 'to')) return fail('fixtures', `${name}: args can have only from and to`);
+  let want;
+  try {
+    want = saveTimeRange(c.args, saveNow, constants);
+  } catch (e) {
+    return fail('fixtures', `${name}: ${e.message}`);
+  }
+  if (canonical({ dashboard: c.dashboard, url: c.url }) !== canonical(want)) {
+    fail('fixtures', `${name}: dashboard and url are not the result of save.20, save.23 and save.24:\n${JSON.stringify(want)}`);
+  }
+});
+const rangeValues = rangeCases.flatMap((c) => [c.args?.from, c.args?.to]);
+for (const [part, test] of [
+  ['a relative value', () => rangeValues.some(isRelative)],
+  ['no from and no to', () => rangeCases.some((c) => c.args && c.args.from === undefined && c.args.to === undefined)],
+  ['epoch milliseconds as an integer', () => rangeValues.some((t) => Number.isInteger(t))],
+  ['epoch milliseconds as a string', () => rangeValues.some((t) => typeof t === 'string' && isEpoch(t))],
+  ['an absolute time next to a relative value', () => rangeCases.some((c) => isRelative(c.args?.from) !== isRelative(c.args?.to) && c.args?.from !== undefined && c.args?.to !== undefined)],
+  ['a value that does not start with now and is not epoch milliseconds', () => rangeValues.some((t) => t !== undefined && !isRelative(t) && !isEpoch(t))],
+  ['a relative value that the URL percent-encodes', () => rangeCases.some((c) => ['from', 'to'].some((k) => isRelative(c.args?.[k]) && /%/.test(c.url?.[k] ?? '')))],
+]) {
+  if (!test()) fail('fixtures', `no save-time-range case with ${part} (fixtures.30)`);
+}
 if (failures === fixtureFailures) pass('fixtures', `${sets.length} sets are valid`);
 
 // 5. Prose files: no literal constant value, and no internal text.

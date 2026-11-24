@@ -67,7 +67,7 @@ The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 ## How to read
 
 1. Files 1 to 5 give the interfaces in build order. Files 6 to 8 apply to all of them. File 9 gives the core
-   panel of a chart, for a save to a dashboard.
+   panel of a chart and the time range of a saved panel, for a save to a dashboard.
 2. Read the files of your part only:
 
    | Part | Files |

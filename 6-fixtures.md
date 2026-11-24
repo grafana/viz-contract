@@ -22,6 +22,7 @@ are in `fixtures/`, one directory for each set.
 | `core-panel.json` | `cases`: a list. Each case has a `description`, a `chart`, the `panel` of that chart, the expected `core` (the core panel, or `null` for a chart with no core panel) and the expected `dropped` list | Source |
 | `core-fits.json` | `cases`: a list. Each case has a `description`, a `chart`, `results` (the frames, as `data.results` of a viz spec), and `fits`: `true` when the frames fit the core panel of the chart | Source |
 | `core-version.json` | `cases`: a list. Each case has a `description`, a `version` (the version of the Grafana of the save, or `null` when the Source cannot read it) and the expected `result`: `allowed`, `older` or `not-known` | Source |
+| `time-range.json` | `cases`: a list. Each case has a `description`, `args` (the `from` and the `to` of the tool arguments of a save, or none of them), the expected `dashboard` (the `from` and the `to` of a new dashboard) and the expected `url` (the values of the query parameters `from` and `to`) | Source |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -122,6 +123,16 @@ are in `fixtures/`, one directory for each set.
     number of two digits next to a number of one digit, so a compare of the text gives the wrong order.
   - A build of `coreVersion` with a pre-release part and with a build part, and a build of an older version.
   - A version that the Source cannot read, and each kind of version that does not have the form of `save.9`.
+- `fixtures.30` One `save-time-range` set. It has `time-range.json`, and a `meta.json` with `now` only. For each
+  case of `time-range.json`, the Source test gives `args` as the `from` and the `to` of the tool arguments of a
+  save, and `now` as the time of the save. The time range of a new dashboard must equal `dashboard` (`save.23`).
+  The values of the query parameters `from` and `to` of the URL must equal `url` (`save.24`). The cases cover
+  these parts:
+  - A relative value, and arguments with no `from` and no `to`.
+  - Epoch milliseconds as an integer and as a string.
+  - An absolute time next to a relative value.
+  - A value that does not start with `now` and is not epoch milliseconds (`save.20`).
+  - A relative value with a character that the URL percent-encodes.
 
 ## Conformance tests
 

@@ -16,7 +16,11 @@ specified.
    migrations of a panel from the `pluginVersion` of the saved panel. Thus a saved panel of the chart needs as
    its `pluginVersion` the version of the panel that the Source checked the options against, and that panel
    must give its migrations to Grafana. `chart-options.json` gives this version (`delivery.23`). A saved core
-   panel has `coreVersion` (`save.2`).
+   panel has `coreVersion` (`save.2`). The time range of a saved panel is specified (`save.20` to `save.24`). One
+   question about it is open: which tool arguments the App gives to a save. After a failed refresh, the last
+   tool arguments have the new time range, and the chart on screen has the old one (`refresh.5`, `refresh.9`).
+   After a zoom or a pan without `onRefresh`, the chart on screen shows a part of the time range of the
+   arguments (`renderer.42`). The save rules must say which time range the save has in these two cases.
 4. Open a dashboard panel. The App draws a panel of an existing dashboard from its panel JSON.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.
