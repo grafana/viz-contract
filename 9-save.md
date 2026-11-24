@@ -125,7 +125,7 @@ panel that the save adds to the dashboard.
 
 The App keeps the `from` and the `to` of the last pick, zoom or pan in the last tool arguments (`refresh.9`). It
 keeps them also if the refresh of that pick, zoom or pan fails. The chart on screen is then the old chart
-(`refresh.5`). A zoom or a pan without `onRefresh` does not change the tool arguments (`renderer.42`). A save
+(`refresh.5`). A zoom or a pan without `onRefresh` does not change the tool arguments (`renderer.73`). A save
 from the App has the last tool arguments (`save.48`). Thus, in these two cases, the save has the time range of
 the last tool arguments, and not the time range of the chart on screen.
 
@@ -267,7 +267,7 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
   arguments (`refresh.8`), with the chart that the user sees as `type`. Thus the save has the chart that the user
   sees, and the time range of the last tool arguments (`save.20`). The chart on screen can show another time
   range: after a refresh that failed (`refresh.5`), and after a zoom or a pan without `onRefresh`
-  (`renderer.42`). The save then still has the time range of the last tool arguments. After a refresh that
+  (`renderer.73`). The save then still has the time range of the last tool arguments. After a refresh that
   failed, that is the time range that the user asked for. After a zoom or a pan without `onRefresh`, the App does
   not know the time range on screen, because the Renderer does not give it to the App. The App makes one call
   for each save. It does not ask the Source first which options a save drops. The result gives them (`save.44`).

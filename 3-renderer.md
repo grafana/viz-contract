@@ -176,34 +176,54 @@ action does on its chart. These rules give only what the App and the user see af
 ## Zoom and pan
 
 A zoom is a drag across the plot area that selects a part of the time range. A zoom out shows a wider time
-range. Reset goes back to the reset range of `renderer.45`. A pan is a drag that moves the time range.
+range. A pan is a drag that moves the time range. Reset is an optional control (`renderer.71`). It goes back to
+the reset range of `renderer.76`.
 
-- `renderer.42` Without `onRefresh`, the chart shows only the data of the viz spec, and the Renderer does not
-  query again. Zoom, zoom out, Reset and pan work in the Renderer only, on that data. They stay inside
-  `data.range`. Reset shows all of `data.range`.
-- `renderer.43` With `onRefresh`, each zoom, zoom out, Reset and pan calls `onRefresh` one time with the cause
-  `timeRange` and the `from` and `to` of the new time range. Thus it changes the time range as a pick of the time
-  picker does (`refresh.3`). After the call, the chart is busy, as for each refresh (`refresh.4`, `refresh.5`). For
-  zoom, zoom out and pan, `from` and `to` are epoch milliseconds as decimal strings, for example `"1790352577294"`.
-- `renderer.44` A double click on the plot area and the Zoom out button of the time picker each do one zoom out. A
-  zoom out keeps the center of the time range and makes it wider, as Grafana does. Without `onRefresh`, it stays
-  inside `data.range` (`renderer.42`).
-- `renderer.45` The Renderer keeps a reset range. At `render`, the reset range is the `timeRange` of the viz spec
-  (`spec.17`). If the viz spec has no `timeRange`, the reset range is its `data.range`. Each pick of the time
-  picker sets the reset range to the pick. A zoom, a zoom out, a pan, a Reset and a call of `update` do not change
-  it. For example, after a pick A, a zoom, a pick B and a zoom, the reset range is B. With `onRefresh`, Reset
-  calls `onRefresh` with the `from` and `to` of the reset range. A relative range stays relative. Thus later
-  refreshes move with the clock (`refresh.3`). The Renderer sends an integer as its decimal string, as the Source
-  does (`tool.6`). For example, `1790352577294` becomes `"1790352577294"`.
-- `renderer.48` With `onRefresh`, Reset does nothing while the chart shows the reset range. The chart shows the
-  reset range after `render`. It also shows it after an `update` that ends the busy state of a pick of the time
-  picker or of a Reset (`refresh.5`), or that comes after the timeout of that pick or Reset (`refresh.15`). The
-  chart stops showing the reset range when a zoom, a zoom out or a pan calls `onRefresh`. This is also true if
-  that refresh fails, because the App keeps the new range (`refresh.9`). A pick or a Reset whose refresh fails or
-  times out does not show the reset range. Thus the user can try Reset again.
+- `renderer.71` The Renderer has three optional controls. Each one has a fixed name:
+  - `reset-with-refresh`: Reset with `onRefresh`.
+  - `reset-without-refresh`: Reset with no `onRefresh`.
+  - `picker-zoom-out`: the Zoom out button of the time picker.
+
+  Reset with `onRefresh` and Reset with no `onRefresh` are two separate optional controls. The Renderer can
+  offer or omit each optional control. The Renderer exports `optionalControls`: the names of the optional
+  controls that it offers. A rule about an optional control applies only to a Renderer that offers that control.
+  Zoom, the zoom out of a double click on the plot area, and pan are not optional.
+- `renderer.72` The element of each optional control has the attribute `data-viz-control`. The value is the name
+  of the control (`renderer.71`). No other element has this attribute. Thus a test finds an optional control
+  without its text or its place.
+- `renderer.73` Without `onRefresh`, the chart shows only the data of the viz spec, and the Renderer does not
+  query again. Zoom, zoom out and pan work in the Renderer only, on that data. They stay inside `data.range`. If
+  the Renderer offers Reset with no `onRefresh` (`renderer.71`), Reset also works in the Renderer only, and it
+  shows all of `data.range`.
+- `renderer.74` With `onRefresh`, each zoom, zoom out and pan calls `onRefresh` one time with the cause
+  `timeRange` and the `from` and `to` of the new time range. If the Renderer offers Reset with `onRefresh`
+  (`renderer.71`), each Reset does the same. Thus each of them changes the time range as a pick of the time
+  picker does (`refresh.3`). After the call, the chart is busy, as for each refresh (`refresh.4`, `refresh.5`).
+  For zoom, zoom out and pan, `from` and `to` are epoch milliseconds as decimal strings, for example
+  `"1790352577294"`.
+- `renderer.75` A double click on the plot area does one zoom out. If the Renderer offers the Zoom out button of
+  the time picker (`renderer.71`), a click on that button also does one zoom out. A zoom out keeps the center of
+  the time range and makes it wider, as Grafana does. Without `onRefresh`, it stays inside `data.range`
+  (`renderer.73`).
+- `renderer.76` This is a rule for a Renderer that offers Reset with `onRefresh` (`renderer.71`). The Renderer
+  keeps a reset range. At `render`, the reset range is the `timeRange` of the viz spec (`spec.17`). If the viz
+  spec has no `timeRange`, the reset range is its `data.range`. Each pick of the time picker sets the reset range
+  to the pick. A zoom, a zoom out, a pan, a Reset and a call of `update` do not change it. For example, after a
+  pick A, a zoom, a pick B and a zoom, the reset range is B. Reset calls `onRefresh` with the `from` and `to` of
+  the reset range. A relative range stays relative. Thus later refreshes move with the clock (`refresh.3`). The
+  Renderer sends an integer as its decimal string, as the Source does (`tool.6`). For example, `1790352577294`
+  becomes `"1790352577294"`.
+- `renderer.77` This is a rule for a Renderer that offers Reset with `onRefresh` (`renderer.71`). Reset does
+  nothing while the chart shows the reset range. The chart shows the reset range after `render`. It also shows it
+  after an `update` that ends the busy state of a pick of the time picker or of a Reset (`refresh.5`), or that
+  comes after the timeout of that pick or Reset (`refresh.15`). The chart stops showing the reset range when a
+  zoom, a zoom out or a pan calls `onRefresh`. This is also true if that refresh fails, because the App keeps the
+  new range (`refresh.9`). A pick or a Reset whose refresh fails or times out does not show the reset range. Thus
+  the user can try Reset again.
 - `renderer.46` A pan calls `onRefresh` only at the end of the drag. It does not call `onRefresh` while the drag
   continues, because data source requests can be slow or expensive.
-- `renderer.47` While the chart is busy, zoom, zoom out, Reset and pan do nothing.
+- `renderer.78` While the chart is busy, zoom, zoom out and pan do nothing. If the Renderer offers Reset with
+  `onRefresh` (`renderer.71`), Reset also does nothing.
 
 ## The Ask in chat link
 
