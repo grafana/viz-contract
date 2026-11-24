@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, fits, invalidOptionsText, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveErrorText, saveText, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, fits, invalidOptionsText, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, saveErrorText, saveMessageText, saveText, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -56,6 +56,7 @@ const messagePatterns = readJSON('registry/messages.json').messages;
 const X_TYPES = ['time', 'number', 'string'];
 const rel = [
   [X_TYPES.every((t) => messagePatterns.some((m) => m.code === `point-${t}`)), 'each xType of the Renderer API has a message pattern'],
+  [messagePatterns.some((m) => m.code === 'save-chart' && m.message.endsWith('<arguments>')), 'the save-chart message pattern ends with the arguments (save.30)'],
   [new Set(names).size === names.length, 'chart names are unique'],
   [charts.every((c) => panels.includes(c.panel)), 'each chart names a panel of panel-types.json'],
   [panels.every((p) => charts.some((c) => c.panel === p)), 'each panel has a chart'],
@@ -258,6 +259,10 @@ for (const set of sets) {
     // The App adds the chart that the user sees as type to the last tool arguments (save.24, fixtures.21).
     if (args && (canonical(args) !== canonical(saveBase.args) || canonical(save.chart) !== canonical({ ...saveBase.args, type: saveBase.chart }))) {
       fail('fixtures', `${set}: args.json is not the args.json of prometheus-line, or the chart of save-args.json is not these arguments with the type ${saveBase.chart} (fixtures.21)`);
+    }
+    // The App test sends the save of each set to the chat (fixtures.24), so the text must not be too long (save.31).
+    if ([...saveMessageText(save, messagePatterns)].length > constants.maxMessageChars.value) {
+      fail('fixtures', `${set}/save-args.json: the message of save.30 is longer than maxMessageChars (fixtures.24)`);
     }
     if (files['save-retry-args.json']) {
       // The second call of save.27 has a chart with no options and no fieldConfig.

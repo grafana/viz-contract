@@ -113,10 +113,23 @@ the dashboard, its time range, and the map from a chart to a core Grafana panel.
   does not change the last tool arguments. The next refresh handles them (`refresh.19`).
 - `save.28` If a call gives another tool error, the App shows the message of the tool error in its shell. The
   form stays open, so the user can save again.
-- `save.29` If the Host refuses the call, the App shows a short error in its shell. The user can still ask the
-  model in the chat to save the chart (`save.30`).
+- `save.29` The Host refuses a call when it answers the call with a JSON-RPC error. A tool error is not a
+  refusal, because it comes from the Source (`save.28`). If the Host refuses the call, the App shows a short error
+  in its shell. If the App can send a text message (`state.20`), it also shows a control that sends the save to
+  the chat. The App sends no message until the user uses that control, because the user can be the one who
+  refused the call.
+- `save.30` When the user uses that control, the App sends one message with `ui/message` of MCP Apps. The message
+  has the `role` `user` and one text item, as in `state.21`. The text is the `save-chart` pattern of
+  `messages.json`. `<arguments>` is the arguments of the call that the Host refused, as one JSON object with no
+  white space, as `JSON.stringify` gives it. The order of the keys is free. The model then calls `save_chart` with
+  these arguments (`save.32`), and the Host applies its own rules to a tool call of the model. The App does not
+  get the result of that save. The model reads it (`save.21`). `state.26` and `state.27` apply to the message.
+- `save.31` If the text of `save.30` is longer than `maxMessageChars`, the App does not show the control of
+  `save.29`, and it sends no message. The length is in Unicode code points. The user can still ask the model in
+  the chat to save the chart (`save.32`).
 
 ## The model
 
-- `save.30` The model calls `save_chart` with a target and with the tool arguments that it wrote for the chart as
-  `chart`. If those arguments have no `type`, the model adds the chart of the chart line (`tool.46`).
+- `save.32` The model calls `save_chart` with a target and with the tool arguments that it wrote for the chart as
+  `chart`. If those arguments have no `type`, the model adds the chart of the chart line (`tool.46`). After a
+  message of `save.30`, the model uses the arguments of the message.

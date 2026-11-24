@@ -14,6 +14,11 @@
       "code": "point-string",
       "when": "The user clicks Ask in chat in the tooltip, and x is a category",
       "message": "Explain the value <y> of <series> <labels> (query <refId>) for the category <x> in the chart <chart>, from <from> to <to>."
+    },
+    {
+      "code": "save-chart",
+      "when": "The Host refuses the call of save_chart from the App, and the user sends the save to the chat",
+      "message": "Save this chart to a dashboard. Call save_chart with these arguments: <arguments>"
     }
   ]
 }

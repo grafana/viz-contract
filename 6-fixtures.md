@@ -144,6 +144,11 @@ are in `fixtures/`, one directory for each set.
   `save-result.json`. If the set has `save-retry-args.json`, the App must call `save_chart` a second time, and
   the arguments of that call must equal `save-retry-args.json` (`save.27`). Otherwise the App must make no second
   call, and it must show the message of the tool error (`save.28`).
+- `fixtures.24` For a set with `save-args.json`, the App test also runs the save of `fixtures.23` with a Host
+  that answers the call of `save_chart` with a JSON-RPC error. The App must send no message before the user uses
+  the control of `save.29`. Then it must send one message. The text must be the `save-chart` pattern of
+  `messages.json`, and its `<arguments>` must be JSON with no white space that equals `save-args.json`
+  (`save.30`). Thus the text of each set is not longer than `maxMessageChars`.
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response

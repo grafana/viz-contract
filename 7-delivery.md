@@ -151,4 +151,12 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.24` A CI check of the Renderer makes sure that `panels` follows `delivery.23`. The check reads
   `info.version` from the built `plugin.json` of each panel. It fails when `panels` does not have exactly the
   panels of the charts of the file, or when a `pluginVersion` is not the version of the panel.
-- `delivery.25` A CI check of the App runs the test of `fixtures.23` for each set that has `save-args.json`.
+- `delivery.25` A CI check of the App runs the tests of `fixtures.23` and `fixtures.24` for each set that has
+  `save-args.json`. It also checks these cases with a Host that the test makes:
+  - The Host answers the call of `save_chart` with a JSON-RPC error, and the test makes a `chart` at run time
+    whose text of `save.30` is longer than `maxMessageChars`. The App must show no control that sends the save to
+    the chat (`save.31`).
+  - The `hostCapabilities` of the Host have `message` with no `text`, and the Host answers the call with a
+    JSON-RPC error. The App must show no such control (`save.29`).
+  - After the App sends the message, the Host answers as in each case of `state.27`. The App must do as
+    `delivery.13` gives for that case.

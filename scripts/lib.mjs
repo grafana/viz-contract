@@ -164,6 +164,12 @@ export function saveText({ dashboard, panel, dropped }, chart) {
   ].join('\n');
 }
 
+// The text of the message that the App sends when the Host refuses a call of save_chart (save.30). args is the
+// arguments of the call, and patterns is the messages list of registry/messages.json. The order of the keys is
+// free, so a test compares the JSON after the pattern, not the text.
+export const saveMessageText = (args, patterns) =>
+  patterns.find((p) => p.code === 'save-chart').message.replace('<arguments>', () => JSON.stringify(args));
+
 // The text of get_chart_options for one entry of chart-options.json (tool.44). dataShape is the dataShape of
 // the chart in chart-types.json.
 export function optionsText(chart, dataShape, entry, advanced) {
