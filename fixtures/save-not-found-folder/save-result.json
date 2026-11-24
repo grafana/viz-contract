@@ -1,0 +1,9 @@
+{
+  "isError": true,
+  "content": [
+    {
+      "type": "text",
+      "text": "save-not-found: The folder of the target does not exist. The chart is not saved."
+    }
+  ]
+}

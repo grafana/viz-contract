@@ -7,12 +7,15 @@ specified.
 2. Send the chart to the chat. The App sends a message about the chart, or about a series or a range, to the
    conversation with `ui/message` of MCP Apps. A message about a point is specified (`renderer.30`, `state.20`).
    See https://github.com/grafana/viz-contract/issues/17.
-3. Save to a dashboard. The user saves the chart to a Grafana dashboard. A map from each chart to a core Grafana
-   panel lets a Grafana with no ECharts app open the saved panel. The saved panel also needs the legend
-   overrides, and now only the Renderer has them (`renderer.37`). The saved panel also has the chart options
-   (`tool.41`). Grafana runs the migrations of a panel from the `pluginVersion` of the saved panel. Thus the saved
-   panel needs as its `pluginVersion` the version of the panel that the Source checked the options against, and
-   that panel must give its migrations to Grafana. `chart-options.json` gives this version (`delivery.23`).
+3. The saved panel. `save_chart` saves the chart to a Grafana dashboard (`save.1`). These parts of a save are not
+   specified: the JSON of the saved panel, its place in the dashboard, and its time range. A map from each chart
+   to a core Grafana panel lets a Grafana with no ECharts app open the saved panel. The map can drop an option
+   (`save.20`). The tool result must also tell the App if the user can save, so that the App shows no Save
+   control that always fails. The saved panel also needs the legend overrides, and now only the Renderer has
+   them (`renderer.37`). The saved panel also has the chart options (`tool.41`). Grafana runs the migrations of a
+   panel from the `pluginVersion` of the saved panel. Thus the saved panel needs as its `pluginVersion` the
+   version of the panel that the Source checked the options against, and that panel must give its migrations to
+   Grafana. `chart-options.json` gives this version (`delivery.23`).
 4. Open a dashboard panel. The App draws a panel of an existing dashboard from its panel JSON.
 5. Visualization suggestions. The core Grafana visualization suggestions replace `pick.json`, and the pick moves to
    the App.

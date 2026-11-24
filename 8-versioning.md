@@ -34,7 +34,9 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
 | --------- | ------- |
 | Tool arguments | Provisional until the first tagged mcp-grafana release that contains the Source. Frozen from that release |
 | Arguments of `get_chart_options` | The promise of the tool arguments |
+| Arguments of `save_chart` | The promise of the tool arguments |
 | Tool result | Internal |
+| Result of `save_chart` | Internal |
 | `chart-options.json` | Internal |
 | Viz spec | Internal. Frozen when the Renderer loads from a CDN |
 | Renderer API | Internal. Frozen when the Renderer loads from a CDN |
@@ -54,3 +56,7 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
   (`tool.43`), so a prompt does not have to name them. A refresh can have an option that the Renderer version does
   not have. The App then calls again with no `options` and no `fieldConfig` (`refresh.19`). Thus a change of the
   options does not break the refresh of `version.12`.
+- `version.14` The `chart` of the arguments of `save_chart` holds tool arguments (`save.7`), and the arguments
+  reach the same consumers as the tool arguments (`version.10`). Thus the arguments of `save_chart` have the
+  promise of the tool arguments. A save can have an option that the Renderer version does not have
+  (`version.13`). The App then saves with no `options` and no `fieldConfig` (`save.27`).

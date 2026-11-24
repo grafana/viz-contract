@@ -188,7 +188,8 @@ Shapes: `schemas/chart-options-args.schema.json` gives the arguments of `get_cha
   <chart>. get_chart_options lists its options.` `<chart>` is `chart`. `render_grafana_app` adds the chart line
   after its text line, and the notes follow (`tool.28`). The chart line is not a note. `tool.30` does not change
   it, and `maxAppNotes` does not count it. Thus the model always knows the chart that the Source picked, and each
-  of the `maxAppNotes` places is for a note of `tool.29`.
+  of the `maxAppNotes` places is for a note of `tool.29`. When the server lists `save_chart`, the chart line has
+  one more sentence (`save.5`).
 - `tool.47` No tool description and no schema of tool arguments holds the options of a chart, the form of an
   override or the list of the charts of `get_chart_options`. Thus the tool list of a Host does not grow with the
   options. The model reads the options of one chart, and the form of an override, only when it needs them.

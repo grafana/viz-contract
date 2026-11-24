@@ -151,3 +151,4 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.24` A CI check of the Renderer makes sure that `panels` follows `delivery.23`. The check reads
   `info.version` from the built `plugin.json` of each panel. It fails when `panels` does not have exactly the
   panels of the charts of the file, or when a `pluginVersion` is not the version of the panel.
+- `delivery.25` A CI check of the App runs the test of `fixtures.23` for each set that has `save-args.json`.

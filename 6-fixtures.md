@@ -19,6 +19,10 @@ are in `fixtures/`, one directory for each set.
 | `options-args.json` | The arguments of `get_chart_options` | Source |
 | `options-result.json` | The expected tool result of `get_chart_options` | Source |
 | `retry-args.json` | The expected tool arguments of the second call of a refresh | App |
+| `save-args.json` | The arguments of `save_chart` | Source, App |
+| `grafana.json` | The answers of the fake Grafana to a save: `read` for the read of the dashboard, and `write` for the write of the dashboard. An answer is `ok`, `conflict`, `forbidden` or `not-found` | Source |
+| `save-result.json` | The expected result of `save_chart`, or the expected tool error | Source, App |
+| `save-retry-args.json` | The expected arguments of the second call of a save | App |
 
 - `fixtures.1` A set has only the files that its tests need. For example, a pick set has no `request.json`.
 - `fixtures.2` `args.json`, `spec.json` and a `result.json` that holds a tool result validate against their schemas.
@@ -88,6 +92,20 @@ are in `fixtures/`, one directory for each set.
   the set. The test draws `spec.json`, and picks another color for that series in the legend. The series must then
   have the color of the legend and the line style of the override. The same must be true after an `update` with
   the same viz spec (`renderer.35`).
+- `fixtures.21` One set or more for each tool error of `save_chart`. Each set has `save-args.json`, and its
+  `save-result.json` is the expected tool error. The `type` of each `chart` is the chart of the set
+  `prometheus-line`.
+  - `save-conflict`: a dashboard that exists. The write gets the answer `conflict` (`save.14`). The set also has
+    `args.json`. It is the `args.json` of the set `prometheus-line`, which has no `type`. The `chart` of
+    `save-args.json` is these arguments with the chart of that set as `type` (`save.24`).
+  - `save-forbidden`: a dashboard that exists. The write gets the answer `forbidden` (`save.15`).
+  - `save-not-found`: the read of the dashboard gets the answer `not-found`. `<kind>` is `dashboard` (`save.16`).
+  - `save-not-found-folder`: a new dashboard in a folder. The write gets the answer `not-found`. `<kind>` is
+    `folder`.
+  - `save-invalid-options`: the `chart` is the `args.json` of the set `options-stale`. The expected result is the
+    `invalid-options` tool error (`save.9`). The set has no `grafana.json`, because the Source does not read the
+    dashboard. `save-retry-args.json` is `save-args.json` with a `chart` that has no `options` and no
+    `fieldConfig` (`save.27`).
 
 ## Conformance tests
 
@@ -109,6 +127,23 @@ are in `fixtures/`, one directory for each set.
   the chart of that set. Thus the test answers the second call with the `result.json` of the set
   `prometheus-line`. The viz spec of the `update` must equal the `spec.json` of that set with one more field: a
   `notices` list that has only the `options-dropped` notice (`refresh.19`).
+- `fixtures.22` For a set with `save-args.json`, the Source test gives `save-args.json` to `save_chart`. The
+  Source uses the `chart-options.json` of the set `options`, as in `fixtures.18`. A fake Grafana gives the answer
+  `read` of `grafana.json` to the read of the dashboard, and the answer `write` to the write of the dashboard.
+  For `conflict`, `forbidden` and `not-found`, it answers as Grafana does in that case. For the `read` `ok`, it
+  gives a dashboard that the test makes, with the UID of the arguments. `grafana.json` has a `read` only if the
+  arguments have a `dashboardUid`, and it has a `write` only if the Source can get to the write. The test runs a
+  set that has a `read` two times: with a dashboard of the v1 schema, and with a dashboard of the v2 schema
+  (`save.13`). The tool result must equal `save-result.json`. With no `grafana.json`, the Source must make no
+  request to Grafana. With no `write`, it must make no write. `save-args.json` and `save-retry-args.json`
+  validate against the schema of the arguments of `save_chart`.
+- `fixtures.23` For a set with `save-args.json`, the App test draws the chart of the set `prometheus-line` with
+  the `result.json` of that set. If the set has `args.json`, the last tool arguments of the App are `args.json`.
+  Otherwise they are the `chart` of `save-args.json`. The user saves the chart to the target of `save-args.json`.
+  The arguments of the call of `save_chart` must equal `save-args.json`. The test answers the call with
+  `save-result.json`. If the set has `save-retry-args.json`, the App must call `save_chart` a second time, and
+  the arguments of that call must equal `save-retry-args.json` (`save.27`). Otherwise the App must make no second
+  call, and it must show the message of the tool error (`save.28`).
 - `fixtures.9` The App test gives `args.json` and `result.json` to the App. The viz spec must equal `spec.json`.
 - `fixtures.10` The Renderer test draws `spec.json`. The value of `onState` must equal `state.json`.
 - `fixtures.11` Before a consumer copies a set into another repository, it makes sure that no recorded response
