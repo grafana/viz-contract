@@ -180,9 +180,12 @@ range. A pan is a drag that moves the time range. Reset is an optional control (
 the reset range of `renderer.45`.
 
 - `renderer.71` Reset and the Zoom out button of the time picker are optional controls. The Renderer can omit
-  Reset, with `onRefresh` and without it. The Renderer can omit the Zoom out button of the time picker. A rule
-  about an optional control applies only to a Renderer that offers that control. Zoom, the zoom out of a double
-  click on the plot area, and pan are not optional.
+  Reset, with `onRefresh` and without it. It can also offer Reset with `onRefresh` and omit it without
+  `onRefresh`, or the reverse. The Renderer can omit the Zoom out button of the time picker. The Renderer offers
+  a control only if its list of optional controls has that control (`delivery.29`). A rule about an optional
+  control applies only where the Renderer offers that control. For example, `renderer.42` does not apply to the
+  Reset of a Renderer that offers Reset only with `onRefresh`. Zoom, the zoom out of a double click on the plot
+  area, and pan are not optional.
 - `renderer.42` Without `onRefresh`, the chart shows only the data of the viz spec, and the Renderer does not
   query again. Zoom, zoom out and pan work in the Renderer only, on that data. They stay inside `data.range`. If
   the Renderer offers Reset (`renderer.71`), Reset also works in the Renderer only, and it shows all of

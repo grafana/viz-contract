@@ -110,11 +110,9 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   `icons.json`.
 - `delivery.12` A CI check of the Renderer draws the `prometheus-line` fixture. It does each zoom, zoom out by a
   double click on the plot area, and pan, with `onRefresh` and with no `onRefresh`. It also does each optional
-  control that the Renderer offers (`renderer.71`): Reset, and the Zoom out button of the time picker when the
-  chart shows it. The check does not do a control that the Renderer omits, and it skips the cases of that control.
-  It does not skip a case of a control that the Renderer offers. With `onRefresh`, the check acts as the App. It
-  ends each busy state with `setRefreshed(<id>, true)`, unless a case below gives another answer. It fails in
-  these cases:
+  control of the list of `delivery.29`. The check does not do a control that is not in the list, and it skips the
+  cases of that control. With `onRefresh`, the check acts as the App. It ends each busy state with
+  `setRefreshed(<id>, true)`, unless a case below gives another answer. It fails in these cases:
   - With `onRefresh`, an action does not call `onRefresh` one time with the cause `timeRange`, or the chart is not
     busy after the call (`renderer.43`).
   - With `onRefresh`, a zoom out after `render` does not give a range that is wider than `data.range` and has the
@@ -124,7 +122,7 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - With no `onRefresh`, an action makes a network request, or the time range on screen leaves `data.range`
     (`renderer.42`).
 
-  For a Renderer that offers Reset, the check also fails in these cases:
+  For a Renderer that offers Reset with `onRefresh`, the check also fails in these cases:
   - With `onRefresh`, Reset after a zoom does not give the `from` and `to` of the `timeRange` of the fixture, for
     example `now-15m` and `now` (`renderer.45`).
   - With `onRefresh`, after a pick of the time picker and a zoom, Reset does not give the `from` and `to` of the
@@ -132,6 +130,16 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
   - With `onRefresh`, Reset with no zoom, zoom out or pan before it calls `onRefresh` (`renderer.48`).
   - With `onRefresh`, after a zoom and a Reset that the check answers with `setRefreshed(<id>, false)`, a second
     Reset does not call `onRefresh` (`renderer.48`).
+- `delivery.29` The source of the Renderer has a fixed list of the optional controls that the Renderer offers
+  (`renderer.71`). The list can have these entries: Reset with `onRefresh`, Reset with no `onRefresh`, and the
+  Zoom out button of the time picker. The time picker shows only with `onRefresh` (`refresh.1`), so its button
+  has one entry. The check of `delivery.12` reads the list. It does not find the optional controls from the
+  screen. It fails in these cases:
+  - The check cannot do a control of the list, for example because the chart does not show the control.
+  - The chart shows an optional control that is not in the list.
+
+  Thus a change that removes a control by mistake fails the check. A change that omits a control on purpose also
+  removes its entry from the list.
 - `delivery.13` A CI check of the App runs the test of `fixtures.15` for each set that has `message.json`. It also
   checks each answer of `state.27` with a Host that the test makes:
   - With `isError` `true`, and with a JSON-RPC error, the text box has exactly the text that the App sent.

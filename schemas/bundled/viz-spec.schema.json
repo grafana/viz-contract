@@ -59,7 +59,7 @@
     },
     "timeRange": {
       "type": "object",
-      "description": "The from and to of the tool arguments, with no change. A relative value, for example now-6h, stays relative. The Renderer uses it for Reset.",
+      "description": "The from and to of the tool arguments, with no change. A relative value, for example now-6h, stays relative. A Renderer that offers Reset uses it for Reset (renderer.71).",
       "required": [
         "from",
         "to"
