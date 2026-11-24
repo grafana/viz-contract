@@ -122,7 +122,7 @@ panel that the save adds to the dashboard.
 
 The App keeps the `from` and the `to` of the last pick, zoom or pan in the last tool arguments (`refresh.9`). It
 keeps them also if the refresh of that pick, zoom or pan fails. The chart on screen is then the old chart
-(`refresh.5`). A zoom or a pan without `onRefresh` does not change the tool arguments (`renderer.42`). No rule
+(`refresh.5`). A zoom or a pan without `onRefresh` does not change the tool arguments (`renderer.73`). No rule
 says yet which tool arguments the App gives to a save. Thus, in these two cases, no rule says yet if the save
 has the time range of the last tool arguments or the time range of the chart on screen. This question is in
 item 3 of `future.md`.
