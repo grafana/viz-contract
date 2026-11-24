@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
-import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
+import { CONTRACT, SCHEMAS, TYPE_DESCRIPTION, canonical, corePanel, coreVersionResult, fits, leafPaths, matches, messageText, optionProblems, optionsText, panelWithOptions, read, readJSON, sourceRequest, summary, unknownChartText } from './lib.mjs';
 import { generate, stale } from './generate.mjs';
 
 let failures = 0;
@@ -226,8 +226,6 @@ for (const set of sets) {
 }
 // The cases of the set core-panel (fixtures.21): the core panel and the dropped options of save.2 to save.5.
 const coreCases = sets.includes('core-panel') ? readJSON('fixtures/core-panel/core-panel.json').cases : [];
-const leafPaths = (node, prefix = '') =>
-  Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leafPaths(v, `${prefix}${k}.`) : [[`${prefix}${k}`, v]]));
 const at = (node, p) => p.split('.').reduce((n, k) => n?.[k], node);
 coreCases.forEach((c, i) => {
   const name = `core-panel case ${i + 1} (${c.chart})`;
@@ -305,6 +303,16 @@ for (const [part, test] of [
   ['a version that the Source cannot read', (c) => c.version === null],
 ]) {
   if (!versionCases.some(test)) fail('fixtures', `no core-version case with ${part} (fixtures.21)`);
+}
+if (!fitsCases.some((c) => coreOf(c.chart) && !coreOf(c.chart).fits)) fail('fixtures', 'no core-fits case for a chart whose core row has no fits (fixtures.21)');
+// A row that needs a field in each frame has a case where one frame has the field and another frame has none.
+for (const r of coreRows.filter((x) => x.fits)) {
+  for (const key of r.fits.flatMap(Object.keys).filter((k) => k.startsWith('everyFrameHasFieldName.'))) {
+    const some = `hasFieldName.${key.slice('everyFrameHasFieldName.'.length)}`;
+    if (!fitsCases.some((c) => c.chart === r.chart && summary(c.results)[some] && !summary(c.results)[key])) {
+      fail('fixtures', `no core-fits case for ${r.chart} where only some frames have the field of ${key} (fixtures.21)`);
+    }
+  }
 }
 for (const [chart, entry] of Object.entries(chartOptions)) {
   const preset = Object.keys(charts.find((c) => c.name === chart)?.options ?? {});

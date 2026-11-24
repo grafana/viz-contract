@@ -111,8 +111,10 @@ are in `fixtures/`, one directory for each set.
 
   For each case of `core-fits.json`, the frames of `results` fit the chart `chart`. The test makes sure that
   they fit the core panel only when `fits` is `true` (`save.8`). Each row of `core-panels.json` that has `fits`
-  has one case of each kind. A check also makes sure that the data of the smoke set of each chart fits its core
-  panel.
+  has one case of each kind. The cases of `nodeGraph` also have a frame of nodes with a frame of edges: one
+  where each frame has an `id` field, and one where only the frame of nodes has it. One case has a chart whose
+  row has no `fits`: plain time series for the `heatmap` chart (`save.1`). A check also makes sure that the data
+  of the smoke set of each chart fits its core panel.
 
   For each case of `core-version.json`, the Source test gives `version` as the version of the Grafana of a save
   that needs the core panel, with `coreVersion` (`save.9`). With the `result` `allowed`, the save is not refused

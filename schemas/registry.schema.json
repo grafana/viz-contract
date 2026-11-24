@@ -18,8 +18,8 @@
             "pattern": "^(fieldCountByType|hasFieldType)\\.(time|number|string|boolean|trace|geo|enum|other|frame|nestedFrames)$"
           },
           {
-            "description": "hasDataFrameType.<type> is true when a frame has schema.meta.type <type>. hasPreferredVisualisationType.<type> is true when a frame has schema.meta.preferredVisualisationType <type>. hasFieldName.<name> is true when a frame has a field with the name <name>, in lower case.",
-            "pattern": "^(hasDataFrameType|hasPreferredVisualisationType|hasFieldName)\\..+$"
+            "description": "hasDataFrameType.<type> is true when a frame has schema.meta.type <type>. hasPreferredVisualisationType.<type> is true when a frame has schema.meta.preferredVisualisationType <type>. hasFieldName.<name> is true when a frame has a field with the name <name>, in lower case. everyFrameHasFieldName.<name> is true when there is one frame or more, and each frame has a field with the name <name>, in lower case.",
+            "pattern": "^(hasDataFrameType|hasPreferredVisualisationType|hasFieldName|everyFrameHasFieldName)\\..+$"
           }
         ]
       },

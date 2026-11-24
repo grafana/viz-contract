@@ -26,6 +26,7 @@ to `save.3` and `save.4`, and `save.5` uses it.
   needs to draw the data of the chart as the chart draws it. For example, the core `piechart` panel draws one
   part for each row only with `reduceOptions.values`. The core `heatmap` panel reads a panel with no options as
   a panel of an old version, and then it calculates the buckets from the values. Thus its preset has `calculate`.
+  With that preset, the core `heatmap` panel reads each number field as one bucket, as the chart does.
 - `save.2` The core panel is made from the panel of the chart (`tool.22`, `tool.41`) and the row of the chart:
   - `type` is the `panel` of the row.
   - `pluginVersion` is `coreVersion`. Grafana then runs the migrations of the core panel from that version.
@@ -71,6 +72,12 @@ to `save.3` and `save.4`, and `save.5` uses it.
   panel registers none. Grafana removes a field option that the panel does not register, with no error. Thus
   the core panel gets a standard field option that is not in `fieldOptions` only at the `core` of its entry.
   With no such `core`, it is a dropped option (`save.5`).
+
+  A standard field option with no entry has no `schema`. Thus no rule makes sure that its value has the same
+  meaning in the core panel, as `delivery.25` does for an entry. The Source accepts a field option of the
+  arguments only with an entry (`tool.39`). Thus a value with no entry comes from the `unit` argument, or from a
+  part of the save that is not specified yet, for example a legend override (`future.md`). The rules of that
+  part must say which values it gives.
 - `save.5` The core panel does not have a dropped option. A dropped option is one of these:
   - An option of the panel of the chart whose entry has no `core`, and that `save.10` does not carry.
   - A path of the panel of the chart that is not an option of the chart, that is not a path of the `options` of
@@ -94,7 +101,8 @@ to `save.3` and `save.4`, and `save.5` uses it.
   conditions in the condition rule language of `registry.schema.json`. The frames fit the core panel when they
   fit the chart (`tool.20`) and one condition of `fits` matches. With no `fits`, the frames that fit the chart
   fit the core panel. For example, a `barchart` draws number fields with no other field, and the core `barchart`
-  panel needs a string or time field. A core panel shows a message or no data for frames that do not fit it. The
+  panel needs a string or time field. The core `nodeGraph` panel needs an `id` field in each frame, and the chart
+  needs none. A core panel shows a message or no data for frames that do not fit it. The
   `fits` of a row come from the code of the core panel in Grafana of `coreVersion`. The core panel of `save.2` to
   `save.5` and `save.10` does not depend on the frames.
 - `save.9` A Grafana of `coreVersion` or of a newer version reads the core panel, because it runs the migrations

@@ -12,7 +12,8 @@ specified.
    chart can fit the chart and not its core panel (`save.8`). The save rules must say how a save finds such
    frames, and what it does then. The saved panel also needs the legend overrides, and now only the Renderer has
    them (`renderer.37`). A legend override is an override property, so the core panel gets it or drops it as each
-   other property (`save.4`, `save.10`). The saved panel also has the chart options (`tool.41`). Grafana runs the
+   other property (`save.4`, `save.10`). A legend override has no entry in `chart-options.json`, so the save rules
+   must say which values it has. The saved panel also has the chart options (`tool.41`). Grafana runs the
    migrations of a panel from the `pluginVersion` of the saved panel. Thus a saved panel of the chart needs as
    its `pluginVersion` the version of the panel that the Source checked the options against, and that panel
    must give its migrations to Grafana. `chart-options.json` gives this version (`delivery.23`). A saved core

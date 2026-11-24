@@ -19,6 +19,8 @@ export function summary(results) {
     .filter((f) => f.schema?.meta?.dataTopic !== 'annotations');
   const s = { frameCount: frames.length, rowCountTotal: 0, rowCountMax: 0, fieldCount: 0, fieldCountMax: 0 };
   const counts = {};
+  // The number of frames that have a field with a name, for everyFrameHasFieldName.
+  const framesWithName = new Map();
   let hasTime = false;
   let first;
   let instant = true;
@@ -33,6 +35,9 @@ export function summary(results) {
     if (f.schema?.meta?.preferredVisualisationType) {
       s[`hasPreferredVisualisationType.${f.schema.meta.preferredVisualisationType}`] = true;
     }
+    for (const name of new Set(fields.map((field) => String(field.name).toLowerCase()))) {
+      framesWithName.set(name, (framesWithName.get(name) ?? 0) + 1);
+    }
     fields.forEach((field, i) => {
       const type = f.data?.enums?.[i] ? 'string' : field.type || 'other';
       counts[type] = (counts[type] || 0) + 1;
@@ -46,6 +51,7 @@ export function summary(results) {
       }
     });
   }
+  for (const [name, n] of framesWithName) if (n === frames.length) s[`everyFrameHasFieldName.${name}`] = true;
   s.isInstant = hasTime && first !== undefined && instant;
   for (const t of FIELD_TYPES) {
     s[`fieldCountByType.${t}`] = counts[t] || 0;
@@ -230,6 +236,10 @@ export function panelWithOptions(panel, args, entry) {
   return out;
 }
 
+// Each path of an object that ends at a value that is not an object, with that value: [path, value].
+export const leafPaths = (node, prefix = '') =>
+  Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leafPaths(v, `${prefix}${k}.`) : [[`${prefix}${k}`, v]]));
+
 // The core panel of a chart and its dropped options (save.2 to save.5, save.10). panel is the panel of the chart,
 // row is the row of chart-types.json, core is the row of core-panels.json, file is chart-options.json, and
 // coreVersion is the constant. With no core panel, there is no result (save.7).
@@ -250,9 +260,7 @@ export function corePanel(panel, row, core, file, coreVersion) {
   const out = { ...rest, type: core.panel, pluginVersion: coreVersion, options: structuredClone(core.options), fieldConfig: { defaults: {}, overrides: [] } };
   const dropped = [];
   // The paths of the options preset of the chart row. The core row takes their place (save.3).
-  const leaves = (node, prefix = '') =>
-    Object.entries(node).flatMap(([k, v]) => (v && typeof v === 'object' && !Array.isArray(v) ? leaves(v, `${prefix}${k}.`) : [`${prefix}${k}`]));
-  const preset = leaves(row.options);
+  const preset = leafPaths(row.options).map(([p]) => p);
   const inPreset = (p) => preset.some((l) => l === p || l.startsWith(`${p}.`) || p.startsWith(`${l}.`));
   const write = (o, value) => {
     const keys = o.core.path.split('.');

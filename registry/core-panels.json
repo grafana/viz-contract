@@ -58,7 +58,7 @@
       "panel": "nodeGraph",
       "options": {},
       "fieldOptions": [],
-      "fits": [{ "hasPreferredVisualisationType.nodeGraph": true }, { "hasFieldName.id": true }]
+      "fits": [{ "everyFrameHasFieldName.id": true }]
     },
     { "chart": "sankey", "panel": "none" },
     { "chart": "chord", "panel": "none" },

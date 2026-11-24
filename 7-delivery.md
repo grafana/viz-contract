@@ -182,8 +182,10 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 - `delivery.27` A CI check of the Renderer makes sure that the `core` of the entries follows `delivery.25` and
   `delivery.26`. It reads the core panel of each chart from `registry/core-panels.json`, and the options of each
   core panel from Grafana of `coreVersion`, for example from the types of the `@grafana/schema` package of that
-  version. The check reads an entry that needs no `core` (`delivery.25`) as an entry with the `core` of
-  `save.10`. It fails in these cases:
+  version. That package does not give the standard field options that a core panel registers. The check reads
+  them from the code of the core panel in Grafana of `coreVersion`, where the panel sets its field options. The
+  check reads an entry that needs no `core` (`delivery.25`) as an entry with the `core` of `save.10`. It fails in
+  these cases:
   - A `core` does not follow a limit of `delivery.26`.
   - The core panel has no option at the place of a `core`.
   - The option at the place of a `core` does not accept a value that the `schema` of the entry accepts.

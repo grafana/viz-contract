@@ -110,6 +110,98 @@
         }
       },
       "fits": false
+    },
+    {
+      "description": "nodeGraph with a frame of nodes that has an id field and a frame of edges that has none: one frame has the field, but not each frame, so the frames fit the chart and not the core panel",
+      "chart": "nodeGraph",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": { "refId": "A", "fields": [{ "name": "id", "type": "string" }, { "name": "title", "type": "string" }] },
+              "data": { "values": [["api", "db", "cache"], ["api", "db", "cache"]] }
+            },
+            {
+              "schema": { "refId": "A", "fields": [{ "name": "source", "type": "string" }, { "name": "target", "type": "string" }] },
+              "data": { "values": [["api", "api"], ["db", "cache"]] }
+            }
+          ]
+        }
+      },
+      "fits": false
+    },
+    {
+      "description": "nodeGraph with node graph frames that each have an id field: the frames fit the core panel",
+      "chart": "nodeGraph",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": {
+                "refId": "A",
+                "meta": { "preferredVisualisationType": "nodeGraph" },
+                "fields": [{ "name": "id", "type": "string" }, { "name": "title", "type": "string" }]
+              },
+              "data": { "values": [["api", "db", "cache"], ["api", "db", "cache"]] }
+            },
+            {
+              "schema": {
+                "refId": "A",
+                "meta": { "preferredVisualisationType": "nodeGraph" },
+                "fields": [{ "name": "id", "type": "string" }, { "name": "source", "type": "string" }, { "name": "target", "type": "string" }]
+              },
+              "data": { "values": [["e1", "e2"], ["api", "api"], ["db", "cache"]] }
+            }
+          ]
+        }
+      },
+      "fits": true
+    },
+    {
+      "description": "nodeGraph with node graph frames whose frame of edges has no id field: the type of the frames does not make them fit the core panel",
+      "chart": "nodeGraph",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": {
+                "refId": "A",
+                "meta": { "preferredVisualisationType": "nodeGraph" },
+                "fields": [{ "name": "id", "type": "string" }, { "name": "title", "type": "string" }]
+              },
+              "data": { "values": [["api", "db", "cache"], ["api", "db", "cache"]] }
+            },
+            {
+              "schema": {
+                "refId": "A",
+                "meta": { "preferredVisualisationType": "nodeGraph" },
+                "fields": [{ "name": "source", "type": "string" }, { "name": "target", "type": "string" }]
+              },
+              "data": { "values": [["api", "api"], ["db", "cache"]] }
+            }
+          ]
+        }
+      },
+      "fits": false
+    },
+    {
+      "description": "heatmap with plain time series: the row of the chart has no fits, so the frames that fit the chart fit the core panel. Each number field is one bucket in the chart and in the core panel",
+      "chart": "heatmap",
+      "results": {
+        "A": {
+          "frames": [
+            {
+              "schema": { "refId": "A", "fields": [{ "name": "Time", "type": "time" }, { "name": "Value", "type": "number", "labels": { "pod": "api-0" } }] },
+              "data": { "values": [[1790352817294, 1790352877294, 1790352937294], [40, 43, 46]] }
+            },
+            {
+              "schema": { "refId": "A", "fields": [{ "name": "Time", "type": "time" }, { "name": "Value", "type": "number", "labels": { "pod": "api-1" } }] },
+              "data": { "values": [[1790352817294, 1790352877294, 1790352937294], [62, 60, 58]] }
+            }
+          ]
+        }
+      },
+      "fits": true
     }
   ]
 }
