@@ -212,7 +212,9 @@ The Renderer is in the mcp-grafana binary. The App resource `ui://grafana/app.ht
 
   The check cannot prove that a value has the same meaning in the core panel, or that the core panel draws as the
   Renderer does with no value. A review of the file makes sure of these.
-- `delivery.28` A CI check of the App runs the tests of `fixtures.33` and `fixtures.34` for each set that has
+- `delivery.28` This is a check for an App that can show the Save control (`save.46`). If the App shows the
+  control only with a setting, the check turns the setting on. An App that cannot show the control skips the
+  check. A CI check of the App runs the tests of `fixtures.33` and `fixtures.34` for each set that has
   `save-args.json`. It also checks these cases with a Host that the test makes:
   - The Host answers the call of `save_chart` with a JSON-RPC error, and the test makes a `chart` at run time
     whose text of `save.54` is longer than `maxSaveMessageChars`. The App must show no control that sends the

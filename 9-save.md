@@ -260,7 +260,7 @@ Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart
   Grafana, which the Renderer cannot read (`renderer.7`). The App can leave the Save control out. An App that
   shows the control also shows it for a server that does not list `save_chart` (`save.26`), and each save then
   ends in the error of `save.53`. Thus an App can keep the control off until the tool result tells it if the
-  user can save (`future.md`).
+  user can save (`future.md`). The rules `save.47` to `save.56` apply only to an App that shows the Save control.
 - `save.47` The user picks the target in a form of the App: a new dashboard with a title and an optional folder,
   or a dashboard that exists. How the App finds the dashboards and the folders of the form is not in this
   contract.

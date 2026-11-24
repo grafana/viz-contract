@@ -199,15 +199,17 @@ are in `fixtures/`, one directory for each set.
   (`save.37`). The tool result must equal `save-result.json`. With no `grafana.json`, the Source must make no
   request to Grafana. With no `write`, it must make no write. `save-args.json` and `save-retry-args.json`
   validate against the schema of the arguments of `save_chart`.
-- `fixtures.33` For a set with `save-args.json`, the App test draws the chart of the set `prometheus-line` with
-  the `result.json` of that set. If the set has `args.json`, the last tool arguments of the App are `args.json`.
-  Otherwise they are the `chart` of `save-args.json`. The user saves the chart to the target of `save-args.json`.
-  The arguments of the call of `save_chart` must equal `save-args.json`. The test answers the call with
-  `save-result.json`. If the set has `save-retry-args.json`, the App must call `save_chart` a second time, and
-  the arguments of that call must equal `save-retry-args.json` (`save.51`). Otherwise the App must make no second
-  call. If `save-result.json` is a tool error, the App must show the message of the tool error (`save.52`). If
-  it is a result, the App must show the title of the dashboard, a link to `dashboard.url` and each path of
-  `dropped` (`save.50`).
+- `fixtures.33` This test and the test of `fixtures.34` are for an App that can show the Save control
+  (`save.46`). If the App shows the control only with a setting, the test turns the setting on. An App that
+  cannot show the control skips both tests (`delivery.28`). For a set with `save-args.json`, the App test draws
+  the chart of the set `prometheus-line` with the `result.json` of that set. If the set has `args.json`, the
+  last tool arguments of the App are `args.json`. Otherwise they are the `chart` of `save-args.json`. The user
+  saves the chart to the target of `save-args.json`. The arguments of the call of `save_chart` must equal
+  `save-args.json`. The test answers the call with `save-result.json`. If the set has `save-retry-args.json`,
+  the App must call `save_chart` a second time, and the arguments of that call must equal
+  `save-retry-args.json` (`save.51`). Otherwise the App must make no second call. If `save-result.json` is a
+  tool error, the App must show the message of the tool error (`save.52`). If it is a result, the App must show
+  the title of the dashboard, a link to `dashboard.url` and each path of `dropped` (`save.50`).
 - `fixtures.34` For a set with `save-args.json`, the App test also runs the save of `fixtures.33` with a Host
   that answers the call of `save_chart` with a JSON-RPC error. The App must send no message before the user uses
   the control of `save.53`. Then it must send one message. The text must be the `save-chart` pattern of
