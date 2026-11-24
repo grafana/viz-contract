@@ -8,7 +8,7 @@ export const read = (rel) => fs.readFileSync(path.join(CONTRACT, rel), 'utf8');
 export const readJSON = (rel) => JSON.parse(read(rel));
 export const json = (value) => JSON.stringify(value, null, 2) + '\n';
 
-export const SCHEMAS = ['query-datasource-args', 'field-config', 'chart-options-args', 'chart-options', 'tool-result', 'viz-spec', 'registry'];
+export const SCHEMAS = ['query-datasource-args', 'field-config', 'chart-options-args', 'chart-options', 'tool-result', 'save-chart-args', 'save-chart-result', 'viz-spec', 'registry'];
 
 // The summary of the frames and the matcher of the condition rule language (schemas/registry.schema.json).
 const FIELD_TYPES = ['time', 'number', 'string', 'boolean', 'trace', 'geo', 'enum', 'other', 'frame', 'nestedFrames'];
@@ -153,6 +153,39 @@ export const TYPE_DESCRIPTION =
 
 // The tool error of get_chart_options for a type that is not a chart (tool.43).
 export const unknownChartText = (type, charts) => `unknown-chart: ${type} is not a chart. The charts are: ${charts.join(', ')}.`;
+
+// The invalid-options tool error (tool.39). problems is the list of optionProblems.
+export const invalidOptionsText = (chart, problems) =>
+  `invalid-options: ${chart} does not accept these options: ${problems.join('; ')}. get_chart_options lists the options of ${chart}.`;
+
+// The tool error of save_chart for the answers of the fake Grafana (save.38 to save.40). answers is the
+// grafana.json of a set, args is its save-args.json, and toolErrors is the toolErrors list of
+// registry/states.json. An answer that is not ok is the end of the code: conflict gives save-conflict. The
+// result is undefined when each answer is ok.
+export function saveErrorText(answers, args, toolErrors) {
+  const answer = answers.read !== undefined && answers.read !== 'ok' ? answers.read : answers.write;
+  if (answer === undefined || answer === 'ok') return undefined;
+  const code = `save-${answer}`;
+  const kind = args.dashboardUid === undefined ? 'folder' : 'dashboard';
+  return `${code}: ${toolErrors.find((e) => e.code === code).message.replace('<kind>', kind)}`;
+}
+
+// The text of a result of save_chart (save.45). result is its structured content, and chart is the chart of the
+// arguments.
+export function saveText({ dashboard, panel, dropped }, chart) {
+  return [
+    `Saved ${chart.type} as panel ${panel.id} (${panel.type}) of the dashboard ${dashboard.uid}.`,
+    `Title: ${dashboard.title.replace(/\s+/g, ' ')}`,
+    ...(dashboard.url ? [`URL: ${dashboard.url}`] : []),
+    ...(dropped.length ? [`Options not saved: ${dropped.join(', ')}.`] : []),
+  ].join('\n');
+}
+
+// The text of the message that the App sends when the Host refuses a call of save_chart (save.54). args is the
+// arguments of the call, and patterns is the messages list of registry/messages.json. The order of the keys is
+// free, so a test compares the JSON after the pattern, not the text.
+export const saveMessageText = (args, patterns) =>
+  patterns.find((p) => p.code === 'save-chart').message.replace('<arguments>', () => JSON.stringify(args));
 
 // The text of get_chart_options for one entry of chart-options.json (tool.44). dataShape is the dataShape of
 // the chart in chart-types.json.

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "save_chart arguments",
+  "description": "Save a chart of render_grafana_app to a Grafana dashboard as a new panel.",
+  "type": "object",
+  "required": [
+    "chart"
+  ],
+  "properties": {
+    "dashboardUid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "UID of the dashboard that gets the panel. Not with title."
+    },
+    "title": {
+      "type": "string",
+      "pattern": "\\S",
+      "description": "Title of a new dashboard that gets the panel. Not with dashboardUid."
+    },
+    "folderUid": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Optional UID of the folder of the new dashboard. With none, the root folder. Needs title."
+    },
+    "chart": {
+      "type": "object",
+      "description": "The arguments of the query_datasource call of the chart, with its type."
+    }
+  },
+  "minProperties": 2,
+  "$comment": "minProperties: chart and a target. dependentSchemas: a target is dashboardUid or title, not both.",
+  "dependentRequired": {
+    "folderUid": [
+      "title"
+    ]
+  },
+  "dependentSchemas": {
+    "dashboardUid": {
+      "type": "object",
+      "properties": {
+        "title": false,
+        "folderUid": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

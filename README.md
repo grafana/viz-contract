@@ -2,6 +2,7 @@
 
 A model in an MCP client asks Grafana for a chart. The `query_datasource` source of the `render_grafana_app` tool
 in `grafana/mcp-grafana` runs the query. The App, an MCP Apps view, gets the result. The Renderer draws the chart.
+The `save_chart` tool saves the chart to a Grafana dashboard.
 
 This contract gives the shapes and the rules that pass between these parts. A part that follows the contract
 works with the other parts. Its engineers do not have to ask the engineers of the other parts.
@@ -17,17 +18,20 @@ flowchart TB
     end
   end
   subgraph Server["mcp-grafana"]
-    Source["Source: query_datasource"]
+    Source["Source: query_datasource, save_chart"]
   end
-  Grafana["Grafana: /api/ds/query"]
+  Grafana["Grafana"]
 
   Model -- "1. render_grafana_app" --> Source
-  Source -- "2. query" --> Grafana
+  Source -- "2. /api/ds/query" --> Grafana
   Source -- "3. tool result" --> App
   App -- "4. viz spec" --> Renderer
   Renderer -- "5. state, notices, onRefresh" --> App
   App -- "6. model context" --> Model
   App -- "7. render_grafana_app again" --> Source
+  Model -- "8. save_chart" --> Source
+  App -- "8. save_chart" --> Source
+  Source -- "9. new panel" --> Grafana
 ```
 
 | Interface | From | To | Files |
@@ -39,6 +43,7 @@ flowchart TB
 | Renderer API | App | Renderer | [3-renderer.md](3-renderer.md), `renderer-api.d.ts` |
 | States, notices and model context | Renderer, App | App, Model | [4-states-and-notices.md](4-states-and-notices.md) |
 | Refresh | Renderer, App | App, Source | [5-refresh.md](5-refresh.md) |
+| Save | Model, App | Source | [9-save.md](9-save.md), `schemas/save-chart-args.schema.json`, `schemas/save-chart-result.schema.json` |
 | Core panel | Renderer build | Source | [9-save.md](9-save.md), [7-delivery.md](7-delivery.md), `registry/core-panels.json`, `schemas/chart-options.schema.json` |
 
 ## Terms
@@ -46,7 +51,7 @@ flowchart TB
 | Term | Meaning |
 | ---- | ------- |
 | Host | The MCP client that shows the App, for example Claude web and Desktop, Cursor and ChatGPT |
-| Source | The Go code in mcp-grafana that runs the query (`query_datasource` in `render_grafana_app`) |
+| Source | The Go code in mcp-grafana that runs the query (`query_datasource` in `render_grafana_app`) and that saves a chart to a dashboard (`save_chart`) |
 | App | The view in `ui://grafana/app.html` of mcp-grafana that gets the tool result and calls the Renderer |
 | Renderer | The browser bundle that draws a viz spec |
 | Viz spec | The JSON object that the App gives to the Renderer |
@@ -61,19 +66,20 @@ flowchart TB
 | Time axis | An x axis that the panel draws from a field of type `time`. For example, a `timeseries` chart has a time axis. A `barchart` has one only if its categories are a `time` field. A `histogram` has none |
 | Saved annotations | The annotations that the user adds from the chart and that the App saves. Only the Renderer keeps them (`renderer.63`) |
 | Reset range | The time range that Reset asks for: the `timeRange` of the viz spec of `render`, or the last pick of the time picker (`renderer.76`). Reset is an optional control (`renderer.71`) |
+| Target | The dashboard that gets the panel of a save: a dashboard that exists, or a new dashboard (`save.30`) |
 
 The Renderer draws the panels of the package `@plugins/grafana-echarts`.
 
 ## How to read
 
-1. Files 1 to 5 give the interfaces in build order. Files 6 to 8 apply to all of them. File 9 gives the core
-   panel of a chart and the time range of a saved panel, for a save to a dashboard.
+1. Files 1 to 5 give the interfaces in build order. Files 6 to 8 apply to all of them. File 9 gives the save to
+   a dashboard: the core panel of a chart, the time range of a saved panel, and the `save_chart` tool.
 2. Read the files of your part only:
 
    | Part | Files |
    | ---- | ----- |
-   | Source | 1, 6, 8, 9, the schemas of the tool arguments, the tool result and the chart options, and `registry/` |
-   | App | 1 to 8, and the registries of states, notices and constants |
+   | Source | 1, 6, 8, 9, the schemas of the tool arguments, the tool result, the chart options and the save, and `registry/` |
+   | App | 1 to 9, and the registries of states, notices and constants |
    | Renderer | 2 to 9, `renderer-api.d.ts`, and the registries of panel types, core panels, states, notices and constants |
 
 3. The schemas give the shapes. The prose gives the behavior only, and does not repeat a schema.
@@ -140,9 +146,9 @@ args, err := fs.ReadFile(vizcontract.Fixtures(), "prometheus-line/args.json")
 The interfaces do not have the same promise of stability. [8-versioning.md](8-versioning.md) gives the three
 promises and the promise of each interface.
 
-The tool result, the viz spec and the Renderer API have the internal promise. They can change in any minor
-version, with no deprecation period. If you build on them outside mcp-grafana and the Renderer, pin a tagged
-version.
+The tool result, the result of `save_chart`, the viz spec and the Renderer API have the internal promise. They can
+change in any minor version, with no deprecation period. If you build on them outside mcp-grafana and the
+Renderer, pin a tagged version.
 
 ## Constants
 
@@ -161,10 +167,12 @@ version.
 | `maxAppNotes` | 5 | notes | yes | Most notes of the Source that render_grafana_app adds to its text line |
 | `maxAppNoteChars` | 200 | characters | yes | Longest note in the text line of render_grafana_app |
 | `maxTitleChars` | 100 | characters | yes | Longest title of the tool arguments |
-| `maxMessageChars` | 1000 | characters | yes | Longest text of a message that the App sends to the conversation |
+| `maxMessageChars` | 1000 | characters | yes | Longest text of a message about a point that the App sends to the conversation |
 | `maxMessageLabels` | 10 | labels | yes | Most labels of the series in a message |
 | `maxMessageValueChars` | 100 | characters | yes | Longest value or label key in a message, for example a series name or a label value |
 | `messageTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a message |
+| `maxSaveMessageChars` | 4000 | characters | yes | Longest text of the message that sends a save to the conversation |
+| `saveTimeoutMs` | 60000 | ms | yes | Time that the App waits for the answer of the Host to a call of save_chart |
 | `deprecationDays` | 30 | days | yes | Shortest deprecation period of a change to a frozen interface |
 | `specVersion` | 1 | version | no | The viz spec version that this contract gives |
 | `coreVersion` | 12.3.0 | version | yes | The version of Grafana whose core panels the core panel map is written for. It is the pluginVersion of a core panel |

@@ -1,7 +1,10 @@
 # 9. Save
 
-A save writes the chart to a Grafana dashboard. The rules of a save are not specified yet (`future.md`). This
-file gives two parts of them: the core panel of a chart, and the time range of a saved panel.
+A save writes the chart to a Grafana dashboard as a new panel. The Source does the save. The App and the model
+only ask for it, with the `save_chart` tool of mcp-grafana. This file gives three parts of a save: the core
+panel of a chart, the time range of a saved panel, and the `save_chart` tool. These parts are not specified yet
+(`future.md`): the JSON of the saved panel, its place in the dashboard, and how the Source knows that a save
+needs the core panel.
 
 The panel of a chart is a Grafana panel plugin (`tool.22`). A Grafana can draw it only when that plugin is
 installed. A core Grafana panel needs no plugin. The core panel of a chart is the core Grafana panel that is
@@ -122,10 +125,9 @@ panel that the save adds to the dashboard.
 
 The App keeps the `from` and the `to` of the last pick, zoom or pan in the last tool arguments (`refresh.9`). It
 keeps them also if the refresh of that pick, zoom or pan fails. The chart on screen is then the old chart
-(`refresh.5`). A zoom or a pan without `onRefresh` does not change the tool arguments (`renderer.73`). No rule
-says yet which tool arguments the App gives to a save. Thus, in these two cases, no rule says yet if the save
-has the time range of the last tool arguments or the time range of the chart on screen. This question is in
-item 3 of `future.md`.
+(`refresh.5`). A zoom or a pan without `onRefresh` does not change the tool arguments (`renderer.73`). A save
+from the App has the last tool arguments (`save.48`). Thus, in these two cases, the save has the time range of
+the last tool arguments, and not the time range of the chart on screen.
 
 `save.20` gives the time range of a save. It does not depend on the place of the save. `save.21` to `save.24`
 are rules for a save to a dashboard only. If the contract later saves the chart to another place, for example a
@@ -159,3 +161,163 @@ notebook, that place needs its own rules for the time range.
   not encode `!`, `*`, `'`, `(` and `)`. `url.QueryEscape` of Go writes a space as `+`, and this rule gives
   `%20`. Thus the dashboard opens with the time range of the chart, also when the dashboard has
   another time range (`save.22`). The URL does not change the dashboard.
+
+## The save tool
+
+The App and the model ask for a save with the `save_chart` tool of mcp-grafana. The Source does the save.
+
+Shapes: `schemas/save-chart-args.schema.json` gives the arguments of `save_chart`.
+`schemas/save-chart-result.schema.json` gives the structured content of its result.
+
+- `save.25` `save_chart` is a tool of mcp-grafana. It is a registered tool with no App, as `get_chart_options` is
+  (`tool.43`). Thus a call does not draw a view, and `tool.3` does not apply to it. The model and the App can call
+  it. The Source does the save.
+- `save.26` The server lists `save_chart` only if it lists `get_chart_options` (`tool.43`) and it does not run with
+  `--disable-write`. Thus a server with `--disable-write` and `--enable-query` draws a chart and cannot save it
+  (`tool.2`). A server can also leave `save_chart` out.
+- `save.27` The description of `save_chart` is one sentence: `Save a chart of render_grafana_app to a Grafana
+  dashboard as a new panel.` The schema of its arguments does not repeat the schema of the tool arguments
+  (`save.31`). Thus the tool list of a Host grows by a small amount only (`tool.47`).
+- `save.28` The annotations of the tool have `readOnlyHint` `false`, `destructiveHint` `false` and `idempotentHint`
+  `false`. A save is not destructive, because it only adds (`save.36`), and it cannot remove the change of
+  another user (`save.37`). MCP takes a tool with no `destructiveHint` as destructive, so the tool sets it. A save
+  is not idempotent: a second call with the same arguments adds a second panel.
+- `save.29` When the server lists `save_chart`, the chart line of `tool.46` has one more sentence: `Chart:
+  <chart>. get_chart_options lists its options. save_chart saves it to a dashboard.` Thus the model reads the
+  name of the tool in the turn of the chart, and the tool list of a Host does not grow.
+
+## The arguments
+
+- `save.30` The target is the dashboard that gets the panel. The arguments give it in one of two ways:
+  - `dashboardUid`: a dashboard that exists.
+  - `title`: a new dashboard with this title. With a `folderUid`, the new dashboard is in that folder. With none,
+    it is in the root folder of Grafana.
+
+  Arguments with `dashboardUid` and `title`, or with none of the two, do not validate.
+- `save.31` `chart` holds the tool arguments of the chart: the arguments of a `query_datasource` call. The schema
+  gives `chart` as an object only. When the tool is called, the Source checks `chart` against the schema of the
+  tool arguments, as in `tool.4`. `tool.10` applies to the queries of `chart`. `chart` must also have a `type`,
+  because the Source does not query (`save.35`), so it cannot pick the chart (`tool.18`). The `from` and the `to`
+  of `chart` give the time range of the save (`save.20`).
+- `save.32` If the arguments do not validate, or `chart` does not pass the checks of `save.31`, the Source returns
+  a tool error with the validation message. It does not read and does not write the dashboard.
+- `save.33` The Source checks the `options` and the `fieldConfig` of `chart` as in `tool.38` to `tool.40`, before
+  it reads the dashboard. If one is not correct, the Source returns the `invalid-options` tool error (`tool.39`),
+  and it does not write.
+- `save.34` The arguments are not a panel JSON, and they have no field for the place of the panel. The Source
+  makes the panel and chooses its place.
+
+## The write
+
+- `save.35` The Source does not query the data source. Thus it does not check that the chart fits the data
+  (`tool.20`), and it has no frames for the `fits` of a core panel (`save.8`).
+- `save.36` A save only adds. It adds one panel to a dashboard that exists, or it makes a new dashboard with one
+  panel. It never changes and never removes a panel that the dashboard has.
+- `save.37` For a dashboard that exists, the Source reads the dashboard, adds the panel, and writes the dashboard
+  with the version that it read. It never writes with overwrite. Thus Grafana refuses the write if the dashboard
+  changed after the read. This applies to a dashboard with the v1 schema and to one with the v2 schema. In v1, the
+  version is the `version` of the dashboard, and the write has `overwrite` `false`. In v2, the version is
+  `metadata.resourceVersion`.
+- `save.38` If Grafana refuses the write because the dashboard changed after the read, the Source returns the
+  `save-conflict` tool error of `states.json`. The Source does not read and write a second time. A new call reads
+  the dashboard again. Only the write of a dashboard that exists gives `save-conflict`. The write of a new
+  dashboard never gives it. For example, some Grafana versions refuse a new dashboard whose title is already in
+  its folder, with the same HTTP status as for a dashboard that changed. That is a tool error of `save.41`,
+  because a new save with the same title fails in the same way.
+- `save.39` If Grafana refuses the read or the write because the user does not have the permission, the Source
+  returns the `save-forbidden` tool error.
+- `save.40` If the dashboard of `dashboardUid` or the folder of `folderUid` does not exist, the Source returns the
+  `save-not-found` tool error. `<kind>` is `dashboard` or `folder`.
+- `save.41` If the read or the write fails for another cause, the Source returns a tool error with the cause. Its
+  text does not start with a code of `states.json`. If the save is refused (`save.7`, `save.9`), the Source
+  returns a tool error whose text tells what those rules give to the user and the model. Each tool error of
+  `save_chart` has the form of `tool.25`.
+
+## The result
+
+- `save.42` The structured content of the result has `dashboard` (the `uid` and the `title` of the dashboard),
+  `panel` (the `id` and the `type` of the saved panel) and `dropped`. The result never has the dashboard JSON or
+  the panel JSON.
+- `save.43` If the Source knows a URL of its Grafana that a browser can open (`tool.27`), `dashboard.url` is that
+  URL, then `/d/`, the UID of the dashboard, `?from=`, the `from` value of `save.24`, `&to=` and the `to` value
+  of `save.24`. Otherwise `dashboard` has no `url`.
+- `save.44` `dropped` is the list of the dropped options of the saved panel, in the form and the order of
+  `save.5`. A save that writes the panel of the chart drops no option, so the list is empty. The Source saves the
+  panel without the dropped options, and it returns no tool error for them (`save.6`).
+- `save.45` The result also has one text item, with these lines in this order:
+  1. `Saved <chart> as panel <id> (<type>) of the dashboard <uid>.` `<chart>` is the `type` of `chart`.
+  2. `Title: <title>` The Source replaces each run of white space in the title with one space.
+  3. `URL: <url>`, only if `dashboard` has a `url`.
+  4. `Options not saved: <paths>.`, only if `dropped` is not empty. `<paths>` is the paths of `dropped`, joined
+     with `, `.
+
+  The model reads the text. The App reads the structured content. The two give the same values (`tool.28`).
+
+## The App
+
+- `save.46` Save is a control of the App, in its shell. The Renderer shows no Save control, and the Renderer API
+  has no option for a save. The Renderer gives nothing to a save, and the form of a save needs the dashboards of
+  Grafana, which the Renderer cannot read (`renderer.7`). The App can leave the Save control out. An App that
+  shows the control also shows it for a server that does not list `save_chart` (`save.26`), and each save then
+  ends in the error of `save.53`. Thus an App can keep the control off until the tool result tells it if the
+  user can save (`future.md`).
+- `save.47` The user picks the target in a form of the App: a new dashboard with a title and an optional folder,
+  or a dashboard that exists. How the App finds the dashboards and the folders of the form is not in this
+  contract.
+- `save.48` The App calls `save_chart` through the Host with the target and `chart`. `chart` is the last tool
+  arguments (`refresh.8`), with the chart that the user sees as `type`. Thus the save has the chart that the user
+  sees, and the time range of the last tool arguments (`save.20`). The chart on screen can show another time
+  range: after a refresh that failed (`refresh.5`), and after a zoom or a pan without `onRefresh`
+  (`renderer.73`). The save then still has the time range of the last tool arguments. After a refresh that
+  failed, that is the time range that the user asked for. After a zoom or a pan without `onRefresh`, the App does
+  not know the time range on screen, because the Renderer does not give it to the App. The App makes one call
+  for each save. It does not ask the Source first which options a save drops. The result gives them (`save.44`).
+- `save.49` While the App waits for the answer of the Host, it shows that it saves, and the user cannot save
+  again, because a second call adds a second panel (`save.28`). The wait ends with the answer, or after
+  `saveTimeoutMs` (`save.56`).
+- `save.50` If the call gives a result, the App shows the title of the dashboard. If `dashboard` has a `url`, the
+  App shows a link to it and opens it with `ui/open-link`, as in `spec.7`. If `dropped` is not empty, the App
+  shows its paths.
+- `save.51` If the call gives the `invalid-options` tool error, the App calls `save_chart` one more time, with a
+  `chart` that has no `options` and no `fieldConfig`. A later Renderer version can rename or remove an option
+  (`version.13`), as for a refresh (`refresh.19`). The App knows the error by its code (`refresh.10`). If the
+  second call gives a result, the App also tells the user that the saved panel has the default options. The App
+  does not change the last tool arguments. The next refresh handles them (`refresh.19`).
+- `save.52` If a call gives another tool error, the App shows the message of the tool error in its shell. The
+  form stays open, so the user can save again.
+- `save.53` If the Host answers a call with a JSON-RPC error, the App does not know the cause. A tool error is not
+  such an error, because it comes from the Source (`save.52`). The Host can refuse the call. The server can also
+  have no `save_chart` (`save.26`):
+  [MCP](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling) answers a call of a
+  tool that the server does not list with a JSON-RPC error, and the App has no way to know if the server lists
+  `save_chart`. The App then shows a short error in its shell. The error tells the user that the App could not
+  save the chart, and that the user can ask the model in the chat to save it. If the App can send a text message
+  (`state.20`), it also shows a control that sends the save to the chat. The App sends no message until the user
+  uses that control, because the user can be the one who refused the call.
+- `save.54` When the user uses that control, the App sends one message with `ui/message` of MCP Apps. The message
+  has the `role` `user` and one text item, as in `state.21`. The text is the `save-chart` pattern of
+  `messages.json`. `<arguments>` is the arguments of the call that got the JSON-RPC error, as one JSON object with
+  no white space, as `JSON.stringify` gives it. The order of the keys is free. The model then calls `save_chart`
+  with these arguments (`save.57`), and the Host applies its own rules to a tool call of the model. The pattern
+  also tells a model that has no `save_chart` tool to tell the user that save is not available, and not to save
+  the chart with another tool. Thus a server that does not list `save_chart` gets no panel from another tool
+  (`save.53`). The App does not get the result of that save. The model reads it (`save.45`). `state.26` and
+  `state.27` apply to the message.
+- `save.55` If the text of `save.54` is longer than `maxSaveMessageChars`, the App does not show the control of
+  `save.53`, and it sends no message. The length is in Unicode code points. `maxMessageChars` does not apply to
+  this message, because the tool arguments of a chart with options or a long query are longer than a message
+  about a point. The error of `save.53` still tells the user to ask the model in the chat.
+- `save.56` The App waits for the answer of the Host to a call of `save_chart` for `saveTimeoutMs` or less. If the
+  Host gives no answer in that time, the App stops the wait, and the user can save again (`save.49`). The App
+  then does not know if the chart is saved, because the save can still complete. The App shows this in its
+  shell, and it tells the user that a second save can add a second panel. An answer that comes after
+  `saveTimeoutMs` is a late answer. A late result is a saved panel. The App shows it as in `save.50`, also if the
+  user saved again. A late tool error and a late JSON-RPC error do nothing, because the user already saw that
+  the App got no answer. A Host that asks the user before each tool call can take longer than `saveTimeoutMs`.
+  The late result then shows the saved panel.
+
+## The model
+
+- `save.57` The model calls `save_chart` with a target and with the tool arguments that it wrote for the chart as
+  `chart`. If those arguments have no `type`, the model adds the chart of the chart line (`tool.46`). After a
+  message of `save.54`, the model uses the arguments of the message.

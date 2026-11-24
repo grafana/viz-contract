@@ -34,7 +34,9 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
 | --------- | ------- |
 | Tool arguments | Provisional until the first tagged mcp-grafana release that contains the Source. Frozen from that release |
 | Arguments of `get_chart_options` | The promise of the tool arguments |
+| Arguments of `save_chart` | Provisional until the first tagged mcp-grafana release that contains `save_chart`. Frozen from that release |
 | Tool result | Internal |
+| Result of `save_chart` | Internal |
 | `chart-options.json` | Internal |
 | Viz spec | Internal. Frozen when the Renderer loads from a CDN |
 | Renderer API | Internal. Frozen when the Renderer loads from a CDN |
@@ -59,3 +61,10 @@ on also changes the Go module path, for example to `github.com/grafana/viz-contr
   `registry/core-panels.json` is correct for Grafana of the new value (`save.1`, `save.10`, `save.8`). A higher
   value makes `save.9` refuse a Grafana that could save before. Thus the title of the pull request names the new
   value, and the release notes have it.
+- `version.15` The `chart` of the arguments of `save_chart` holds tool arguments (`save.31`), and the arguments
+  reach the same consumers as the tool arguments (`version.10`). Thus the arguments of `save_chart` become frozen
+  in the same way, but with their own release: they are provisional until the first tagged mcp-grafana release
+  that contains `save_chart`, and frozen from that release. The tool arguments can be frozen before that
+  release. The form of `chart` then has the promise of the tool arguments, and the other arguments of
+  `save_chart` stay provisional. A save can have an option that the Renderer version does not have
+  (`version.13`). The App then saves with no `options` and no `fieldConfig` (`save.51`).

@@ -1,0 +1,23 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Saved timeseries as panel 7 (timeseries) of the dashboard save-target.\nTitle: HTTP overview\nURL: http://localhost:3000/d/save-target?from=now-15m&to=now\nOptions not saved: options.animation.enabled, fieldConfig.defaults.custom.axisSoftMin."
+    }
+  ],
+  "structuredContent": {
+    "dashboard": {
+      "uid": "save-target",
+      "title": "HTTP overview",
+      "url": "http://localhost:3000/d/save-target?from=now-15m&to=now"
+    },
+    "panel": {
+      "id": 7,
+      "type": "timeseries"
+    },
+    "dropped": [
+      "options.animation.enabled",
+      "fieldConfig.defaults.custom.axisSoftMin"
+    ]
+  }
+}

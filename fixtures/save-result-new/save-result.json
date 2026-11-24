@@ -1,0 +1,20 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Saved timeseries as panel 1 (grafana-echartscartesian-panel) of the dashboard save-new.\nTitle: HTTP requests\nURL: http://localhost:3000/d/save-new?from=now-15m&to=now"
+    }
+  ],
+  "structuredContent": {
+    "dashboard": {
+      "uid": "save-new",
+      "title": "HTTP requests",
+      "url": "http://localhost:3000/d/save-new?from=now-15m&to=now"
+    },
+    "panel": {
+      "id": 1,
+      "type": "grafana-echartscartesian-panel"
+    },
+    "dropped": []
+  }
+}
