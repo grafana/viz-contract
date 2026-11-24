@@ -30,7 +30,9 @@ This file gives the steps to change the contract.
     of `coreVersion`: one time with frames that fit it, and one time with frames that fit the chart and not the
     core panel. If you changed `fieldOptions`, draw the core panel with a value for each id that you added.
     Say in the pull request what you drew. No check of this repository reads Grafana, so the checks do not find a
-    wrong panel type, a wrong preset, a wrong `fieldOptions` or a wrong `fits`.
+    wrong panel type, a wrong preset, a wrong `fieldOptions` or a wrong `fits`. A change of `coreVersion` follows
+    `version.14`: it changes each row, so draw each core panel again. A higher value also makes a save refuse a
+    Grafana that could save before (`save.9`), so the title of the pull request names the new value.
 
 ## Version and changelog
 

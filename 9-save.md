@@ -15,8 +15,10 @@ chart. The `chart-options.json` of the Renderer gives the place of each chart op
 (`delivery.25`). Thus the names of the options stay data of the Renderer (`version.13`). The standard field
 options of Grafana are not options of one chart, so `registry/core-panels.json` gives their place (`save.10`).
 The Source makes the core panel, because it reads both files (`tool.37`). Both parts are written for Grafana of
-`coreVersion`.
-`coreVersion` is a version of Semantic Versioning 2.0.0 (`version.14`).
+`coreVersion`. `coreVersion` is a version of Semantic Versioning 2.0.0 (`version.14`).
+
+The rules are in the order of their IDs. The one exception is `save.10`: it is after `save.4`, because it adds
+to `save.3` and `save.4`, and `save.5` uses it.
 
 - `save.1` `registry/core-panels.json` has one row for each row of `registry/chart-types.json`, in the same
   order. The `panel` of a row is the type of the core panel of the chart, or `none`. A row with a core panel also
@@ -24,13 +26,6 @@ The Source makes the core panel, because it reads both files (`tool.37`). Both p
   needs to draw the data of the chart as the chart draws it. For example, the core `piechart` panel draws one
   part for each row only with `reduceOptions.values`. The core `heatmap` panel reads a panel with no options as
   a panel of an old version, and then it calculates the buckets from the values. Thus its preset has `calculate`.
-- `save.8` A core panel does not draw each set of frames that its chart draws. A row can have `fits`: a list of
-  conditions in the condition rule language of `registry.schema.json`. The frames fit the core panel when they
-  fit the chart (`tool.20`) and one condition of `fits` matches. With no `fits`, the frames that fit the chart
-  fit the core panel. For example, a `barchart` draws number fields with no other field, and the core `barchart`
-  panel needs a string or time field. A core panel shows a message or no data for frames that do not fit it. The
-  `fits` of a row come from the code of the core panel in Grafana of `coreVersion`. The core panel of `save.2` to
-  `save.5` and `save.10` does not depend on the frames.
 - `save.2` The core panel is made from the panel of the chart (`tool.22`, `tool.41`) and the row of the chart:
   - `type` is the `panel` of the row.
   - `pluginVersion` is `coreVersion`. Grafana then runs the migrations of the core panel from that version.
@@ -95,6 +90,13 @@ The Source makes the core panel, because it reads both files (`tool.37`). Both p
   of the save cannot draw, and that the chart has no core panel. It names each chart that has one, in the order
   of `chart-types.json`. Thus the user can install the panel or pick another chart, and no dashboard gets a panel
   that its Grafana cannot draw.
+- `save.8` A core panel does not draw each set of frames that its chart draws. A row can have `fits`: a list of
+  conditions in the condition rule language of `registry.schema.json`. The frames fit the core panel when they
+  fit the chart (`tool.20`) and one condition of `fits` matches. With no `fits`, the frames that fit the chart
+  fit the core panel. For example, a `barchart` draws number fields with no other field, and the core `barchart`
+  panel needs a string or time field. A core panel shows a message or no data for frames that do not fit it. The
+  `fits` of a row come from the code of the core panel in Grafana of `coreVersion`. The core panel of `save.2` to
+  `save.5` and `save.10` does not depend on the frames.
 - `save.9` A Grafana of `coreVersion` or of a newer version reads the core panel, because it runs the migrations
   from `coreVersion`. An older Grafana does not know that form, and it ignores an option that it does not know.
   When a save needs the core panel and the version of the Grafana of the save is older than `coreVersion`, the
